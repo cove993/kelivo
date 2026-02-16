@@ -55,6 +55,7 @@ class MarkdownWithCodeHighlight extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     final sanitizedText = _sanitizeImageLinks(text);
     final imageUrls = _extractImageUrls(sanitizedText);
+    final imageAlts = _extractImageAlts(sanitizedText);
     final normalized = _preprocessFences(
       sanitizedText,
       enableMath: settings.enableMathRendering,
@@ -173,6 +174,11 @@ class MarkdownWithCodeHighlight extends StatelessWidget {
         final idx = imgs.indexOf(url);
         final initial = idx >= 0 ? idx : 0;
         final provider = _imageProviderFor(url);
+        final alt = imageAlts[url] ?? '';
+        double? fixedWidth;
+        if (alt == 'sticker') fixedWidth = 80.0;
+        else if (alt == 'small') fixedWidth = 120.0;
+        else if (alt == 'medium') fixedWidth = 280.0;
         return GestureDetector(
           onTap: () {
             Navigator.of(ctx).push(
@@ -212,9 +218,9 @@ class MarkdownWithCodeHighlight extends StatelessWidget {
                     // Missing or unsupported source: show a broken image indicator
                     return const Icon(Icons.broken_image);
                   }
-                  return Image(
-                    image: provider,
-                    width: constraints.maxWidth,
+                    return Image(
+                      image: provider,
+                      width: fixedWidth ?? constraints.maxWidth,
                     fit: BoxFit.contain,
                     errorBuilder: (context, error, stack) =>
                         const Icon(Icons.broken_image),
@@ -928,6 +934,16 @@ class MarkdownWithCodeHighlight extends StatelessWidget {
         .map((m) => (m.group(1) ?? '').trim())
         .where((s) => s.isNotEmpty)
         .toList();
+  }
+  static Map<String, String> _extractImageAlts(String md) {
+    final re = RegExp(r"!\[([^\]]*)\]\(([^)\s]+)\)");
+    final map = <String, String>{};
+    for (final m in re.allMatches(md)) {
+      final alt = (m.group(1) ?? '').trim();
+      final url = (m.group(2) ?? '').trim();
+      if (url.isNotEmpty) map[url] = alt;
+    }
+    return map;
   }
 
   static String _sanitizeImageLinks(String input) {
