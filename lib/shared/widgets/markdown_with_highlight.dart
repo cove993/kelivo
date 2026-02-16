@@ -176,9 +176,16 @@ class MarkdownWithCodeHighlight extends StatelessWidget {
         final provider = _imageProviderFor(url);
         final alt = imageAlts[url] ?? '';
         double? fixedWidth;
-        if (alt == 'sticker') fixedWidth = 80.0;
-        else if (alt == 'small') fixedWidth = 120.0;
-        else if (alt == 'medium') fixedWidth = 280.0;
+        final numWidth = double.tryParse(alt);
+        if (numWidth != null && numWidth > 0) {
+          fixedWidth = numWidth;
+        } else if (alt == 'sticker') {
+          fixedWidth = 80.0;
+        } else if (alt == 'small') {
+          fixedWidth = 120.0;
+        } else if (alt == 'medium') {
+          fixedWidth = 280.0;
+        }
         return GestureDetector(
           onTap: () {
             Navigator.of(ctx).push(
