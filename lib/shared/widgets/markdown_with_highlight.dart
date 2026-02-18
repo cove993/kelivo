@@ -103,7 +103,11 @@ class MarkdownWithCodeHighlight extends StatelessWidget {
         components.insert(0, InlineLatexParenScrollableMd());
       }
     }
-    components.insert(0, HtmlBlockMd());
+    components.insert(0, HtmlHrMd());
+    components.insert(0, HtmlBlockquoteMd());
+    components.insert(0, HtmlProgressMd());
+    components.insert(0, HtmlDetailsMd());
+    components.insert(0, HtmlPMd());
     components.insert(0, AtxHeadingMd());
     // Ensure fenced code blocks take precedence over headings and other blocks
     // so lines like "# comment" inside code fences are not parsed as headings.
@@ -2877,150 +2881,116 @@ Color? _parseCssColor(String s) {
 // ─── Block HTML renderer ──────────────────────────────────────────────────────
 
 /// Block-level HTML: <p style>, <details>, <progress>, <blockquote class>, <hr style>
-class HtmlBlockMd extends BlockMd {
+class HtmlPMd extends BlockMd {
   @override
-  String get expString =>
-      r'(?:<p(?:\s[^>]*)?>[\s\S]*?</p>)'
-      r'|(?:<details(?:\s[^>]*)?>[\s\S]*?</details>)'
-      r'|(?:<progress(?:\s[^>]*)?>[\s\S]*?</progress>)'
-      r'|(?:<blockquote(?:\s[^>]*)?>[\s\S]*?</blockquote>)'
-      r'|(?:<hr(?:\s[^>]*)?\s*/?>)';
+  String get expString => r'^\s*<p(?:\s[^>]*)?>[\s\S]*?</p>\s*$';
 
   @override
   Widget build(BuildContext context, String text, GptMarkdownConfig config) {
-    final t = text.trim();
-    final lower = t.toLowerCase();
-
-    if (lower.startsWith('<p')) return _buildP(context, t, config);
-    if (lower.startsWith('<details')) return _buildDetails(context, t, config);
-    if (lower.startsWith('<progress')) return _buildProgress(context, t);
-    if (lower.startsWith('<blockquote')) {
-      return _buildBlockquote(context, t, config);
-    }
-    if (lower.startsWith('<hr')) return _buildHr(context, t);
-
-    return const SizedBox.shrink();
-  }
-
-  // ── <p style="color:...;font-weight:...">content</p> ──────────────────────
-  Widget _buildP(
-      BuildContext context, String text, GptMarkdownConfig config) {
-    final styleMatch =
-        RegExp(r'<p(?:\s+style="([^"]*)")?\s*>([\s\S]*?)</p>',
-                caseSensitive: false)
-            .firstMatch(text);
-    if (styleMatch == null) return const SizedBox.shrink();
-
-    final styleStr = styleMatch.group(1) ?? '';
-    final content = styleMatch.group(2) ?? '';
+    final m = RegExp(r'<p(?:\s+style="([^"]*)")?\s*>([\s\S]*?)</p>', caseSensitive: false).firstMatch(text.trim());
+    if (m == null) return const SizedBox.shrink();
+    final styleStr = m.group(1) ?? '';
+    final content = m.group(2) ?? '';
     final parsed = _parseCssStyle(styleStr);
     final base = config.style ?? const TextStyle();
     final style = base.copyWith(
       color: parsed.color ?? base.color,
       fontWeight: parsed.bold ? FontWeight.bold : base.fontWeight,
     );
-
-    // Render inner HTML (may contain <span> tags handled by inline renderer)
     final innerCfg = config.copyWith(style: style);
-    final children =
-        MarkdownComponent.generate(context, content, innerCfg, true);
-
+    final children = MarkdownComponent.generate(context, content, innerCfg, true);
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 2),
-      child: config.copyWith(style: style).getRich(
-            TextSpan(children: children),
-          ),
+      child: innerCfg.getRich(TextSpan(children: children)),
     );
   }
+}
 
-  // ── <details><summary>title</summary><p>body</p></details> ────────────────
-  Widget _buildDetails(
-      BuildContext context, String text, GptMarkdownConfig config) {
+class HtmlDetailsMd extends BlockMd {
+  @override
+  String get expString => r'^\s*<details(?:\s[^>]*)?>[\s\S]*?</details>\s*$';
+
+  @override
+  Widget build(BuildContext context, String text, GptMarkdownConfig config) {
     final m = RegExp(
       r'<details[^>]*>\s*<summary[^>]*>([\s\S]*?)</summary>([\s\S]*?)</details>',
       caseSensitive: false,
-    ).firstMatch(text);
+    ).firstMatch(text.trim());
     if (m == null) return const SizedBox.shrink();
-
     final summary = (m.group(1) ?? '').trim();
-    final body = (m.group(2) ?? '').trim();
-
-    // Strip outer <p> tags from body for cleaner rendering
-    final bodyText = RegExp(r'^<p[^>]*>([\s\S]*?)</p>$', caseSensitive: false)
-            .firstMatch(body)
+    final body = RegExp(r'^<p[^>]*>([\s\S]*?)</p>$', caseSensitive: false)
+            .firstMatch((m.group(2) ?? '').trim())
             ?.group(1)
             ?.trim() ??
-        body;
-
+        (m.group(2) ?? '').trim();
     final cs = Theme.of(context).colorScheme;
     final isDark = Theme.of(context).brightness == Brightness.dark;
-
     return _HtmlDetailsWidget(
       summary: summary,
-      body: bodyText,
+      body: body,
       config: config,
       cs: cs,
       isDark: isDark,
     );
   }
+}
 
-  // ── <progress value="x" max="y"></progress> ───────────────────────────────
-  Widget _buildProgress(BuildContext context, String text) {
-    final m = RegExp(r'<progress\s+value="(\d+)"\s+max="(\d+)"',
-            caseSensitive: false)
-        .firstMatch(text);
+class HtmlProgressMd extends BlockMd {
+  @override
+  String get expString => r'^\s*<progress\s[^>]*>[\s\S]*?</progress>\s*$';
+
+  @override
+  Widget build(BuildContext context, String text, GptMarkdownConfig config) {
+    final m = RegExp(r'<progress\s+value="(\d+)"\s+max="(\d+)"', caseSensitive: false).firstMatch(text);
     if (m == null) return const SizedBox.shrink();
-
     final value = int.tryParse(m.group(1) ?? '0') ?? 0;
     final max = int.tryParse(m.group(2) ?? '100') ?? 100;
     final ratio = max > 0 ? (value / max).clamp(0.0, 1.0) : 0.0;
     final cs = Theme.of(context).colorScheme;
-
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
       child: LayoutBuilder(
-        builder: (context, constraints) {
-          return Container(
-            height: 4,
-            width: constraints.maxWidth,
-            decoration: BoxDecoration(
-              color: cs.outlineVariant.withOpacity(0.25),
-              borderRadius: BorderRadius.circular(2),
-            ),
-            child: FractionallySizedBox(
-              alignment: Alignment.centerLeft,
-              widthFactor: ratio,
-              child: Container(
-                decoration: BoxDecoration(
-                  color: cs.primary,
-                  borderRadius: BorderRadius.circular(2),
-                ),
+        builder: (context, constraints) => Container(
+          height: 4,
+          width: constraints.maxWidth,
+          decoration: BoxDecoration(
+            color: cs.outlineVariant.withOpacity(0.25),
+            borderRadius: BorderRadius.circular(2),
+          ),
+          child: FractionallySizedBox(
+            alignment: Alignment.centerLeft,
+            widthFactor: ratio,
+            child: Container(
+              decoration: BoxDecoration(
+                color: cs.primary,
+                borderRadius: BorderRadius.circular(2),
               ),
             ),
-          );
-        },
+          ),
+        ),
       ),
     );
   }
+}
 
-  // ── <blockquote class="pink|blue">content</blockquote> ────────────────────
-  Widget _buildBlockquote(
-      BuildContext context, String text, GptMarkdownConfig config) {
+class HtmlBlockquoteMd extends BlockMd {
+  @override
+  String get expString => r'^\s*<blockquote(?:\s[^>]*)?>[\s\S]*?</blockquote>\s*$';
+
+  @override
+  Widget build(BuildContext context, String text, GptMarkdownConfig config) {
     final m = RegExp(
       r'<blockquote(?:\s+class="([^"]*)")?\s*>([\s\S]*?)</blockquote>',
       caseSensitive: false,
-    ).firstMatch(text);
+    ).firstMatch(text.trim());
     if (m == null) return const SizedBox.shrink();
-
     final cls = (m.group(1) ?? '').toLowerCase();
     final content = (m.group(2) ?? '').trim();
     final cs = Theme.of(context).colorScheme;
     final isDark = Theme.of(context).brightness == Brightness.dark;
-
     final Color accent;
     final Color bg;
     final Color textColor;
-
     if (cls == 'pink') {
       accent = const Color(0xFFF48FB1);
       bg = const Color(0xFFFFF0F5);
@@ -3034,16 +3004,13 @@ class HtmlBlockMd extends BlockMd {
       bg = cs.surfaceVariant.withOpacity(isDark ? 0.18 : 0.12);
       textColor = cs.onSurface.withOpacity(0.75);
     }
-
     final innerCfg = config.copyWith(
       style: (config.style ?? const TextStyle()).copyWith(
         color: isDark ? cs.onSurface.withOpacity(0.85) : textColor,
         fontStyle: FontStyle.italic,
       ),
     );
-    final children =
-        MarkdownComponent.generate(context, content, innerCfg, true);
-
+    final children = MarkdownComponent.generate(context, content, innerCfg, true);
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 6),
       decoration: BoxDecoration(
@@ -3058,49 +3025,36 @@ class HtmlBlockMd extends BlockMd {
       child: innerCfg.getRich(TextSpan(children: children)),
     );
   }
+}
 
-  // ── <hr style="background:..."> ───────────────────────────────────────────
-  Widget _buildHr(BuildContext context, String text) {
-    final styleMatch =
-        RegExp(r'<hr(?:\s+style="([^"]*)")?\s*/?>',
-                caseSensitive: false)
-            .firstMatch(text);
+class HtmlHrMd extends BlockMd {
+  @override
+  String get expString => r'^\s*<hr(?:\s[^>]*)?\s*/?>\s*$';
+
+  @override
+  Widget build(BuildContext context, String text, GptMarkdownConfig config) {
+    final styleMatch = RegExp(r'<hr(?:\s+style="([^"]*)")?\s*/?>', caseSensitive: false).firstMatch(text);
     final styleStr = styleMatch?.group(1) ?? '';
     final cs = Theme.of(context).colorScheme;
-
-    // Check for gradient background
-    final gradientMatch =
-        RegExp(r'background:\s*(linear-gradient\([^)]+\))',
-                caseSensitive: false)
-            .firstMatch(styleStr);
-
+    final gradientMatch = RegExp(r'background:\s*(linear-gradient\([^)]+\))', caseSensitive: false).firstMatch(styleStr);
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 10),
       child: gradientMatch != null
           ? _buildGradientHr(context, gradientMatch.group(1)!)
-          : Container(
-              width: double.infinity,
-              height: 1,
-              color: cs.outlineVariant.withOpacity(0.35),
-            ),
+          : Container(width: double.infinity, height: 1, color: cs.outlineVariant.withOpacity(0.35)),
     );
   }
 
   Widget _buildGradientHr(BuildContext context, String gradientStr) {
-    // Parse linear-gradient(to right, transparent, #color, transparent)
-    final colorMatch =
-        RegExp(r'#([0-9a-fA-F]{6})').firstMatch(gradientStr);
+    final colorMatch = RegExp(r'#([0-9a-fA-F]{6})').firstMatch(gradientStr);
     final color = colorMatch != null
         ? Color(int.parse('FF${colorMatch.group(1)}', radix: 16))
         : Theme.of(context).colorScheme.outlineVariant;
-
     return Container(
       width: double.infinity,
       height: 1,
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [Colors.transparent, color, Colors.transparent],
-        ),
+        gradient: LinearGradient(colors: [Colors.transparent, color, Colors.transparent]),
       ),
     );
   }
