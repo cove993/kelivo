@@ -757,15 +757,19 @@ class MarkdownWithCodeHighlight extends StatelessWidget {
       return key;
     });
 
-    // Protect <details>...</details> blocks from Markdown parsing
+    // Compress <details> blocks into single line to survive paragraph splitting
     final detailsRegex = RegExp(
       r'<details[\s\S]*?</details>',
       caseSensitive: false,
     );
     out = out.replaceAllMapped(detailsRegex, (match) {
-      final key = '__CODE_MASK_${codeCount++}__';
-      codeMap[key] = match.group(0)!;
-      return key;
+      final compressed = match.group(0)!
+          .replaceAll('\r\n', '\n')
+          .split('\n')
+          .map((l) => l.trim())
+          .where((l) => l.isNotEmpty)
+          .join('');
+      return compressed;
     });
     
     // STEP 2: PROCESSING (on masked string, code is now protected)
@@ -2908,17 +2912,17 @@ class HtmlPMd extends BlockMd {
 
 class HtmlDetailsMd extends BlockMd {
   @override
-  String get expString => r'<details[^>]*>[\s\S]*?</details>';
+  String get expString => r'<details[^>]*><summary[^>]*>.*?</summary>.*?</details>';
 
   @override
   Widget build(BuildContext context, String text, GptMarkdownConfig config) {
     final m = RegExp(
-      r'<details[^>]*>\s*<summary[^>]*>([\s\S]*?)</summary>([\s\S]*?)</details>',
+      r'<details[^>]*><summary[^>]*>(.*?)</summary>(.*?)</details>',
       caseSensitive: false,
     ).firstMatch(text.trim());
     if (m == null) return const SizedBox.shrink();
     final summary = (m.group(1) ?? '').trim();
-    final body = RegExp(r'^<p[^>]*>([\s\S]*?)</p>$', caseSensitive: false)
+    final body = RegExp(r'^<p[^>]*>(.*?)</p>$', caseSensitive: false)
             .firstMatch((m.group(2) ?? '').trim())
             ?.group(1)
             ?.trim() ??
