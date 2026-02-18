@@ -2923,6 +2923,7 @@ _CssStyle _parseCssStyle(String style) {
     padding: padding,
     fontSize: fontSize,
   );
+}
 
 Color? _parseCssColor(String s) {
   s = s.trim();
