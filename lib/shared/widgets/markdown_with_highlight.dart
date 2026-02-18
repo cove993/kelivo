@@ -2890,6 +2890,7 @@ _CssStyle _parseCssStyle(String style) {
   bool bold = false;
   double? borderRadius;
   EdgeInsets? padding;
+  double? fontSize;
 
   for (final decl in style.split(';')) {
     final parts = decl.split(':');
