@@ -2763,6 +2763,7 @@ class AllowedHtmlTagsMd extends InlineMd {
       final textStyle = base.copyWith(
         color: parsed.color ?? base.color,
         fontWeight: parsed.bold ? FontWeight.bold : base.fontWeight,
+        fontSize: parsed.fontSize ?? base.fontSize,
       );
       if (parsed.backgroundColor != null) {
         return WidgetSpan(
@@ -2872,12 +2873,14 @@ class _CssStyle {
   final bool bold;
   final double? borderRadius;
   final EdgeInsets? padding;
+  final double? fontSize;
   const _CssStyle({
     this.color,
     this.backgroundColor,
     this.bold = false,
     this.borderRadius,
     this.padding,
+    this.fontSize,
   });
 }
 
@@ -2908,6 +2911,9 @@ _CssStyle _parseCssStyle(String style) {
       final px = double.tryParse(val.replaceAll(RegExp(r'[^0-9.]'), '')) ?? 0;
       padding = EdgeInsets.symmetric(horizontal: px, vertical: px / 3);
     }
+    if (prop == 'font-size') {
+      fontSize = double.tryParse(val.replaceAll(RegExp(r'[^0-9.]'), ''));
+    }
   }
   return _CssStyle(
     color: color,
@@ -2915,8 +2921,8 @@ _CssStyle _parseCssStyle(String style) {
     bold: bold,
     borderRadius: borderRadius,
     padding: padding,
+    fontSize: fontSize,
   );
-}
 
 Color? _parseCssColor(String s) {
   s = s.trim();
