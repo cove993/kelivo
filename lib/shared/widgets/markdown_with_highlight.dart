@@ -103,6 +103,7 @@ class MarkdownWithCodeHighlight extends StatelessWidget {
         components.insert(0, InlineLatexParenScrollableMd());
       }
     }
+    components.insert(0, HtmlBlockMd());
     components.insert(0, AtxHeadingMd());
     // Ensure fenced code blocks take precedence over headings and other blocks
     // so lines like "# comment" inside code fences are not parsed as headings.
@@ -752,6 +753,17 @@ class MarkdownWithCodeHighlight extends StatelessWidget {
       return key;
     });
 
+    // Protect <details>...</details> blocks from Markdown parsing
+    final detailsRegex = RegExp(
+      r'<details[\s\S]*?</details>',
+      caseSensitive: false,
+    );
+    out = out.replaceAllMapped(detailsRegex, (match) {
+      final key = '__CODE_MASK_${codeCount++}__';
+      codeMap[key] = match.group(0)!;
+      return key;
+    });
+    
     // STEP 2: PROCESSING (on masked string, code is now protected)
 
     // 2025-10-23 Fix: Remove title attributes from markdown links to work around gpt_markdown's
@@ -2636,14 +2648,120 @@ class BackslashEscapeMd extends InlineMd {
 }
 
 /// Whitelist-based HTML tag renderer.
-/// Currently supports <br> tags for manual line breaks.
+/// Inline: <br>, <mark>, <sub>, <sup>, <span style>, <ruby>
 class AllowedHtmlTagsMd extends InlineMd {
   @override
-  RegExp get exp => RegExp(r"<br\s*/?>", caseSensitive: false);
+  RegExp get exp => RegExp(
+    r'(?:<br\s*/?>)'
+    r'|(?:<mark(?:\s+class="([^"]*)")?\s*>(.*?)</mark>)'
+    r'|(?:<sub>(.*?)</sub>)'
+    r'|(?:<sup>(.*?)</sup>)'
+    r'|(?:<span\s+style="([^"]*)">(.*?)</span>)'
+    r'|(?:<ruby>(.*?)<rt>(.*?)</rt></ruby>)',
+    caseSensitive: false,
+  );
 
   @override
   InlineSpan span(BuildContext context, String text, GptMarkdownConfig config) {
-    return const TextSpan(text: '\n');
+    final m = exp.firstMatch(text);
+    if (m == null) return TextSpan(text: text, style: config.style);
+    final full = m.group(0) ?? '';
+    final tag = full.toLowerCase();
+
+    // <br>
+    if (tag.startsWith('<br')) return const TextSpan(text: '\n');
+
+    // <mark class="pink|blue">
+    if (tag.startsWith('<mark')) {
+      final cls = (m.group(1) ?? '').toLowerCase();
+      final content = m.group(2) ?? '';
+      final bg = cls == 'pink'
+          ? const Color(0xFFFFD6E0)
+          : cls == 'blue'
+              ? const Color(0xFFD0E8FF)
+              : const Color(0xFFFFF176);
+      return WidgetSpan(
+        alignment: PlaceholderAlignment.baseline,
+        baseline: TextBaseline.alphabetic,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 2),
+          decoration: BoxDecoration(
+            color: bg,
+            borderRadius: BorderRadius.circular(2),
+          ),
+          child: Text(content, style: config.style),
+        ),
+      );
+    }
+
+    // <sub>
+    if (tag.startsWith('<sub')) {
+      final content = m.group(3) ?? '';
+      final base = config.style ?? const TextStyle();
+      final sz = (base.fontSize ?? 15.5) * 0.72;
+      return WidgetSpan(
+        alignment: PlaceholderAlignment.bottom,
+        baseline: TextBaseline.alphabetic,
+        child: Transform.translate(
+          offset: const Offset(0, 3),
+          child: Text(content, style: base.copyWith(fontSize: sz)),
+        ),
+      );
+    }
+
+    // <sup>
+    if (tag.startsWith('<sup')) {
+      final content = m.group(4) ?? '';
+      final base = config.style ?? const TextStyle();
+      final sz = (base.fontSize ?? 15.5) * 0.72;
+      return WidgetSpan(
+        alignment: PlaceholderAlignment.top,
+        baseline: TextBaseline.alphabetic,
+        child: Transform.translate(
+          offset: const Offset(0, -3),
+          child: Text(content, style: base.copyWith(fontSize: sz)),
+        ),
+      );
+    }
+
+    // <span style="color:...;font-weight:...">
+    if (tag.startsWith('<span')) {
+      final styleStr = m.group(5) ?? '';
+      final content = m.group(6) ?? '';
+      final parsed = _parseCssStyle(styleStr);
+      final base = config.style ?? const TextStyle();
+      return TextSpan(
+        text: content,
+        style: base.copyWith(
+          color: parsed.color ?? base.color,
+          fontWeight: parsed.bold ? FontWeight.bold : base.fontWeight,
+        ),
+      );
+    }
+
+    // <ruby>text<rt>annotation</rt></ruby>
+    if (tag.startsWith('<ruby')) {
+      final base = m.group(7) ?? '';
+      final rt = m.group(8) ?? '';
+      final baseStyle = config.style ?? const TextStyle();
+      final rtStyle = baseStyle.copyWith(
+        fontSize: (baseStyle.fontSize ?? 15.5) * 0.6,
+        color: (baseStyle.color ?? Colors.black).withOpacity(0.6),
+      );
+      return WidgetSpan(
+        alignment: PlaceholderAlignment.baseline,
+        baseline: TextBaseline.alphabetic,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(rt, style: rtStyle),
+            Text(base, style: baseStyle),
+          ],
+        ),
+      );
+    }
+
+    return TextSpan(text: text, style: config.style);
   }
 }
 
@@ -2698,6 +2816,411 @@ class SelectableHighlightView extends StatelessWidget {
         children: codeTextSpans.isEmpty
             ? [TextSpan(text: source)]
             : codeTextSpans,
+      ),
+    );
+  }
+}
+
+// ─── CSS style parser ────────────────────────────────────────────────────────
+
+class _CssStyle {
+  final Color? color;
+  final bool bold;
+  const _CssStyle({this.color, this.bold = false});
+}
+
+_CssStyle _parseCssStyle(String style) {
+  Color? color;
+  bool bold = false;
+  for (final decl in style.split(';')) {
+    final parts = decl.split(':');
+    if (parts.length != 2) continue;
+    final prop = parts[0].trim().toLowerCase();
+    final val = parts[1].trim();
+    if (prop == 'color') color = _parseCssColor(val);
+    if (prop == 'font-weight' &&
+        (val == 'bold' || val == '700' || val == '800' || val == '900')) {
+      bold = true;
+    }
+  }
+  return _CssStyle(color: color, bold: bold);
+}
+
+Color? _parseCssColor(String s) {
+  s = s.trim();
+  if (s.startsWith('#')) {
+    try {
+      final hex = s.substring(1);
+      if (hex.length == 6) return Color(int.parse('FF$hex', radix: 16));
+      if (hex.length == 8) return Color(int.parse(hex, radix: 16));
+    } catch (_) {}
+  }
+  const named = <String, Color>{
+    'red': Color(0xFFEF5350),
+    'blue': Color(0xFF42A5F5),
+    'green': Color(0xFF66BB6A),
+    'yellow': Color(0xFFFFCA28),
+    'purple': Color(0xFFAB47BC),
+    'orange': Color(0xFFEF6C00),
+    'pink': Color(0xFFF48FB1),
+    'gray': Color(0xFF9E9E9E),
+    'grey': Color(0xFF9E9E9E),
+    'white': Color(0xFFFFFFFF),
+    'black': Color(0xFF000000),
+    'teal': Color(0xFF26A69A),
+    'indigo': Color(0xFF5C6BC0),
+    'cyan': Color(0xFF26C6DA),
+  };
+  return named[s.toLowerCase()];
+}
+
+// ─── Block HTML renderer ──────────────────────────────────────────────────────
+
+/// Block-level HTML: <p style>, <details>, <progress>, <blockquote class>, <hr style>
+class HtmlBlockMd extends BlockMd {
+  @override
+  String get expString =>
+      r'(?:<p(?:\s[^>]*)?>[\s\S]*?</p>)'
+      r'|(?:<details(?:\s[^>]*)?>[\s\S]*?</details>)'
+      r'|(?:<progress(?:\s[^>]*)?>[\s\S]*?</progress>)'
+      r'|(?:<blockquote(?:\s[^>]*)?>[\s\S]*?</blockquote>)'
+      r'|(?:<hr(?:\s[^>]*)?\s*/?>)';
+
+  @override
+  Widget build(BuildContext context, String text, GptMarkdownConfig config) {
+    final t = text.trim();
+    final lower = t.toLowerCase();
+
+    if (lower.startsWith('<p')) return _buildP(context, t, config);
+    if (lower.startsWith('<details')) return _buildDetails(context, t, config);
+    if (lower.startsWith('<progress')) return _buildProgress(context, t);
+    if (lower.startsWith('<blockquote')) {
+      return _buildBlockquote(context, t, config);
+    }
+    if (lower.startsWith('<hr')) return _buildHr(context, t);
+
+    return const SizedBox.shrink();
+  }
+
+  // ── <p style="color:...;font-weight:...">content</p> ──────────────────────
+  Widget _buildP(
+      BuildContext context, String text, GptMarkdownConfig config) {
+    final styleMatch =
+        RegExp(r'<p(?:\s+style="([^"]*)")?\s*>([\s\S]*?)</p>',
+                caseSensitive: false)
+            .firstMatch(text);
+    if (styleMatch == null) return const SizedBox.shrink();
+
+    final styleStr = styleMatch.group(1) ?? '';
+    final content = styleMatch.group(2) ?? '';
+    final parsed = _parseCssStyle(styleStr);
+    final base = config.style ?? const TextStyle();
+    final style = base.copyWith(
+      color: parsed.color ?? base.color,
+      fontWeight: parsed.bold ? FontWeight.bold : base.fontWeight,
+    );
+
+    // Render inner HTML (may contain <span> tags handled by inline renderer)
+    final innerCfg = config.copyWith(style: style);
+    final children =
+        MarkdownComponent.generate(context, content, innerCfg, true);
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 2),
+      child: config.copyWith(style: style).getRich(
+            TextSpan(children: children),
+          ),
+    );
+  }
+
+  // ── <details><summary>title</summary><p>body</p></details> ────────────────
+  Widget _buildDetails(
+      BuildContext context, String text, GptMarkdownConfig config) {
+    final m = RegExp(
+      r'<details[^>]*>\s*<summary[^>]*>([\s\S]*?)</summary>([\s\S]*?)</details>',
+      caseSensitive: false,
+    ).firstMatch(text);
+    if (m == null) return const SizedBox.shrink();
+
+    final summary = (m.group(1) ?? '').trim();
+    final body = (m.group(2) ?? '').trim();
+
+    // Strip outer <p> tags from body for cleaner rendering
+    final bodyText = RegExp(r'^<p[^>]*>([\s\S]*?)</p>$', caseSensitive: false)
+            .firstMatch(body)
+            ?.group(1)
+            ?.trim() ??
+        body;
+
+    final cs = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return _HtmlDetailsWidget(
+      summary: summary,
+      body: bodyText,
+      config: config,
+      cs: cs,
+      isDark: isDark,
+    );
+  }
+
+  // ── <progress value="x" max="y"></progress> ───────────────────────────────
+  Widget _buildProgress(BuildContext context, String text) {
+    final m = RegExp(r'<progress\s+value="(\d+)"\s+max="(\d+)"',
+            caseSensitive: false)
+        .firstMatch(text);
+    if (m == null) return const SizedBox.shrink();
+
+    final value = int.tryParse(m.group(1) ?? '0') ?? 0;
+    final max = int.tryParse(m.group(2) ?? '100') ?? 100;
+    final ratio = max > 0 ? (value / max).clamp(0.0, 1.0) : 0.0;
+    final cs = Theme.of(context).colorScheme;
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          return Container(
+            height: 4,
+            width: constraints.maxWidth,
+            decoration: BoxDecoration(
+              color: cs.outlineVariant.withOpacity(0.25),
+              borderRadius: BorderRadius.circular(2),
+            ),
+            child: FractionallySizedBox(
+              alignment: Alignment.centerLeft,
+              widthFactor: ratio,
+              child: Container(
+                decoration: BoxDecoration(
+                  color: cs.primary,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  // ── <blockquote class="pink|blue">content</blockquote> ────────────────────
+  Widget _buildBlockquote(
+      BuildContext context, String text, GptMarkdownConfig config) {
+    final m = RegExp(
+      r'<blockquote(?:\s+class="([^"]*)")?\s*>([\s\S]*?)</blockquote>',
+      caseSensitive: false,
+    ).firstMatch(text);
+    if (m == null) return const SizedBox.shrink();
+
+    final cls = (m.group(1) ?? '').toLowerCase();
+    final content = (m.group(2) ?? '').trim();
+    final cs = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    final Color accent;
+    final Color bg;
+    final Color textColor;
+
+    if (cls == 'pink') {
+      accent = const Color(0xFFF48FB1);
+      bg = const Color(0xFFFFF0F5);
+      textColor = const Color(0xFFC2185B);
+    } else if (cls == 'blue') {
+      accent = const Color(0xFF90CAF9);
+      bg = const Color(0xFFF0F7FF);
+      textColor = const Color(0xFF1565C0);
+    } else {
+      accent = cs.outlineVariant;
+      bg = cs.surfaceVariant.withOpacity(isDark ? 0.18 : 0.12);
+      textColor = cs.onSurface.withOpacity(0.75);
+    }
+
+    final innerCfg = config.copyWith(
+      style: (config.style ?? const TextStyle()).copyWith(
+        color: isDark ? cs.onSurface.withOpacity(0.85) : textColor,
+        fontStyle: FontStyle.italic,
+      ),
+    );
+    final children =
+        MarkdownComponent.generate(context, content, innerCfg, true);
+
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 6),
+      decoration: BoxDecoration(
+        color: isDark ? cs.surfaceVariant.withOpacity(0.18) : bg,
+        borderRadius: const BorderRadius.only(
+          topRight: Radius.circular(8),
+          bottomRight: Radius.circular(8),
+        ),
+        border: Border(left: BorderSide(color: accent, width: 3)),
+      ),
+      padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
+      child: innerCfg.getRich(TextSpan(children: children)),
+    );
+  }
+
+  // ── <hr style="background:..."> ───────────────────────────────────────────
+  Widget _buildHr(BuildContext context, String text) {
+    final styleMatch =
+        RegExp(r'<hr(?:\s+style="([^"]*)")?\s*/?>',
+                caseSensitive: false)
+            .firstMatch(text);
+    final styleStr = styleMatch?.group(1) ?? '';
+    final cs = Theme.of(context).colorScheme;
+
+    // Check for gradient background
+    final gradientMatch =
+        RegExp(r'background:\s*(linear-gradient\([^)]+\))',
+                caseSensitive: false)
+            .firstMatch(styleStr);
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 10),
+      child: gradientMatch != null
+          ? _buildGradientHr(context, gradientMatch.group(1)!)
+          : Container(
+              width: double.infinity,
+              height: 1,
+              color: cs.outlineVariant.withOpacity(0.35),
+            ),
+    );
+  }
+
+  Widget _buildGradientHr(BuildContext context, String gradientStr) {
+    // Parse linear-gradient(to right, transparent, #color, transparent)
+    final colorMatch =
+        RegExp(r'#([0-9a-fA-F]{6})').firstMatch(gradientStr);
+    final color = colorMatch != null
+        ? Color(int.parse('FF${colorMatch.group(1)}', radix: 16))
+        : Theme.of(context).colorScheme.outlineVariant;
+
+    return Container(
+      width: double.infinity,
+      height: 1,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [Colors.transparent, color, Colors.transparent],
+        ),
+      ),
+    );
+  }
+}
+
+// ─── Details stateful widget ──────────────────────────────────────────────────
+
+class _HtmlDetailsWidget extends StatefulWidget {
+  final String summary;
+  final String body;
+  final GptMarkdownConfig config;
+  final ColorScheme cs;
+  final bool isDark;
+
+  const _HtmlDetailsWidget({
+    required this.summary,
+    required this.body,
+    required this.config,
+    required this.cs,
+    required this.isDark,
+  });
+
+  @override
+  State<_HtmlDetailsWidget> createState() => _HtmlDetailsWidgetState();
+}
+
+class _HtmlDetailsWidgetState extends State<_HtmlDetailsWidget> {
+  bool _open = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = widget.cs;
+    final isDark = widget.isDark;
+    final borderColor = cs.outlineVariant.withOpacity(isDark ? 0.22 : 0.28);
+    final headerBg = cs.surfaceVariant.withOpacity(isDark ? 0.18 : 0.08);
+
+    final summaryChildren = MarkdownComponent.generate(
+      context,
+      widget.summary,
+      widget.config,
+      true,
+    );
+    final bodyChildren = MarkdownComponent.generate(
+      context,
+      widget.body,
+      widget.config,
+      true,
+    );
+
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 6),
+      decoration: BoxDecoration(
+        border: Border.all(color: borderColor),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Summary row
+          InkWell(
+            onTap: () => setState(() => _open = !_open),
+            child: Container(
+              width: double.infinity,
+              color: headerBg,
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              child: Row(
+                children: [
+                  AnimatedRotation(
+                    turns: _open ? 0.25 : 0.0,
+                    duration: const Duration(milliseconds: 180),
+                    curve: Curves.easeOutCubic,
+                    child: Icon(
+                      Icons.chevron_right,
+                      size: 16,
+                      color: cs.onSurface.withOpacity(0.55),
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: widget.config.getRich(
+                      TextSpan(
+                        children: summaryChildren,
+                        style: (widget.config.style ?? const TextStyle())
+                            .copyWith(fontWeight: FontWeight.w500),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          // Body (animated)
+          AnimatedSwitcher(
+            duration: const Duration(milliseconds: 200),
+            switchInCurve: Curves.easeOutCubic,
+            switchOutCurve: Curves.easeInCubic,
+            transitionBuilder: (child, anim) => SizeTransition(
+              sizeFactor: anim,
+              axisAlignment: -1,
+              child: FadeTransition(opacity: anim, child: child),
+            ),
+            child: _open
+                ? Container(
+                    key: const ValueKey('open'),
+                    width: double.infinity,
+                    decoration: BoxDecoration(
+                      border: Border(
+                          top: BorderSide(color: borderColor, width: 0.8)),
+                    ),
+                    padding: const EdgeInsets.fromLTRB(14, 10, 14, 10),
+                    child: widget.config.getRich(
+                      TextSpan(children: bodyChildren),
+                    ),
+                  )
+                : const SizedBox.shrink(key: ValueKey('closed')),
+          ),
+        ],
       ),
     );
   }
