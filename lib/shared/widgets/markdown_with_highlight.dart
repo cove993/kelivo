@@ -2883,7 +2883,7 @@ Color? _parseCssColor(String s) {
 /// Block-level HTML: <p style>, <details>, <progress>, <blockquote class>, <hr style>
 class HtmlPMd extends BlockMd {
   @override
-  String get expString => r'^\s*<p(?:\s[^>]*)?>[\s\S]*?</p>\s*$';
+  String get expString => r'<p[^>]*>[\s\S]*?</p>';
 
   @override
   Widget build(BuildContext context, String text, GptMarkdownConfig config) {
@@ -2908,7 +2908,7 @@ class HtmlPMd extends BlockMd {
 
 class HtmlDetailsMd extends BlockMd {
   @override
-  String get expString => r'^\s*<details(?:\s[^>]*)?>[\s\S]*?</details>\s*$';
+  String get expString => r'<details[^>]*>[\s\S]*?</details>';
 
   @override
   Widget build(BuildContext context, String text, GptMarkdownConfig config) {
@@ -2937,7 +2937,7 @@ class HtmlDetailsMd extends BlockMd {
 
 class HtmlProgressMd extends BlockMd {
   @override
-  String get expString => r'^\s*<progress\s[^>]*>[\s\S]*?</progress>\s*$';
+  String get expString => r'<progress[^>]*>[\s\S]*?</progress>';
 
   @override
   Widget build(BuildContext context, String text, GptMarkdownConfig config) {
@@ -2975,7 +2975,7 @@ class HtmlProgressMd extends BlockMd {
 
 class HtmlBlockquoteMd extends BlockMd {
   @override
-  String get expString => r'^\s*<blockquote(?:\s[^>]*)?>[\s\S]*?</blockquote>\s*$';
+  String get expString => r'<blockquote[^>]*>[\s\S]*?</blockquote>';
 
   @override
   Widget build(BuildContext context, String text, GptMarkdownConfig config) {
@@ -3029,7 +3029,7 @@ class HtmlBlockquoteMd extends BlockMd {
 
 class HtmlHrMd extends BlockMd {
   @override
-  String get expString => r'^\s*<hr(?:\s[^>]*)?\s*/?>\s*$';
+  String get expString => r'<hr[^>]*\s*/?>';
 
   @override
   Widget build(BuildContext context, String text, GptMarkdownConfig config) {
