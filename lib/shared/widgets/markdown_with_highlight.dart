@@ -103,6 +103,19 @@ class MarkdownWithCodeHighlight extends StatelessWidget {
         components.insert(0, InlineLatexParenScrollableMd());
       }
     }
+    components.insert(0, HtmlMusicCardMd());
+    components.insert(0, HtmlRelCardMd());
+    components.insert(0, HtmlStarsMd());
+    components.insert(0, HtmlSectionTitleMd());
+    components.insert(0, HtmlAttrListMd());
+    components.insert(0, HtmlAttrCardMd());
+    components.insert(0, HtmlEnvCardMd());
+    components.insert(0, HtmlItemCardMd());
+    components.insert(0, HtmlTimelineMd());
+    components.insert(0, HtmlChoicesMd());
+    components.insert(0, HtmlNoticeMd());
+    components.insert(0, HtmlSegsMd());
+    components.insert(0, HtmlBarMd());
     components.insert(0, HtmlHrMd());
     components.insert(0, HtmlBlockquoteMd());
     components.insert(0, HtmlProgressMd());
@@ -770,6 +783,15 @@ class MarkdownWithCodeHighlight extends StatelessWidget {
           .where((l) => l.isNotEmpty)
           .join('');
       return compressed;
+    });
+    
+    // Ensure block HTML tags are separated by blank lines
+    final blockHtmlTags = RegExp(
+      r'(<\/(?:p|progress|blockquote|details|hr|bar|segs|notice|choices|timeline|itemcard|envcard|attrcard|attrlist|sectiontitle|stars|relcard|musiccard)>)\n(<(?:p|progress|blockquote|details|hr|bar|segs|notice|choices|timeline|itemcard|envcard|attrcard|attrlist|sectiontitle|stars|relcard|musiccard))',
+      caseSensitive: false,
+    );
+    out = out.replaceAllMapped(blockHtmlTags, (m) {
+      return '${m.group(1)}\n\n${m.group(2)}';
     });
     
     // STEP 2: PROCESSING (on masked string, code is now protected)
@@ -2732,19 +2754,32 @@ class AllowedHtmlTagsMd extends InlineMd {
       );
     }
 
-    // <span style="color:...;font-weight:...">
+    // <span style="color:...;font-weight:...;background-color:...">
     if (tag.startsWith('<span')) {
       final styleStr = m.group(5) ?? '';
       final content = m.group(6) ?? '';
       final parsed = _parseCssStyle(styleStr);
       final base = config.style ?? const TextStyle();
-      return TextSpan(
-        text: content,
-        style: base.copyWith(
-          color: parsed.color ?? base.color,
-          fontWeight: parsed.bold ? FontWeight.bold : base.fontWeight,
-        ),
+      final textStyle = base.copyWith(
+        color: parsed.color ?? base.color,
+        fontWeight: parsed.bold ? FontWeight.bold : base.fontWeight,
       );
+      if (parsed.backgroundColor != null) {
+        return WidgetSpan(
+          alignment: PlaceholderAlignment.baseline,
+          baseline: TextBaseline.alphabetic,
+          child: Container(
+            padding: parsed.padding ??
+                const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+            decoration: BoxDecoration(
+              color: parsed.backgroundColor,
+              borderRadius: BorderRadius.circular(parsed.borderRadius ?? 10),
+            ),
+            child: Text(content, style: textStyle),
+          ),
+        );
+      }
+      return TextSpan(text: content, style: textStyle);
     }
 
     // <ruby>text<rt>annotation</rt></ruby>
@@ -2833,25 +2868,54 @@ class SelectableHighlightView extends StatelessWidget {
 
 class _CssStyle {
   final Color? color;
+  final Color? backgroundColor;
   final bool bold;
-  const _CssStyle({this.color, this.bold = false});
+  final double? borderRadius;
+  final EdgeInsets? padding;
+  const _CssStyle({
+    this.color,
+    this.backgroundColor,
+    this.bold = false,
+    this.borderRadius,
+    this.padding,
+  });
 }
 
 _CssStyle _parseCssStyle(String style) {
   Color? color;
+  Color? backgroundColor;
   bool bold = false;
+  double? borderRadius;
+  EdgeInsets? padding;
+
   for (final decl in style.split(';')) {
     final parts = decl.split(':');
-    if (parts.length != 2) continue;
+    if (parts.length < 2) continue;
     final prop = parts[0].trim().toLowerCase();
-    final val = parts[1].trim();
+    final val = parts.sublist(1).join(':').trim();
     if (prop == 'color') color = _parseCssColor(val);
+    if (prop == 'background-color' || prop == 'background') {
+      backgroundColor = _parseCssColor(val);
+    }
     if (prop == 'font-weight' &&
         (val == 'bold' || val == '700' || val == '800' || val == '900')) {
       bold = true;
     }
+    if (prop == 'border-radius') {
+      borderRadius = double.tryParse(val.replaceAll(RegExp(r'[^0-9.]'), ''));
+    }
+    if (prop == 'padding') {
+      final px = double.tryParse(val.replaceAll(RegExp(r'[^0-9.]'), '')) ?? 0;
+      padding = EdgeInsets.symmetric(horizontal: px, vertical: px / 3);
+    }
   }
-  return _CssStyle(color: color, bold: bold);
+  return _CssStyle(
+    color: color,
+    backgroundColor: backgroundColor,
+    bold: bold,
+    borderRadius: borderRadius,
+    padding: padding,
+  );
 }
 
 Color? _parseCssColor(String s) {
@@ -2896,7 +2960,10 @@ class HtmlPMd extends BlockMd {
     final styleStr = m.group(1) ?? '';
     final content = m.group(2) ?? '';
     final parsed = _parseCssStyle(styleStr);
-    final base = config.style ?? const TextStyle();
+    final base = (config.style ?? Theme.of(context).textTheme.bodyMedium ?? const TextStyle()).copyWith(
+      fontSize: config.style?.fontSize ?? 15.5,
+      height: config.style?.height ?? 1.55,
+    );
     final style = base.copyWith(
       color: parsed.color ?? base.color,
       fontWeight: parsed.bold ? FontWeight.bold : base.fontWeight,
@@ -3059,6 +3126,1030 @@ class HtmlHrMd extends BlockMd {
       height: 1,
       decoration: BoxDecoration(
         gradient: LinearGradient(colors: [Colors.transparent, color, Colors.transparent]),
+      ),
+    );
+  }
+}
+
+/// <bar label="好感度" value="84" max="100" color="#e91e63"></bar>
+class HtmlBarMd extends BlockMd {
+  @override
+  String get expString => r'<bar\s[^>]*>\s*</bar>';
+
+  @override
+  Widget build(BuildContext context, String text, GptMarkdownConfig config) {
+    final m = RegExp(
+      r'<bar\s+label="([^"]*)"\s+value="(\d+)"\s+max="(\d+)"\s+color="([^"]*)"',
+      caseSensitive: false,
+    ).firstMatch(text);
+    if (m == null) return const SizedBox.shrink();
+
+    final label = m.group(1) ?? '';
+    final value = int.tryParse(m.group(2) ?? '0') ?? 0;
+    final max = int.tryParse(m.group(3) ?? '100') ?? 100;
+    final color = _parseCssColor(m.group(4) ?? '') ??
+        Theme.of(context).colorScheme.primary;
+    final ratio = max > 0 ? (value / max).clamp(0.0, 1.0) : 0.0;
+    final percent = (ratio * 100).round();
+
+    // 渐变色：原色偏淡版本作为起点
+    final startColor = Color.lerp(color, Colors.white, 0.45) ?? color;
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                label,
+                style: (config.style ?? const TextStyle()).copyWith(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: color,
+                ),
+              ),
+              Text(
+                '$percent%',
+                style: (config.style ?? const TextStyle()).copyWith(
+                  fontSize: 12,
+                  color: Theme.of(context).colorScheme.onSurface.withOpacity(0.4),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          LayoutBuilder(
+            builder: (context, constraints) => Container(
+              height: 6,
+              width: constraints.maxWidth,
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.outlineVariant.withOpacity(0.2),
+                borderRadius: BorderRadius.circular(3),
+              ),
+              child: FractionallySizedBox(
+                alignment: Alignment.centerLeft,
+                widthFactor: ratio,
+                child: Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(colors: [startColor, color]),
+                    borderRadius: BorderRadius.circular(3),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// <segs label="好感度" value="8" max="10" color="#f48fb1"></segs>
+class HtmlSegsMd extends BlockMd {
+  @override
+  String get expString => r'<segs\s[^>]*>\s*</segs>';
+
+  @override
+  Widget build(BuildContext context, String text, GptMarkdownConfig config) {
+    final m = RegExp(
+      r'<segs\s+label="([^"]*)"\s+value="(\d+)"\s+max="(\d+)"\s+color="([^"]*)"',
+      caseSensitive: false,
+    ).firstMatch(text);
+    if (m == null) return const SizedBox.shrink();
+
+    final label = m.group(1) ?? '';
+    final value = int.tryParse(m.group(2) ?? '0') ?? 0;
+    final max = int.tryParse(m.group(3) ?? '10') ?? 10;
+    final color = _parseCssColor(m.group(4) ?? '') ??
+        Theme.of(context).colorScheme.primary;
+    final cs = Theme.of(context).colorScheme;
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Text(
+                label,
+                style: (config.style ?? const TextStyle()).copyWith(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: color,
+                ),
+              ),
+              const SizedBox(width: 6),
+              Text(
+                '$value/$max',
+                style: (config.style ?? const TextStyle()).copyWith(
+                  fontSize: 12,
+                  color: cs.onSurface.withOpacity(0.4),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Row(
+            children: List.generate(max, (i) {
+              final filled = i < value;
+              return Expanded(
+                child: Container(
+                  margin: const EdgeInsets.symmetric(horizontal: 1.5),
+                  height: 6,
+                  decoration: BoxDecoration(
+                    color: filled
+                        ? color
+                        : cs.outlineVariant.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(3),
+                  ),
+                ),
+              );
+            }),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// <notice type="success|warning|info|love">内容</notice>
+class HtmlNoticeMd extends BlockMd {
+  @override
+  String get expString => r'<notice\s[^>]*>[\s\S]*?</notice>';
+
+  @override
+  Widget build(BuildContext context, String text, GptMarkdownConfig config) {
+    final m = RegExp(
+      r'<notice(?:\s+type="([^"]*)")?\s*>([\s\S]*?)</notice>',
+      caseSensitive: false,
+    ).firstMatch(text.trim());
+    if (m == null) return const SizedBox.shrink();
+
+    final type = (m.group(1) ?? 'info').toLowerCase();
+    final content = (m.group(2) ?? '').trim();
+
+    final Map<String, List<dynamic>> styles = {
+      'success': [const Color(0xFFE8F5E9), const Color(0xFF2E7D32), '✅'],
+      'warning': [const Color(0xFFFFF3E0), const Color(0xFFE65100), '⚠️'],
+      'error':   [const Color(0xFFFFEBEE), const Color(0xFFC62828), '❌'],
+      'love':    [const Color(0xFFFCE4EC), const Color(0xFFC2185B), '💗'],
+      'info':    [const Color(0xFFE3F2FD), const Color(0xFF1565C0), 'ℹ️'],
+    };
+
+    final s = styles[type] ?? styles['info']!;
+    final bg = s[0] as Color;
+    final fg = s[1] as Color;
+    final icon = s[2] as String;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    final innerCfg = config.copyWith(
+      style: (config.style ?? const TextStyle()).copyWith(
+        fontSize: 14,
+        color: isDark ? Theme.of(context).colorScheme.onSurface : fg,
+      ),
+    );
+    final children = MarkdownComponent.generate(context, content, innerCfg, true);
+
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 4),
+      padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
+      decoration: BoxDecoration(
+        color: isDark
+            ? fg.withOpacity(0.12)
+            : bg,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(icon, style: const TextStyle(fontSize: 15)),
+          const SizedBox(width: 8),
+          Expanded(child: innerCfg.getRich(TextSpan(children: children))),
+        ],
+      ),
+    );
+  }
+}
+
+/// <choices>
+/// <choice key="A" color="#fce4ec">主动上前搭话</choice>
+/// <choice key="B" color="#e3f2fd">假装没看见</choice>
+/// <choice key="C" disabled="true">直接离开（锁定）</choice>
+/// </choices>
+class HtmlChoicesMd extends BlockMd {
+  @override
+  String get expString => r'<choices\s*>[\s\S]*?</choices>';
+
+  @override
+  Widget build(BuildContext context, String text, GptMarkdownConfig config) {
+    final outer = RegExp(
+      r'<choices\s*>([\s\S]*?)</choices>',
+      caseSensitive: false,
+    ).firstMatch(text.trim());
+    if (outer == null) return const SizedBox.shrink();
+
+    final inner = outer.group(1) ?? '';
+    final itemRe = RegExp(
+      r'<choice(?:\s+key="([^"]*)")?(?:\s+color="([^"]*)")?(?:\s+disabled="([^"]*)")?\s*>([\s\S]*?)</choice>',
+      caseSensitive: false,
+    );
+
+    final items = itemRe.allMatches(inner).toList();
+    if (items.isEmpty) return const SizedBox.shrink();
+
+    final cs = Theme.of(context).colorScheme;
+
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 6),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: items.map((m) {
+          final key = m.group(1) ?? '';
+          final colorStr = m.group(2) ?? '';
+          final disabled = (m.group(3) ?? '').toLowerCase() == 'true';
+          final content = (m.group(4) ?? '').trim();
+          final color = _parseCssColor(colorStr) ?? cs.primaryContainer;
+
+          return Opacity(
+            opacity: disabled ? 0.38 : 1.0,
+            child: Container(
+              margin: const EdgeInsets.only(bottom: 6),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
+              decoration: BoxDecoration(
+                color: cs.surface,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                  color: cs.outlineVariant.withOpacity(0.3),
+                ),
+              ),
+              child: Row(
+                children: [
+                  if (key.isNotEmpty) ...[
+                    Container(
+                      width: 22,
+                      height: 22,
+                      decoration: BoxDecoration(
+                        color: disabled ? cs.outlineVariant.withOpacity(0.2) : color,
+                        shape: BoxShape.circle,
+                      ),
+                      alignment: Alignment.center,
+                      child: Text(
+                        key,
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                          color: disabled
+                              ? cs.onSurface.withOpacity(0.4)
+                              : _parseCssColor(colorStr) != null
+                                  ? cs.onSurface
+                                  : cs.onPrimaryContainer,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                  ],
+                  Expanded(
+                    child: Text(
+                      content,
+                      style: (config.style ?? const TextStyle()).copyWith(
+                        fontSize: 14,
+                        color: disabled
+                            ? cs.onSurface.withOpacity(0.38)
+                            : cs.onSurface,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        }).toList(),
+      ),
+    );
+  }
+}
+
+/// <timeline>
+/// <tlevent time="22:14" color="#f48fb1">在便利店偶遇，好感度 +5</tlevent>
+/// <tlevent time="22:31" color="#e91e63">解锁新剧情：深夜便利店</tlevent>
+/// </timeline>
+class HtmlTimelineMd extends BlockMd {
+  @override
+  String get expString => r'<timeline\s*>[\s\S]*?</timeline>';
+
+  @override
+  Widget build(BuildContext context, String text, GptMarkdownConfig config) {
+    final outer = RegExp(
+      r'<timeline\s*>([\s\S]*?)</timeline>',
+      caseSensitive: false,
+    ).firstMatch(text.trim());
+    if (outer == null) return const SizedBox.shrink();
+
+    final inner = outer.group(1) ?? '';
+    final itemRe = RegExp(
+      r'<tlevent(?:\s+time="([^"]*)")?(?:\s+color="([^"]*)")?\s*>([\s\S]*?)</tlevent>',
+      caseSensitive: false,
+    );
+
+    final items = itemRe.allMatches(inner).toList();
+    if (items.isEmpty) return const SizedBox.shrink();
+
+    final cs = Theme.of(context).colorScheme;
+
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 6),
+      child: Column(
+        children: List.generate(items.length, (i) {
+          final m = items[i];
+          final time = (m.group(1) ?? '').trim();
+          final color = _parseCssColor(m.group(2) ?? '') ?? cs.primary;
+          final content = (m.group(3) ?? '').trim();
+          final isLast = i == items.length - 1;
+
+          return IntrinsicHeight(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                SizedBox(
+                  width: 44,
+                  child: Text(
+                    time,
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: cs.onSurface.withOpacity(0.4),
+                    ),
+                    textAlign: TextAlign.right,
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Column(
+                  children: [
+                    Container(
+                      width: 10,
+                      height: 10,
+                      margin: const EdgeInsets.only(top: 4),
+                      decoration: BoxDecoration(
+                        color: color,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                    if (!isLast)
+                      Expanded(
+                        child: Container(
+                          width: 1,
+                          color: cs.outlineVariant.withOpacity(0.25),
+                        ),
+                      ),
+                  ],
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Padding(
+                    padding: EdgeInsets.only(bottom: isLast ? 0 : 12),
+                    child: Text(
+                      content,
+                      style: (config.style ?? const TextStyle()).copyWith(
+                        fontSize: 14,
+                        color: cs.onSurface.withOpacity(0.85),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          );
+        }),
+      ),
+    );
+  }
+}
+
+/// <itemcard icon="💍" name="银色细链" badge="专属" badgecolor="#fce4ec" badgetextcolor="#c2185b">她脚踝上常年戴着的那条</itemcard>
+class HtmlItemCardMd extends BlockMd {
+  @override
+  String get expString => r'<itemcard\s[^>]*>[\s\S]*?</itemcard>';
+
+  @override
+  Widget build(BuildContext context, String text, GptMarkdownConfig config) {
+    final m = RegExp(
+      r'<itemcard(?:\s+icon="([^"]*)")?(?:\s+name="([^"]*)")?(?:\s+badge="([^"]*)")?(?:\s+badgecolor="([^"]*)")?(?:\s+badgetextcolor="([^"]*)")?\s*>([\s\S]*?)</itemcard>',
+      caseSensitive: false,
+    ).firstMatch(text.trim());
+    if (m == null) return const SizedBox.shrink();
+
+    final icon = m.group(1) ?? '';
+    final name = m.group(2) ?? '';
+    final badge = m.group(3) ?? '';
+    final badgeBg = _parseCssColor(m.group(4) ?? '') ?? const Color(0xFFFCE4EC);
+    final badgeFg = _parseCssColor(m.group(5) ?? '') ?? const Color(0xFFC2185B);
+    final desc = (m.group(6) ?? '').trim();
+    final cs = Theme.of(context).colorScheme;
+
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: cs.surface,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: cs.outlineVariant.withOpacity(0.25)),
+      ),
+      child: Row(
+        children: [
+          if (icon.isNotEmpty) ...[
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: badgeBg.withOpacity(0.5),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              alignment: Alignment.center,
+              child: Text(icon, style: const TextStyle(fontSize: 20)),
+            ),
+            const SizedBox(width: 10),
+          ],
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (name.isNotEmpty)
+                  Text(
+                    name,
+                    style: (config.style ?? const TextStyle()).copyWith(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: cs.onSurface,
+                    ),
+                  ),
+                if (desc.isNotEmpty)
+                  Text(
+                    desc,
+                    style: (config.style ?? const TextStyle()).copyWith(
+                      fontSize: 12,
+                      color: cs.onSurface.withOpacity(0.5),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+          if (badge.isNotEmpty) ...[
+            const SizedBox(width: 8),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+              decoration: BoxDecoration(
+                color: badgeBg,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Text(
+                badge,
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                  color: badgeFg,
+                ),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+/// <envcard title="🌙 深夜便利店" tags="22:47,室内,安静" bgcolor="#1a1a2e" textcolor="white">场景描述</envcard>
+class HtmlEnvCardMd extends BlockMd {
+  @override
+  String get expString => r'<envcard\s[^>]*>[\s\S]*?</envcard>';
+
+  @override
+  Widget build(BuildContext context, String text, GptMarkdownConfig config) {
+    final m = RegExp(
+      r'<envcard(?:\s+title="([^"]*)")?(?:\s+tags="([^"]*)")?(?:\s+bgcolor="([^"]*)")?(?:\s+textcolor="([^"]*)")?\s*>([\s\S]*?)</envcard>',
+      caseSensitive: false,
+    ).firstMatch(text.trim());
+    if (m == null) return const SizedBox.shrink();
+
+    final title = (m.group(1) ?? '').trim();
+    final tagsRaw = (m.group(2) ?? '').trim();
+    final bgColor = _parseCssColor(m.group(3) ?? '') ?? const Color(0xFF1A1A2E);
+    final textColor = _parseCssColor(m.group(4) ?? '') ?? Colors.white;
+    final desc = (m.group(5) ?? '').trim();
+    final tags = tagsRaw.isNotEmpty
+        ? tagsRaw.split(',').map((t) => t.trim()).where((t) => t.isNotEmpty).toList()
+        : <String>[];
+
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 6),
+      padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+      decoration: BoxDecoration(
+        color: bgColor,
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (title.isNotEmpty)
+            Text(
+              title,
+              style: TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.w700,
+                color: textColor,
+              ),
+            ),
+          if (desc.isNotEmpty) ...[
+            const SizedBox(height: 4),
+            Text(
+              desc,
+              style: TextStyle(
+                fontSize: 13,
+                color: textColor.withOpacity(0.85),
+              ),
+            ),
+          ],
+          if (tags.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 4,
+              runSpacing: 4,
+              children: tags.map((tag) => Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                decoration: BoxDecoration(
+                  color: textColor.withOpacity(0.15),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Text(
+                  tag,
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: textColor.withOpacity(0.9),
+                  ),
+                ),
+              )).toList(),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+/// <attrcard>
+/// <attr key="😊 心情" val="有点紧张"></attr>
+/// <attr key="📍 位置" val="便利店" highlight="true"></attr>
+/// </attrcard>
+class HtmlAttrCardMd extends BlockMd {
+  @override
+  String get expString => r'<attrcard\s*>[\s\S]*?</attrcard>';
+
+  @override
+  Widget build(BuildContext context, String text, GptMarkdownConfig config) {
+    final outer = RegExp(
+      r'<attrcard\s*>([\s\S]*?)</attrcard>',
+      caseSensitive: false,
+    ).firstMatch(text.trim());
+    if (outer == null) return const SizedBox.shrink();
+
+    final inner = outer.group(1) ?? '';
+    final itemRe = RegExp(
+      r'<attr(?:\s+key="([^"]*)")?(?:\s+val="([^"]*)")?(?:\s+color="([^"]*)")?(?:\s+highlight="([^"]*)")?\s*/?>',
+      caseSensitive: false,
+    );
+    final items = itemRe.allMatches(inner).toList();
+    if (items.isEmpty) return const SizedBox.shrink();
+
+    final cs = Theme.of(context).colorScheme;
+
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 6),
+      child: GridView.count(
+        crossAxisCount: 2,
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
+        crossAxisSpacing: 6,
+        mainAxisSpacing: 6,
+        childAspectRatio: 3.2,
+        children: items.map((m) {
+          final key = (m.group(1) ?? '').trim();
+          final val = (m.group(2) ?? '').trim();
+          final color = _parseCssColor(m.group(3) ?? '');
+          final highlight = (m.group(4) ?? '').toLowerCase() == 'true';
+
+          return Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+            decoration: BoxDecoration(
+              color: highlight
+                  ? (color ?? cs.primary).withOpacity(0.08)
+                  : cs.surfaceVariant.withOpacity(0.35),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(
+                color: highlight
+                    ? (color ?? cs.primary).withOpacity(0.2)
+                    : cs.outlineVariant.withOpacity(0.15),
+              ),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  key,
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: cs.onSurface.withOpacity(0.45),
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+                Text(
+                  val,
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                    color: color ?? cs.onSurface,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
+          );
+        }).toList(),
+      ),
+    );
+  }
+}
+
+/// <attrlist>
+/// <attritem icon="😊" iconbg="#fce4ec" key="心情" val="有点紧张"></attritem>
+/// <attritem icon="📍" iconbg="#e3f2fd" key="位置" val="便利店收银台旁" color="#e91e63"></attritem>
+/// </attrlist>
+class HtmlAttrListMd extends BlockMd {
+  @override
+  String get expString => r'<attrlist\s*>[\s\S]*?</attrlist>';
+
+  @override
+  Widget build(BuildContext context, String text, GptMarkdownConfig config) {
+    final outer = RegExp(
+      r'<attrlist\s*>([\s\S]*?)</attrlist>',
+      caseSensitive: false,
+    ).firstMatch(text.trim());
+    if (outer == null) return const SizedBox.shrink();
+
+    final inner = outer.group(1) ?? '';
+    final itemRe = RegExp(
+      r'<attritem(?:\s+icon="([^"]*)")?(?:\s+iconbg="([^"]*)")?(?:\s+key="([^"]*)")?(?:\s+val="([^"]*)")?(?:\s+color="([^"]*)")?\s*/?>',
+      caseSensitive: false,
+    );
+    final items = itemRe.allMatches(inner).toList();
+    if (items.isEmpty) return const SizedBox.shrink();
+
+    final cs = Theme.of(context).colorScheme;
+
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 6),
+      decoration: BoxDecoration(
+        color: cs.surface,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: cs.outlineVariant.withOpacity(0.2)),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Column(
+        children: List.generate(items.length, (i) {
+          final m = items[i];
+          final icon = (m.group(1) ?? '').trim();
+          final iconBg = _parseCssColor(m.group(2) ?? '') ?? cs.primaryContainer;
+          final key = (m.group(3) ?? '').trim();
+          final val = (m.group(4) ?? '').trim();
+          final color = _parseCssColor(m.group(5) ?? '');
+          final isLast = i == items.length - 1;
+
+          return Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            decoration: BoxDecoration(
+              border: isLast
+                  ? null
+                  : Border(
+                      bottom: BorderSide(
+                        color: cs.outlineVariant.withOpacity(0.12),
+                      ),
+                    ),
+            ),
+            child: Row(
+              children: [
+                if (icon.isNotEmpty) ...[
+                  Container(
+                    width: 30,
+                    height: 30,
+                    decoration: BoxDecoration(
+                      color: iconBg,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    alignment: Alignment.center,
+                    child: Text(icon, style: const TextStyle(fontSize: 15)),
+                  ),
+                  const SizedBox(width: 10),
+                ],
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      if (key.isNotEmpty)
+                        Text(
+                          key,
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: cs.onSurface.withOpacity(0.4),
+                          ),
+                        ),
+                      if (val.isNotEmpty)
+                        Text(
+                          val,
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                            color: color ?? cs.onSurface,
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          );
+        }),
+      ),
+    );
+  }
+}
+
+/// <sectiontitle color="#f48fb1">第一章 · 相遇</sectiontitle>
+class HtmlSectionTitleMd extends BlockMd {
+  @override
+  String get expString => r'<sectiontitle[^>]*>[\s\S]*?</sectiontitle>';
+
+  @override
+  Widget build(BuildContext context, String text, GptMarkdownConfig config) {
+    final m = RegExp(
+      r'<sectiontitle(?:\s+color="([^"]*)")?\s*>([\s\S]*?)</sectiontitle>',
+      caseSensitive: false,
+    ).firstMatch(text.trim());
+    if (m == null) return const SizedBox.shrink();
+
+    final color = _parseCssColor(m.group(1) ?? '') ??
+        Theme.of(context).colorScheme.onSurface.withOpacity(0.4);
+    final content = (m.group(2) ?? '').trim();
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 10),
+      child: Row(
+        children: [
+          Expanded(
+            child: Container(
+              height: 1,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [Colors.transparent, color.withOpacity(0.3)],
+                ),
+              ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 10),
+            child: Text(
+              content,
+              style: TextStyle(
+                fontSize: 12,
+                color: color,
+                fontWeight: FontWeight.w500,
+                letterSpacing: 0.5,
+              ),
+            ),
+          ),
+          Expanded(
+            child: Container(
+              height: 1,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [color.withOpacity(0.3), Colors.transparent],
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// <stars label="好感度" value="4" max="5" color="#f48fb1"></stars>
+class HtmlStarsMd extends BlockMd {
+  @override
+  String get expString => r'<stars\s[^>]*>\s*</stars>';
+
+  @override
+  Widget build(BuildContext context, String text, GptMarkdownConfig config) {
+    final m = RegExp(
+      r'<stars(?:\s+label="([^"]*)")?(?:\s+value="(\d+)")?(?:\s+max="(\d+)")?(?:\s+color="([^"]*)")?\s*/?>',
+      caseSensitive: false,
+    ).firstMatch(text);
+    if (m == null) return const SizedBox.shrink();
+
+    final label = (m.group(1) ?? '').trim();
+    final value = int.tryParse(m.group(2) ?? '0') ?? 0;
+    final max = int.tryParse(m.group(3) ?? '5') ?? 5;
+    final color = _parseCssColor(m.group(4) ?? '') ?? const Color(0xFFF48FB1);
+    final cs = Theme.of(context).colorScheme;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 3),
+      child: Row(
+        children: [
+          if (label.isNotEmpty) ...[
+            Text(
+              label,
+              style: (config.style ?? const TextStyle()).copyWith(
+                fontSize: 13,
+                color: cs.onSurface.withOpacity(0.6),
+              ),
+            ),
+            const SizedBox(width: 8),
+          ],
+          Row(
+            children: List.generate(max, (i) => Padding(
+              padding: const EdgeInsets.only(right: 2),
+              child: Text(
+                i < value ? '★' : '☆',
+                style: TextStyle(
+                  fontSize: 16,
+                  color: i < value ? color : cs.outlineVariant,
+                  height: 1.2,
+                ),
+              ),
+            )),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// <relcard name="Celina" role="母亲·画师" icon="👩" iconbg="#fce4ec" score="84" scorecolor="#e91e63" scorelabel="❤"></relcard>
+class HtmlRelCardMd extends BlockMd {
+  @override
+  String get expString => r'<relcard\s[^>]*>\s*</relcard>';
+
+  @override
+  Widget build(BuildContext context, String text, GptMarkdownConfig config) {
+    final m = RegExp(
+      r'<relcard(?:\s+name="([^"]*)")?(?:\s+role="([^"]*)")?(?:\s+icon="([^"]*)")?(?:\s+iconbg="([^"]*)")?(?:\s+score="([^"]*)")?(?:\s+scorecolor="([^"]*)")?(?:\s+scorelabel="([^"]*)")?\s*/?>',
+      caseSensitive: false,
+    ).firstMatch(text);
+    if (m == null) return const SizedBox.shrink();
+
+    final name = (m.group(1) ?? '').trim();
+    final role = (m.group(2) ?? '').trim();
+    final icon = (m.group(3) ?? '').trim();
+    final iconBg = _parseCssColor(m.group(4) ?? '') ?? const Color(0xFFFCE4EC);
+    final score = (m.group(5) ?? '').trim();
+    final scoreColor = _parseCssColor(m.group(6) ?? '') ?? const Color(0xFFE91E63);
+    final scoreLabel = (m.group(7) ?? '❤').trim();
+    final cs = Theme.of(context).colorScheme;
+
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: cs.surface,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: cs.outlineVariant.withOpacity(0.2)),
+      ),
+      child: Row(
+        children: [
+          if (icon.isNotEmpty) ...[
+            Container(
+              width: 38,
+              height: 38,
+              decoration: BoxDecoration(
+                color: iconBg,
+                shape: BoxShape.circle,
+              ),
+              alignment: Alignment.center,
+              child: Text(icon, style: const TextStyle(fontSize: 18)),
+            ),
+            const SizedBox(width: 10),
+          ],
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (name.isNotEmpty)
+                  Text(
+                    name,
+                    style: (config.style ?? const TextStyle()).copyWith(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: cs.onSurface,
+                    ),
+                  ),
+                if (role.isNotEmpty)
+                  Text(
+                    role,
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: cs.onSurface.withOpacity(0.45),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+          if (score.isNotEmpty)
+            Text(
+              '$scoreLabel $score',
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: scoreColor,
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+/// <musiccard title="夜曲" artist="周杰伦" coverbg="#fce4ec" covericon="🎵"></musiccard>
+class HtmlMusicCardMd extends BlockMd {
+  @override
+  String get expString => r'<musiccard\s[^>]*>\s*</musiccard>';
+
+  @override
+  Widget build(BuildContext context, String text, GptMarkdownConfig config) {
+    final m = RegExp(
+      r'<musiccard(?:\s+title="([^"]*)")?(?:\s+artist="([^"]*)")?(?:\s+coverbg="([^"]*)")?(?:\s+covericon="([^"]*)")?\s*/?>',
+      caseSensitive: false,
+    ).firstMatch(text);
+    if (m == null) return const SizedBox.shrink();
+
+    final title = (m.group(1) ?? '').trim();
+    final artist = (m.group(2) ?? '').trim();
+    final coverBg = _parseCssColor(m.group(3) ?? '') ?? const Color(0xFFFCE4EC);
+    final coverIcon = (m.group(4) ?? '🎵').trim();
+    final cs = Theme.of(context).colorScheme;
+
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: cs.surface,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: cs.outlineVariant.withOpacity(0.2)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: coverBg,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            alignment: Alignment.center,
+            child: Text(coverIcon, style: const TextStyle(fontSize: 20)),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (title.isNotEmpty)
+                  Text(
+                    title,
+                    style: (config.style ?? const TextStyle()).copyWith(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: cs.onSurface,
+                    ),
+                  ),
+                if (artist.isNotEmpty)
+                  Text(
+                    artist,
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: cs.onSurface.withOpacity(0.45),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+          Icon(
+            Icons.music_note,
+            size: 18,
+            color: cs.onSurface.withOpacity(0.3),
+          ),
+        ],
       ),
     );
   }
