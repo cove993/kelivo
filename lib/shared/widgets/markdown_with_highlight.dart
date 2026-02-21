@@ -192,18 +192,25 @@ class MarkdownWithCodeHighlight extends StatelessWidget {
         final idx = imgs.indexOf(url);
         final initial = idx >= 0 ? idx : 0;
         final provider = _imageProviderFor(url);
-        final alt = imageAlts[url] ?? '';
-        double? fixedWidth;
-        final numWidth = double.tryParse(alt);
-        if (numWidth != null && numWidth > 0) {
-          fixedWidth = numWidth;
-        } else if (alt == 'sticker') {
-          fixedWidth = 80.0;
-        } else if (alt == 'small') {
-          fixedWidth = 120.0;
-        } else if (alt == 'medium') {
-          fixedWidth = 280.0;
-        }
+            final alt = imageAlts[url] ?? '';
+            double? fixedWidth;
+            final numWidth = double.tryParse(alt);
+            if (numWidth != null && numWidth > 0) {
+              fixedWidth = numWidth;
+            } else {
+              final pipeParts = alt.split('|');
+              final lastPart = pipeParts.last.trim();
+              final pipeNum = double.tryParse(lastPart);
+              if (pipeNum != null && pipeNum > 0) {
+                fixedWidth = pipeNum;
+              } else if (lastPart == 'sticker' || alt == 'sticker') {
+                fixedWidth = 80.0;
+              } else if (lastPart == 'small' || alt == 'small') {
+                fixedWidth = 120.0;
+              } else if (lastPart == 'medium' || alt == 'medium') {
+                fixedWidth = 280.0;
+              }
+            }
         return GestureDetector(
           onTap: () {
             Navigator.of(ctx).push(
