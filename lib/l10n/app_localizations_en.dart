@@ -1388,6 +1388,27 @@ class AppLocalizationsEn extends AppLocalizations {
   String get bottomToolsSheetClearContext => 'Clear Context';
 
   @override
+  String get compressContext => 'Compress Context';
+
+  @override
+  String get compressContextDesc => 'Summarize and start a new chat';
+
+  @override
+  String get clearContextDesc => 'Mark a context boundary';
+
+  @override
+  String get contextManagement => 'Context Management';
+
+  @override
+  String get compressingContext => 'Compressing context...';
+
+  @override
+  String get compressContextFailed => 'Failed to compress context';
+
+  @override
+  String get compressContextNoMessages => 'No messages to compress';
+
+  @override
   String get bottomToolsSheetLearningMode => 'Learning Mode';
 
   @override
@@ -2144,6 +2165,22 @@ class AppLocalizationsEn extends AppLocalizations {
     String userMessagesVar,
   ) {
     return 'Variables: previous summary: $previousSummaryVar, new messages: $userMessagesVar';
+  }
+
+  @override
+  String get defaultModelPageCompressModelTitle => 'Compress Model';
+
+  @override
+  String get defaultModelPageCompressModelSubtitle =>
+      'Used for compressing conversation context; prefer fast models';
+
+  @override
+  String get defaultModelPageCompressPromptHint =>
+      'Enter prompt template for context compression';
+
+  @override
+  String defaultModelPageCompressVars(String contentVar, String localeVar) {
+    return 'Variables: conversation: $contentVar, language: $localeVar';
   }
 
   @override
@@ -2972,6 +3009,14 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get displaySettingsPageShowModelNameTimestampSubtitle =>
       'Show model name and the timestamp below it in chat messages';
+
+  @override
+  String get displaySettingsPageShowProviderInChatMessageTitle =>
+      'Show Provider After Model Name';
+
+  @override
+  String get displaySettingsPageShowProviderInChatMessageSubtitle =>
+      'Display provider name after the model ID in chat messages (e.g. model | provider)';
 
   @override
   String get displaySettingsPageChatModelIconTitle => 'Chat Model Icon';
@@ -3909,6 +3954,40 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get logSettingsTitle => 'Log Settings';
+
+  @override
+  String get logSettingsSaveOutput => 'Save Response Output';
+
+  @override
+  String get logSettingsSaveOutputSubtitle =>
+      'Log response body content (may use significant storage)';
+
+  @override
+  String get logSettingsAutoDelete => 'Auto-delete';
+
+  @override
+  String get logSettingsAutoDeleteSubtitle =>
+      'Delete logs older than specified days';
+
+  @override
+  String get logSettingsAutoDeleteDisabled => 'Disabled';
+
+  @override
+  String logSettingsAutoDeleteDays(int count) {
+    return '$count days';
+  }
+
+  @override
+  String get logSettingsMaxSize => 'Max Log Size';
+
+  @override
+  String get logSettingsMaxSizeSubtitle => 'Oldest logs deleted when exceeded';
+
+  @override
+  String get logSettingsMaxSizeUnlimited => 'Unlimited';
+
+  @override
   String get assistantEditManageSummariesTitle => 'Manage Summaries';
 
   @override
@@ -4035,8 +4114,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get worldBookEntryKeywordsLabel => 'Keywords';
 
   @override
-  String get worldBookEntryKeywordsHint =>
-      'Type a keyword and tap +. You can paste multiple, separated by commas or new lines.';
+  String get worldBookEntryKeywordsHint => 'Type a keyword and tap + to add.';
 
   @override
   String get worldBookEntryKeywordInputHint => 'Type a keyword';

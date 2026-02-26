@@ -96,10 +96,15 @@ class DesktopDefaultModelPane extends StatelessWidget {
                     subtitle: l10n.defaultModelPageSummaryModelSubtitle,
                     modelProvider: settings.summaryModelProvider,
                     modelId: settings.summaryModelId,
-                    fallbackProvider: settings.titleModelProvider ?? settings.currentModelProvider,
-                    fallbackModelId: settings.titleModelId ?? settings.currentModelId,
+                    fallbackProvider:
+                        settings.titleModelProvider ??
+                        settings.currentModelProvider,
+                    fallbackModelId:
+                        settings.titleModelId ?? settings.currentModelId,
                     onReset: () async {
-                      await context.read<SettingsProvider>().resetSummaryModel();
+                      await context
+                          .read<SettingsProvider>()
+                          .resetSummaryModel();
                     },
                     onPick: () async {
                       final sel = await showModelSelector(context);
@@ -111,6 +116,38 @@ class DesktopDefaultModelPane extends StatelessWidget {
                       }
                     },
                     configAction: () => _showSummaryPromptDialog(context),
+                  ),
+
+                  const SizedBox(height: 16),
+                  _ModelCard(
+                    icon: lucide.Lucide.package2,
+                    title: l10n.defaultModelPageCompressModelTitle,
+                    subtitle: l10n.defaultModelPageCompressModelSubtitle,
+                    modelProvider: settings.compressModelProvider,
+                    modelId: settings.compressModelId,
+                    fallbackProvider:
+                        settings.summaryModelProvider ??
+                        settings.titleModelProvider ??
+                        settings.currentModelProvider,
+                    fallbackModelId:
+                        settings.summaryModelId ??
+                        settings.titleModelId ??
+                        settings.currentModelId,
+                    onReset: () async {
+                      await context
+                          .read<SettingsProvider>()
+                          .resetCompressModel();
+                    },
+                    onPick: () async {
+                      final sel = await showModelSelector(context);
+                      if (sel != null) {
+                        await context.read<SettingsProvider>().setCompressModel(
+                          sel.providerKey,
+                          sel.modelId,
+                        );
+                      }
+                    },
+                    configAction: () => _showCompressPromptDialog(context),
                   ),
 
                   const SizedBox(height: 16),
@@ -213,17 +250,10 @@ class DesktopDefaultModelPane extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(height: 10),
-                  ConstrainedBox(
-                    constraints: const BoxConstraints(minHeight: 160),
-                    child: TextField(
-                      controller: ctrl,
-                      maxLines: null,
-                      minLines: 8,
-                      style: const TextStyle(fontSize: 14),
-                      decoration: _deskInputDecoration(ctx).copyWith(
-                        hintText: l10n.defaultModelPageTitlePromptHint,
-                      ),
-                    ),
+                  _promptEditor(
+                    ctx,
+                    controller: ctrl,
+                    hintText: l10n.defaultModelPageTitlePromptHint,
                   ),
                   const SizedBox(height: 8),
                   Row(
@@ -310,17 +340,10 @@ class DesktopDefaultModelPane extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(height: 10),
-                  ConstrainedBox(
-                    constraints: const BoxConstraints(minHeight: 160),
-                    child: TextField(
-                      controller: ctrl,
-                      maxLines: null,
-                      minLines: 8,
-                      style: const TextStyle(fontSize: 14),
-                      decoration: _deskInputDecoration(ctx).copyWith(
-                        hintText: l10n.defaultModelPageTranslatePromptHint,
-                      ),
-                    ),
+                  _promptEditor(
+                    ctx,
+                    controller: ctrl,
+                    hintText: l10n.defaultModelPageTranslatePromptHint,
                   ),
                   const SizedBox(height: 8),
                   Row(
@@ -410,17 +433,10 @@ class DesktopDefaultModelPane extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(height: 10),
-                  ConstrainedBox(
-                    constraints: const BoxConstraints(minHeight: 160),
-                    child: TextField(
-                      controller: ctrl,
-                      maxLines: null,
-                      minLines: 8,
-                      style: const TextStyle(fontSize: 14),
-                      decoration: _deskInputDecoration(
-                        ctx,
-                      ).copyWith(hintText: l10n.defaultModelPageOcrPromptHint),
-                    ),
+                  _promptEditor(
+                    ctx,
+                    controller: ctrl,
+                    hintText: l10n.defaultModelPageOcrPromptHint,
                   ),
                   const SizedBox(height: 8),
                   Row(
@@ -499,17 +515,10 @@ class DesktopDefaultModelPane extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(height: 10),
-                  ConstrainedBox(
-                    constraints: const BoxConstraints(minHeight: 160),
-                    child: TextField(
-                      controller: ctrl,
-                      maxLines: null,
-                      minLines: 8,
-                      style: const TextStyle(fontSize: 14),
-                      decoration: _deskInputDecoration(ctx).copyWith(
-                        hintText: l10n.defaultModelPageSummaryPromptHint,
-                      ),
-                    ),
+                  _promptEditor(
+                    ctx,
+                    controller: ctrl,
+                    hintText: l10n.defaultModelPageSummaryPromptHint,
                   ),
                   const SizedBox(height: 8),
                   Row(
@@ -540,6 +549,99 @@ class DesktopDefaultModelPane extends StatelessWidget {
                     l10n.defaultModelPageSummaryVars(
                       '{previous_summary}',
                       '{user_messages}',
+                    ),
+                    style: TextStyle(
+                      color: cs.onSurface.withOpacity(0.6),
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _showCompressPromptDialog(BuildContext context) async {
+    final cs = Theme.of(context).colorScheme;
+    final l10n = AppLocalizations.of(context)!;
+    final sp = context.read<SettingsProvider>();
+    final ctrl = TextEditingController(text: sp.compressPrompt);
+    await showDialog<void>(
+      context: context,
+      barrierDismissible: true,
+      builder: (ctx) {
+        return Dialog(
+          backgroundColor: cs.surface,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          insetPadding: const EdgeInsets.symmetric(
+            horizontal: 24,
+            vertical: 24,
+          ),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 600),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          l10n.defaultModelPagePromptLabel,
+                          style: const TextStyle(
+                            fontSize: 13.5,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                      _SmallIconBtn(
+                        icon: lucide.Lucide.X,
+                        onTap: () => Navigator.of(ctx).maybePop(),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+                  _promptEditor(
+                    ctx,
+                    controller: ctrl,
+                    hintText: l10n.defaultModelPageCompressPromptHint,
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      _DeskIosButton(
+                        label: l10n.defaultModelPageResetDefault,
+                        filled: false,
+                        dense: true,
+                        onTap: () async {
+                          await sp.resetCompressPrompt();
+                          ctrl.text = sp.compressPrompt;
+                        },
+                      ),
+                      const Spacer(),
+                      _DeskIosButton(
+                        label: l10n.defaultModelPageSave,
+                        filled: true,
+                        dense: true,
+                        onTap: () async {
+                          await sp.setCompressPrompt(ctrl.text.trim());
+                          if (ctx.mounted) Navigator.of(ctx).maybePop();
+                        },
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    l10n.defaultModelPageCompressVars(
+                      '{content}',
+                      '{locale}',
                     ),
                     style: TextStyle(
                       color: cs.onSurface.withOpacity(0.6),
@@ -893,6 +995,29 @@ class _BrandCircle extends StatelessWidget {
       child: inner,
     );
   }
+}
+
+Widget _promptEditor(
+  BuildContext context, {
+  required TextEditingController controller,
+  required String hintText,
+}) {
+  final editorHeight = (MediaQuery.of(context).size.height * 0.45).clamp(
+    180.0,
+    420.0,
+  );
+  return SizedBox(
+    height: editorHeight.toDouble(),
+    child: TextField(
+      controller: controller,
+      maxLines: null,
+      minLines: null,
+      expands: true,
+      textAlignVertical: TextAlignVertical.top,
+      style: const TextStyle(fontSize: 14),
+      decoration: _deskInputDecoration(context).copyWith(hintText: hintText),
+    ),
+  );
 }
 
 InputDecoration _deskInputDecoration(BuildContext context) {

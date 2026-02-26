@@ -1352,6 +1352,27 @@ class AppLocalizationsZh extends AppLocalizations {
   String get bottomToolsSheetClearContext => '清空上下文';
 
   @override
+  String get compressContext => '压缩上下文';
+
+  @override
+  String get compressContextDesc => '总结对话并开始新聊天';
+
+  @override
+  String get clearContextDesc => '标记上下文分界点';
+
+  @override
+  String get contextManagement => '上下文管理';
+
+  @override
+  String get compressingContext => '正在压缩上下文...';
+
+  @override
+  String get compressContextFailed => '压缩上下文失败';
+
+  @override
+  String get compressContextNoMessages => '没有可压缩的消息';
+
+  @override
   String get bottomToolsSheetLearningMode => '学习模式';
 
   @override
@@ -2074,6 +2095,20 @@ class AppLocalizationsZh extends AppLocalizations {
     String userMessagesVar,
   ) {
     return '变量：旧摘要：$previousSummaryVar，新消息：$userMessagesVar';
+  }
+
+  @override
+  String get defaultModelPageCompressModelTitle => '压缩模型';
+
+  @override
+  String get defaultModelPageCompressModelSubtitle => '用于压缩对话上下文的模型，推荐使用快速模型';
+
+  @override
+  String get defaultModelPageCompressPromptHint => '输入用于上下文压缩的提示词模板';
+
+  @override
+  String defaultModelPageCompressVars(String contentVar, String localeVar) {
+    return '变量：对话内容：$contentVar，语言：$localeVar';
   }
 
   @override
@@ -2874,6 +2909,13 @@ class AppLocalizationsZh extends AppLocalizations {
   @override
   String get displaySettingsPageShowModelNameTimestampSubtitle =>
       '是否在聊天消息中显示模型名称和时间戳';
+
+  @override
+  String get displaySettingsPageShowProviderInChatMessageTitle => '模型名称后显示供应商';
+
+  @override
+  String get displaySettingsPageShowProviderInChatMessageSubtitle =>
+      '在聊天消息的模型名称后面显示供应商名称（如 模型 | 供应商）';
 
   @override
   String get displaySettingsPageChatModelIconTitle => '聊天列表模型图标';
@@ -3770,6 +3812,38 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
+  String get logSettingsTitle => '日志设置';
+
+  @override
+  String get logSettingsSaveOutput => '保存响应输出';
+
+  @override
+  String get logSettingsSaveOutputSubtitle => '记录响应体内容（可能占用较多存储空间）';
+
+  @override
+  String get logSettingsAutoDelete => '自动删除';
+
+  @override
+  String get logSettingsAutoDeleteSubtitle => '删除超过指定天数的日志';
+
+  @override
+  String get logSettingsAutoDeleteDisabled => '不启用';
+
+  @override
+  String logSettingsAutoDeleteDays(int count) {
+    return '$count 天';
+  }
+
+  @override
+  String get logSettingsMaxSize => '日志大小上限';
+
+  @override
+  String get logSettingsMaxSizeSubtitle => '超出后将删除最早的日志';
+
+  @override
+  String get logSettingsMaxSizeUnlimited => '不限制';
+
+  @override
   String get assistantEditManageSummariesTitle => '管理摘要';
 
   @override
@@ -3895,7 +3969,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get worldBookEntryKeywordsLabel => '关键词';
 
   @override
-  String get worldBookEntryKeywordsHint => '输入关键词后点 + 添加；也可粘贴多个，用逗号/换行分隔。';
+  String get worldBookEntryKeywordsHint => '输入关键词后点 + 添加。';
 
   @override
   String get worldBookEntryKeywordInputHint => '输入关键词';
@@ -5298,6 +5372,27 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
 
   @override
   String get bottomToolsSheetClearContext => '清空上下文';
+
+  @override
+  String get compressContext => '压缩上下文';
+
+  @override
+  String get compressContextDesc => '总结对话并开始新聊天';
+
+  @override
+  String get clearContextDesc => '标记上下文分界点';
+
+  @override
+  String get contextManagement => '上下文管理';
+
+  @override
+  String get compressingContext => '正在压缩上下文...';
+
+  @override
+  String get compressContextFailed => '压缩上下文失败';
+
+  @override
+  String get compressContextNoMessages => '没有可压缩的消息';
 
   @override
   String get bottomToolsSheetLearningMode => '学习模式';
@@ -6807,6 +6902,13 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
       '是否在聊天消息中显示模型名称和时间戳';
 
   @override
+  String get displaySettingsPageShowProviderInChatMessageTitle => '模型名称后显示供应商';
+
+  @override
+  String get displaySettingsPageShowProviderInChatMessageSubtitle =>
+      '在聊天消息的模型名称后面显示供应商名称（如 模型 | 供应商）';
+
+  @override
   String get displaySettingsPageChatModelIconTitle => '聊天列表模型图标';
 
   @override
@@ -7701,6 +7803,38 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
   }
 
   @override
+  String get logSettingsTitle => '日志设置';
+
+  @override
+  String get logSettingsSaveOutput => '保存响应输出';
+
+  @override
+  String get logSettingsSaveOutputSubtitle => '记录响应体内容（可能占用较多存储空间）';
+
+  @override
+  String get logSettingsAutoDelete => '自动删除';
+
+  @override
+  String get logSettingsAutoDeleteSubtitle => '删除超过指定天数的日志';
+
+  @override
+  String get logSettingsAutoDeleteDisabled => '不启用';
+
+  @override
+  String logSettingsAutoDeleteDays(int count) {
+    return '$count 天';
+  }
+
+  @override
+  String get logSettingsMaxSize => '日志大小上限';
+
+  @override
+  String get logSettingsMaxSizeSubtitle => '超出后将删除最早的日志';
+
+  @override
+  String get logSettingsMaxSizeUnlimited => '不限制';
+
+  @override
   String get fileUploadDuplicateTitle => '文件已存在';
 
   @override
@@ -7805,7 +7939,7 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
   String get worldBookEntryKeywordsLabel => '关键词';
 
   @override
-  String get worldBookEntryKeywordsHint => '输入关键词后点 + 添加；也可粘贴多个，用逗号/换行分隔。';
+  String get worldBookEntryKeywordsHint => '输入关键词后点 + 添加。';
 
   @override
   String get worldBookEntryKeywordInputHint => '输入关键词';
@@ -9209,6 +9343,27 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get bottomToolsSheetClearContext => '清空上下文';
 
   @override
+  String get compressContext => '壓縮上下文';
+
+  @override
+  String get compressContextDesc => '總結對話並開始新聊天';
+
+  @override
+  String get clearContextDesc => '標記上下文分界點';
+
+  @override
+  String get contextManagement => '上下文管理';
+
+  @override
+  String get compressingContext => '正在壓縮上下文...';
+
+  @override
+  String get compressContextFailed => '壓縮上下文失敗';
+
+  @override
+  String get compressContextNoMessages => '沒有可壓縮的訊息';
+
+  @override
   String get bottomToolsSheetLearningMode => '學習模式';
 
   @override
@@ -9931,6 +10086,20 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
     String userMessagesVar,
   ) {
     return '變數：舊摘要：$previousSummaryVar，新訊息：$userMessagesVar';
+  }
+
+  @override
+  String get defaultModelPageCompressModelTitle => '壓縮模型';
+
+  @override
+  String get defaultModelPageCompressModelSubtitle => '用於壓縮對話上下文的模型，建議使用快速模型';
+
+  @override
+  String get defaultModelPageCompressPromptHint => '輸入用於上下文壓縮的提示詞範本';
+
+  @override
+  String defaultModelPageCompressVars(String contentVar, String localeVar) {
+    return '變數：對話內容：$contentVar，語言：$localeVar';
   }
 
   @override
@@ -10727,6 +10896,13 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   @override
   String get displaySettingsPageShowModelNameTimestampSubtitle =>
       '是否在聊天訊息中顯示模型名稱及時間戳';
+
+  @override
+  String get displaySettingsPageShowProviderInChatMessageTitle => '模型名稱後顯示供應商';
+
+  @override
+  String get displaySettingsPageShowProviderInChatMessageSubtitle =>
+      '在聊天訊息的模型名稱後面顯示供應商名稱（如 模型 | 供應商）';
 
   @override
   String get displaySettingsPageChatModelIconTitle => '聊天列表模型圖示';
@@ -11625,6 +11801,38 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   }
 
   @override
+  String get logSettingsTitle => '日誌設定';
+
+  @override
+  String get logSettingsSaveOutput => '保存回應輸出';
+
+  @override
+  String get logSettingsSaveOutputSubtitle => '記錄回應本文內容（可能佔用較多儲存空間）';
+
+  @override
+  String get logSettingsAutoDelete => '自動刪除';
+
+  @override
+  String get logSettingsAutoDeleteSubtitle => '刪除超過指定天數的日誌';
+
+  @override
+  String get logSettingsAutoDeleteDisabled => '不啟用';
+
+  @override
+  String logSettingsAutoDeleteDays(int count) {
+    return '$count 天';
+  }
+
+  @override
+  String get logSettingsMaxSize => '日誌大小上限';
+
+  @override
+  String get logSettingsMaxSizeSubtitle => '超出後將刪除最早的日誌';
+
+  @override
+  String get logSettingsMaxSizeUnlimited => '不限制';
+
+  @override
   String get assistantEditManageSummariesTitle => '管理摘要';
 
   @override
@@ -11747,7 +11955,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get worldBookEntryKeywordsLabel => '關鍵詞';
 
   @override
-  String get worldBookEntryKeywordsHint => '輸入關鍵詞後點 + 新增；也可貼上多個，用逗號/換行分隔。';
+  String get worldBookEntryKeywordsHint => '輸入關鍵詞後點 + 新增。';
 
   @override
   String get worldBookEntryKeywordInputHint => '輸入關鍵詞';

@@ -58,6 +58,8 @@ class SettingsProvider extends ChangeNotifier {
   static const String _ocrPromptKey = 'ocr_prompt_v1';
   static const String _summaryModelKey = 'summary_model_v1';
   static const String _summaryPromptKey = 'summary_prompt_v1';
+  static const String _compressModelKey = 'compress_model_v1';
+  static const String _compressPromptKey = 'compress_prompt_v1';
   static const String _themePaletteKey = 'theme_palette_v1';
   static const String _useDynamicColorKey = 'use_dynamic_color_v1';
   static const String _thinkingBudgetKey = 'thinking_budget_v1';
@@ -70,6 +72,7 @@ class SettingsProvider extends ChangeNotifier {
   static const String _displayAutoCollapseThinkingKey = 'display_auto_collapse_thinking_v1';
   static const String _displayShowMessageNavKey = 'display_show_message_nav_v1';
   static const String _displayShowProviderInModelCapsuleKey = 'display_show_provider_in_model_capsule_v1';
+  static const String _displayShowProviderInChatMessageKey = 'display_show_provider_in_chat_message_v1';
   static const String _displayHapticsOnGenerateKey = 'display_haptics_on_generate_v1';
   static const String _displayHapticsOnDrawerKey = 'display_haptics_on_drawer_v1';
   static const String _displayHapticsGlobalEnabledKey = 'display_haptics_global_enabled_v1';
@@ -106,6 +109,10 @@ class SettingsProvider extends ChangeNotifier {
   static const String _requestLogEnabledKey = 'request_log_enabled_v1';
   // Flutter runtime logging (debug)
   static const String _flutterLogEnabledKey = 'flutter_log_enabled_v1';
+  // Log settings: save response output, auto-delete, max size
+  static const String _logSaveOutputKey = 'log_save_output_v1';
+  static const String _logAutoDeleteDaysKey = 'log_auto_delete_days_v1';
+  static const String _logMaxSizeMBKey = 'log_max_size_mb_v1';
   // Desktop topic panel placement + right sidebar open state
   static const String _desktopTopicPositionKey = 'desktop_topic_position_v1';
   static const String _desktopRightSidebarOpenKey = 'desktop_right_sidebar_open_v1';
@@ -409,6 +416,19 @@ class SettingsProvider extends ChangeNotifier {
     final summaryp = prefs.getString(_summaryPromptKey);
     _summaryPrompt =
         (summaryp == null || summaryp.trim().isEmpty) ? defaultSummaryPrompt : summaryp;
+    // load compress model
+    final compressSel = prefs.getString(_compressModelKey);
+    if (compressSel != null && compressSel.contains('::')) {
+      final parts = compressSel.split('::');
+      if (parts.length >= 2) {
+        _compressModelProvider = parts[0];
+        _compressModelId = parts.sublist(1).join('::');
+      }
+    }
+    // load compress prompt
+    final compressp = prefs.getString(_compressPromptKey);
+    _compressPrompt =
+        (compressp == null || compressp.trim().isEmpty) ? defaultCompressPrompt : compressp;
     // learning mode
     _learningModeEnabled = prefs.getBool(_learningModeEnabledKey) ?? false;
     final lmp = prefs.getString(_learningModePromptKey);
@@ -426,6 +446,7 @@ class SettingsProvider extends ChangeNotifier {
     _autoCollapseThinking = prefs.getBool(_displayAutoCollapseThinkingKey) ?? true;
     _showMessageNavButtons = prefs.getBool(_displayShowMessageNavKey) ?? true;
     _showProviderInModelCapsule = prefs.getBool(_displayShowProviderInModelCapsuleKey) ?? true;
+    _showProviderInChatMessage = prefs.getBool(_displayShowProviderInChatMessageKey) ?? false;
     _hapticsOnGenerate = prefs.getBool(_displayHapticsOnGenerateKey) ?? false;
     _hapticsOnDrawer = prefs.getBool(_displayHapticsOnDrawerKey) ?? true;
     _hapticsGlobalEnabled = prefs.getBool(_displayHapticsGlobalEnabledKey) ?? true;
@@ -442,6 +463,15 @@ class SettingsProvider extends ChangeNotifier {
     await RequestLogger.setEnabled(_requestLogEnabled);
     _flutterLogEnabled = prefs.getBool(_flutterLogEnabledKey) ?? false;
     await FlutterLogger.setEnabled(_flutterLogEnabled);
+    _logSaveOutput = prefs.getBool(_logSaveOutputKey) ?? true;
+    RequestLogger.saveOutput = _logSaveOutput;
+    _logAutoDeleteDays = prefs.getInt(_logAutoDeleteDaysKey) ?? 0;
+    _logMaxSizeMB = prefs.getInt(_logMaxSizeMBKey) ?? 0;
+    // Run log cleanup based on current settings
+    RequestLogger.cleanupLogs(
+      autoDeleteDays: _logAutoDeleteDays,
+      maxSizeMB: _logMaxSizeMB,
+    );
     _newChatOnLaunch = prefs.getBool(_displayNewChatOnLaunchKey) ?? true;
     _newChatOnAssistantSwitch = prefs.getBool(_displayNewChatOnAssistantSwitchKey) ?? false;
     _newChatAfterDelete = prefs.getBool(_displayNewChatAfterDeleteKey) ?? false;
@@ -1571,6 +1601,12 @@ class SettingsProvider extends ChangeNotifier {
       await prefs.remove(_summaryModelKey);
       changed = true;
     }
+    if (_compressModelProvider == providerKey) {
+      _compressModelProvider = null;
+      _compressModelId = null;
+      await prefs.remove(_compressModelKey);
+      changed = true;
+    }
     if (changed) notifyListeners();
   }
 
@@ -1609,6 +1645,12 @@ class SettingsProvider extends ChangeNotifier {
       _summaryModelProvider = null;
       _summaryModelId = null;
       await prefs.remove(_summaryModelKey);
+      changed = true;
+    }
+    if (_compressModelProvider == providerKey && _compressModelId == modelId) {
+      _compressModelProvider = null;
+      _compressModelId = null;
+      await prefs.remove(_compressModelKey);
       changed = true;
     }
     // Also remove from pinned if applicable
@@ -1658,6 +1700,11 @@ class SettingsProvider extends ChangeNotifier {
       _summaryModelProvider = null;
       _summaryModelId = null;
       await prefs.remove(_summaryModelKey);
+    }
+    if (_compressModelProvider == key) {
+      _compressModelProvider = null;
+      _compressModelId = null;
+      await prefs.remove(_compressModelKey);
     }
 
     // Remove pinned models for this provider
@@ -1951,6 +1998,67 @@ Generate or update a brief summary of the user's questions and intentions.
   Future<void> resetSummaryPrompt() async =>
       setSummaryPrompt(defaultSummaryPrompt);
 
+  // Compress model and prompt
+  String? _compressModelProvider;
+  String? _compressModelId;
+  String? get compressModelProvider => _compressModelProvider;
+  String? get compressModelId => _compressModelId;
+  String? get compressModelKey =>
+      (_compressModelProvider != null && _compressModelId != null)
+          ? '${_compressModelProvider!}::${_compressModelId!}'
+          : null;
+
+  static const String defaultCompressPrompt =
+      '''Provide a detailed summary of the following conversation for continuing in a new session.
+
+The new session will not have access to the original conversation history, so preserve all context needed to continue seamlessly.
+
+Focus on:
+- Key topics discussed and why they matter
+- Important decisions made and their reasoning
+- Current work in progress and its state
+- Next steps or open questions to address
+- Any relevant technical details, code snippets, or configurations mentioned
+
+Requirements:
+1. Write in {locale} language, matching the original conversation language
+2. Be concise but complete — do not omit important context
+3. Output the summary directly without prefaces or meta-commentary
+4. Start with a clear indicator (e.g., "[Summary of previous conversation]" or equivalent)
+
+<conversation>
+{content}
+</conversation>''';
+
+  String _compressPrompt = defaultCompressPrompt;
+  String get compressPrompt => _compressPrompt;
+
+  Future<void> setCompressModel(String providerKey, String modelId) async {
+    _compressModelProvider = providerKey;
+    _compressModelId = modelId;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_compressModelKey, '$providerKey::$modelId');
+  }
+
+  Future<void> resetCompressModel() async {
+    _compressModelProvider = null;
+    _compressModelId = null;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_compressModelKey);
+  }
+
+  Future<void> setCompressPrompt(String prompt) async {
+    _compressPrompt = prompt.trim().isEmpty ? defaultCompressPrompt : prompt;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_compressPromptKey, _compressPrompt);
+  }
+
+  Future<void> resetCompressPrompt() async =>
+      setCompressPrompt(defaultCompressPrompt);
+
   // Learning Mode
   bool _learningModeEnabled = false;
   bool get learningModeEnabled => _learningModeEnabled;
@@ -2118,6 +2226,17 @@ DO NOT GIVE ANSWERS OR DO HOMEWORK FOR THE USER. If the user asks a math or logi
     notifyListeners();
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(_displayShowProviderInModelCapsuleKey, v);
+  }
+
+  // Display: show provider name after model ID in chat messages
+  bool _showProviderInChatMessage = false;
+  bool get showProviderInChatMessage => _showProviderInChatMessage;
+  Future<void> setShowProviderInChatMessage(bool v) async {
+    if (_showProviderInChatMessage == v) return;
+    _showProviderInChatMessage = v;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_displayShowProviderInChatMessageKey, v);
   }
 
   // Display: create a new chat on app launch
@@ -2486,6 +2605,42 @@ DO NOT GIVE ANSWERS OR DO HOMEWORK FOR THE USER. If the user asks a math or logi
     await FlutterLogger.setEnabled(v);
   }
 
+  // Log settings: save output
+  bool _logSaveOutput = true;
+  bool get logSaveOutput => _logSaveOutput;
+  Future<void> setLogSaveOutput(bool v) async {
+    if (_logSaveOutput == v) return;
+    _logSaveOutput = v;
+    RequestLogger.saveOutput = v;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_logSaveOutputKey, v);
+  }
+
+  // Log settings: auto-delete (days)
+  int _logAutoDeleteDays = 0;
+  int get logAutoDeleteDays => _logAutoDeleteDays;
+  Future<void> setLogAutoDeleteDays(int v) async {
+    if (_logAutoDeleteDays == v) return;
+    _logAutoDeleteDays = v;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt(_logAutoDeleteDaysKey, v);
+    RequestLogger.cleanupLogs(autoDeleteDays: v, maxSizeMB: _logMaxSizeMB);
+  }
+
+  // Log settings: max log size (MB)
+  int _logMaxSizeMB = 0;
+  int get logMaxSizeMB => _logMaxSizeMB;
+  Future<void> setLogMaxSizeMB(int v) async {
+    if (_logMaxSizeMB == v) return;
+    _logMaxSizeMB = v;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt(_logMaxSizeMBKey, v);
+    RequestLogger.cleanupLogs(autoDeleteDays: _logAutoDeleteDays, maxSizeMB: v);
+  }
+
   // Search service settings
   Future<void> setSearchServices(List<SearchServiceOptions> services) async {
     _searchServices = List.from(services);
@@ -2586,6 +2741,7 @@ DO NOT GIVE ANSWERS OR DO HOMEWORK FOR THE USER. If the user asks a math or logi
     copy._autoCollapseThinking = _autoCollapseThinking;
     copy._showMessageNavButtons = _showMessageNavButtons;
     copy._showProviderInModelCapsule = _showProviderInModelCapsule;
+    copy._showProviderInChatMessage = _showProviderInChatMessage;
     copy._hapticsOnGenerate = _hapticsOnGenerate;
     copy._hapticsOnDrawer = _hapticsOnDrawer;
     copy._hapticsGlobalEnabled = _hapticsGlobalEnabled;
@@ -2598,6 +2754,9 @@ DO NOT GIVE ANSWERS OR DO HOMEWORK FOR THE USER. If the user asks a math or logi
     copy._keepAssistantListExpandedOnSidebarClose = _keepAssistantListExpandedOnSidebarClose;
     copy._requestLogEnabled = _requestLogEnabled;
     copy._flutterLogEnabled = _flutterLogEnabled;
+    copy._logSaveOutput = _logSaveOutput;
+    copy._logAutoDeleteDays = _logAutoDeleteDays;
+    copy._logMaxSizeMB = _logMaxSizeMB;
     copy._newChatOnLaunch = _newChatOnLaunch;
     copy._newChatOnAssistantSwitch = _newChatOnAssistantSwitch;
     copy._newChatAfterDelete = _newChatAfterDelete;

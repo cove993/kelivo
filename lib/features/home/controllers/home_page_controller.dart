@@ -361,13 +361,6 @@ class HomePageController extends ChangeNotifier {
   }
 
   void _setupKeyboardListeners() {
-    _inputFocus.addListener(() {
-      if (_inputFocus.hasFocus && !isDesktopPlatform) {
-        Future.delayed(const Duration(milliseconds: 300), () {
-          _scrollCtrl.scrollToBottom();
-        });
-      }
-    });
   }
 
   void _setupDesktopFeatures() {
@@ -543,6 +536,19 @@ class HomePageController extends ChangeNotifier {
   Future<void> clearContext() async {
     await _viewModel.clearContext();
     notifyListeners();
+  }
+
+  /// Compress context: summarize via LLM, create new conversation.
+  /// Returns null on success, or an error string on failure.
+  Future<String?> compressContext() async {
+    final result = await _viewModel.compressContext();
+    if (result == null) {
+      // Success - switched to new conversation
+      _translations.clear();
+      notifyListeners();
+      _scrollToBottomSoon(animate: false);
+    }
+    return result;
   }
 
   // ============================================================================

@@ -574,6 +574,13 @@
   "bottomToolsSheetPhotos": "Photos",
   "bottomToolsSheetUpload": "Upload",
   "bottomToolsSheetClearContext": "Clear Context",
+  "compressContext": "Compress Context",
+  "compressContextDesc": "Summarize and start a new chat",
+  "clearContextDesc": "Mark a context boundary",
+  "contextManagement": "Context Management",
+  "compressingContext": "Compressing context...",
+  "compressContextFailed": "Failed to compress context",
+  "compressContextNoMessages": "No messages to compress",
   "bottomToolsSheetLearningMode": "Learning Mode",
   "bottomToolsSheetLearningModeDescription": "Help you learn step by step",
   "bottomToolsSheetConfigurePrompt": "Configure prompt",
@@ -961,6 +968,20 @@
       }
     }
   },
+  "defaultModelPageCompressModelTitle": "Compress Model",
+  "defaultModelPageCompressModelSubtitle": "Used for compressing conversation context; prefer fast models",
+  "defaultModelPageCompressPromptHint": "Enter prompt template for context compression",
+  "defaultModelPageCompressVars": "Variables: conversation: {contentVar}, language: {localeVar}",
+  "@defaultModelPageCompressVars": {
+    "placeholders": {
+      "contentVar": {
+        "type": "String"
+      },
+      "localeVar": {
+        "type": "String"
+      }
+    }
+  },
   "defaultModelPageTranslateVars": "Variables: source text: {sourceVar}, target language: {targetVar}",
   "@defaultModelPageTranslateVars": {
     "placeholders": {
@@ -1252,6 +1273,8 @@
   "displaySettingsPageShowUserMessageActionsSubtitle": "Display copy, resend, and more buttons below your messages",
   "displaySettingsPageShowModelNameTimestampTitle": "Show Model Name & Timestamp",
   "displaySettingsPageShowModelNameTimestampSubtitle": "Show model name and the timestamp below it in chat messages",
+  "displaySettingsPageShowProviderInChatMessageTitle": "Show Provider After Model Name",
+  "displaySettingsPageShowProviderInChatMessageSubtitle": "Display provider name after the model ID in chat messages (e.g. model | provider)",
   "displaySettingsPageChatModelIconTitle": "Chat Model Icon",
   "displaySettingsPageChatModelIconSubtitle": "Show model icon in chat messages",
   "displaySettingsPageShowTokenStatsTitle": "Show Token & Context Stats",
@@ -1606,6 +1629,23 @@
       }
     }
   },
+  "logSettingsTitle": "Log Settings",
+  "logSettingsSaveOutput": "Save Response Output",
+  "logSettingsSaveOutputSubtitle": "Log response body content (may use significant storage)",
+  "logSettingsAutoDelete": "Auto-delete",
+  "logSettingsAutoDeleteSubtitle": "Delete logs older than specified days",
+  "logSettingsAutoDeleteDisabled": "Disabled",
+  "logSettingsAutoDeleteDays": "{count} days",
+  "@logSettingsAutoDeleteDays": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "logSettingsMaxSize": "Max Log Size",
+  "logSettingsMaxSizeSubtitle": "Oldest logs deleted when exceeded",
+  "logSettingsMaxSizeUnlimited": "Unlimited",
   "assistantEditManageSummariesTitle": "Manage Summaries",
   "assistantEditSummaryEmpty": "No summaries yet",
   "assistantEditSummaryDialogTitle": "Edit Summary",
@@ -1673,7 +1713,7 @@
   "worldBookEntryEnabledLabel": "Entry enabled",
   "worldBookEntryPriorityLabel": "Priority",
   "worldBookEntryKeywordsLabel": "Keywords",
-  "worldBookEntryKeywordsHint": "Type a keyword and tap +. You can paste multiple, separated by commas or new lines.",
+  "worldBookEntryKeywordsHint": "Type a keyword and tap + to add.",
   "worldBookEntryKeywordInputHint": "Type a keyword",
   "worldBookEntryKeywordAddTooltip": "Add keyword",
   "worldBookEntryUseRegexLabel": "Use regex",

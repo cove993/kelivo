@@ -2699,6 +2699,48 @@ abstract class AppLocalizations {
   /// **'Clear Context'**
   String get bottomToolsSheetClearContext;
 
+  /// No description provided for @compressContext.
+  ///
+  /// In en, this message translates to:
+  /// **'Compress Context'**
+  String get compressContext;
+
+  /// No description provided for @compressContextDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Summarize and start a new chat'**
+  String get compressContextDesc;
+
+  /// No description provided for @clearContextDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Mark a context boundary'**
+  String get clearContextDesc;
+
+  /// No description provided for @contextManagement.
+  ///
+  /// In en, this message translates to:
+  /// **'Context Management'**
+  String get contextManagement;
+
+  /// No description provided for @compressingContext.
+  ///
+  /// In en, this message translates to:
+  /// **'Compressing context...'**
+  String get compressingContext;
+
+  /// No description provided for @compressContextFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to compress context'**
+  String get compressContextFailed;
+
+  /// No description provided for @compressContextNoMessages.
+  ///
+  /// In en, this message translates to:
+  /// **'No messages to compress'**
+  String get compressContextNoMessages;
+
   /// No description provided for @bottomToolsSheetLearningMode.
   ///
   /// In en, this message translates to:
@@ -4051,6 +4093,30 @@ abstract class AppLocalizations {
     String previousSummaryVar,
     String userMessagesVar,
   );
+
+  /// No description provided for @defaultModelPageCompressModelTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Compress Model'**
+  String get defaultModelPageCompressModelTitle;
+
+  /// No description provided for @defaultModelPageCompressModelSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Used for compressing conversation context; prefer fast models'**
+  String get defaultModelPageCompressModelSubtitle;
+
+  /// No description provided for @defaultModelPageCompressPromptHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter prompt template for context compression'**
+  String get defaultModelPageCompressPromptHint;
+
+  /// No description provided for @defaultModelPageCompressVars.
+  ///
+  /// In en, this message translates to:
+  /// **'Variables: conversation: {contentVar}, language: {localeVar}'**
+  String defaultModelPageCompressVars(String contentVar, String localeVar);
 
   /// No description provided for @defaultModelPageTranslateVars.
   ///
@@ -5611,6 +5677,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Show model name and the timestamp below it in chat messages'**
   String get displaySettingsPageShowModelNameTimestampSubtitle;
+
+  /// No description provided for @displaySettingsPageShowProviderInChatMessageTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Show Provider After Model Name'**
+  String get displaySettingsPageShowProviderInChatMessageTitle;
+
+  /// No description provided for @displaySettingsPageShowProviderInChatMessageSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Display provider name after the model ID in chat messages (e.g. model | provider)'**
+  String get displaySettingsPageShowProviderInChatMessageSubtitle;
 
   /// No description provided for @displaySettingsPageChatModelIconTitle.
   ///
@@ -7328,6 +7406,66 @@ abstract class AppLocalizations {
   /// **'+{count} more'**
   String logViewerMoreCount(int count);
 
+  /// No description provided for @logSettingsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Log Settings'**
+  String get logSettingsTitle;
+
+  /// No description provided for @logSettingsSaveOutput.
+  ///
+  /// In en, this message translates to:
+  /// **'Save Response Output'**
+  String get logSettingsSaveOutput;
+
+  /// No description provided for @logSettingsSaveOutputSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Log response body content (may use significant storage)'**
+  String get logSettingsSaveOutputSubtitle;
+
+  /// No description provided for @logSettingsAutoDelete.
+  ///
+  /// In en, this message translates to:
+  /// **'Auto-delete'**
+  String get logSettingsAutoDelete;
+
+  /// No description provided for @logSettingsAutoDeleteSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete logs older than specified days'**
+  String get logSettingsAutoDeleteSubtitle;
+
+  /// No description provided for @logSettingsAutoDeleteDisabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Disabled'**
+  String get logSettingsAutoDeleteDisabled;
+
+  /// No description provided for @logSettingsAutoDeleteDays.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} days'**
+  String logSettingsAutoDeleteDays(int count);
+
+  /// No description provided for @logSettingsMaxSize.
+  ///
+  /// In en, this message translates to:
+  /// **'Max Log Size'**
+  String get logSettingsMaxSize;
+
+  /// No description provided for @logSettingsMaxSizeSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Oldest logs deleted when exceeded'**
+  String get logSettingsMaxSizeSubtitle;
+
+  /// No description provided for @logSettingsMaxSizeUnlimited.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlimited'**
+  String get logSettingsMaxSizeUnlimited;
+
   /// No description provided for @assistantEditManageSummariesTitle.
   ///
   /// In en, this message translates to:
@@ -7565,7 +7703,7 @@ abstract class AppLocalizations {
   /// No description provided for @worldBookEntryKeywordsHint.
   ///
   /// In en, this message translates to:
-  /// **'Type a keyword and tap +. You can paste multiple, separated by commas or new lines.'**
+  /// **'Type a keyword and tap + to add.'**
   String get worldBookEntryKeywordsHint;
 
   /// No description provided for @worldBookEntryKeywordInputHint.
