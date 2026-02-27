@@ -904,7 +904,21 @@ class _ChatMessageWidgetState extends State<ChatMessageWidget> {
                     padding: EdgeInsets.all(4),
                     icon: Lucide.RefreshCw,
                     color: cs.onSurface.withOpacity(0.9),
-                    onTap: widget.onResend,
+                    onTap: widget.onResend == null ? null : () async {
+                      final ok = await showDialog<bool>(
+                        context: context,
+                        builder: (dctx) => AlertDialog(
+                          backgroundColor: Theme.of(dctx).colorScheme.surface,
+                          title: Text(l10n.chatMessageWidgetRegenerateConfirmTitle),
+                          content: Text(l10n.chatMessageWidgetRegenerateConfirmContent),
+                          actions: [
+                            TextButton(onPressed: () => Navigator.of(dctx).pop(false), child: Text(l10n.chatMessageWidgetRegenerateConfirmCancel)),
+                            TextButton(onPressed: () => Navigator.of(dctx).pop(true), child: Text(l10n.chatMessageWidgetRegenerateConfirmOk)),
+                          ],
+                        ),
+                      );
+                      if (ok == true) widget.onResend!();
+                    },
                   ),
                 ),
               ),
@@ -1348,16 +1362,25 @@ class _ChatMessageWidgetState extends State<ChatMessageWidget> {
                       defaultTargetPlatform == TargetPlatform.windows ||
                       defaultTargetPlatform == TargetPlatform.linux;
                   final double baseAssistant = isDesktop ? 14.0 : 15.7;
+                  Widget assistantContent;
+                  if (settings.enableAssistantMarkdown) {
+                    assistantContent = MarkdownWithCodeHighlight(
+                      text: visualContent,
+                      onCitationTap: (id) => _handleCitationTap(id),
+                      baseStyle: TextStyle(fontSize: baseAssistant, height: 1.5),
+                    );
+                  } else {
+                    assistantContent = Text(
+                      visualContent,
+                      style: TextStyle(fontSize: baseAssistant, height: 1.5, color: cs.onSurface),
+                    );
+                  }
                   return RepaintBoundary(
                     child: SelectionArea(
                       key: ValueKey('assistant_${widget.message.id}'),
                       child: DefaultTextStyle.merge(
                         style: TextStyle(fontSize: baseAssistant, height: 1.5),
-                        child: MarkdownWithCodeHighlight(
-                          text: visualContent,
-                          onCitationTap: (id) => _handleCitationTap(id),
-                          baseStyle: TextStyle(fontSize: baseAssistant, height: 1.5),
-                        ),
+                        child: assistantContent,
                       ),
                     ),
                   );
@@ -1456,13 +1479,22 @@ class _ChatMessageWidgetState extends State<ChatMessageWidget> {
                                           defaultTargetPlatform == TargetPlatform.windows ||
                                           defaultTargetPlatform == TargetPlatform.linux;
                                       final double baseTranslation = isDesktop ? 14.0 : 15.5;
-                                      return DefaultTextStyle.merge(
-                                        style: TextStyle(fontSize: baseTranslation, height: 1.4),
-                                        child: MarkdownWithCodeHighlight(
+                                      Widget translationContent;
+                                      if (settings.enableAssistantMarkdown) {
+                                        translationContent = MarkdownWithCodeHighlight(
                                           text: translationText!,
                                           onCitationTap: (id) => _handleCitationTap(id),
                                           baseStyle: TextStyle(fontSize: baseTranslation, height: 1.4),
-                                        ),
+                                        );
+                                      } else {
+                                        translationContent = Text(
+                                          translationText!,
+                                          style: TextStyle(fontSize: baseTranslation, height: 1.4, color: cs.onSurface),
+                                        );
+                                      }
+                                      return DefaultTextStyle.merge(
+                                        style: TextStyle(fontSize: baseTranslation, height: 1.4),
+                                        child: translationContent,
                                       );
                                     }),
                                   ),
@@ -1533,7 +1565,21 @@ class _ChatMessageWidgetState extends State<ChatMessageWidget> {
                               padding: EdgeInsets.all(4),
                               icon: Lucide.RefreshCw,
                               color: cs.onSurface.withOpacity(0.9),
-                              onTap: widget.onRegenerate,
+                              onTap: widget.onRegenerate == null ? null : () async {
+                                final ok = await showDialog<bool>(
+                                  context: context,
+                                  builder: (dctx) => AlertDialog(
+                                    backgroundColor: Theme.of(dctx).colorScheme.surface,
+                                    title: Text(l10n.chatMessageWidgetRegenerateConfirmTitle),
+                                    content: Text(l10n.chatMessageWidgetRegenerateConfirmContent),
+                                    actions: [
+                                      TextButton(onPressed: () => Navigator.of(dctx).pop(false), child: Text(l10n.chatMessageWidgetRegenerateConfirmCancel)),
+                                      TextButton(onPressed: () => Navigator.of(dctx).pop(true), child: Text(l10n.chatMessageWidgetRegenerateConfirmOk)),
+                                    ],
+                                  ),
+                                );
+                                if (ok == true) widget.onRegenerate!();
+                              },
                             ),
                           ),
                         ),

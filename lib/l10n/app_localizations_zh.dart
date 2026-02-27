@@ -1517,6 +1517,19 @@ class AppLocalizationsZh extends AppLocalizations {
   String get chatMessageWidgetRegenerateTooltip => '重新生成';
 
   @override
+  String get chatMessageWidgetRegenerateConfirmTitle => '确认重新生成';
+
+  @override
+  String get chatMessageWidgetRegenerateConfirmContent =>
+      '重新生成将会覆盖此消息之后的所有消息，且无法撤销。确定要继续吗？';
+
+  @override
+  String get chatMessageWidgetRegenerateConfirmCancel => '取消';
+
+  @override
+  String get chatMessageWidgetRegenerateConfirmOk => '重新生成';
+
+  @override
   String get chatMessageWidgetStopTooltip => '停止';
 
   @override
@@ -1633,6 +1646,10 @@ class AppLocalizationsZh extends AppLocalizations {
   @override
   String get displaySettingsPageEnableReasoningMarkdownTitle =>
       '思维链 Markdown 渲染';
+
+  @override
+  String get displaySettingsPageEnableAssistantMarkdownTitle =>
+      '助手消息 Markdown 渲染';
 
   @override
   String get displaySettingsPageMobileCodeBlockWrapTitle => '移动端代码块自动换行';
@@ -5539,6 +5556,19 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
   String get chatMessageWidgetRegenerateTooltip => '重新生成';
 
   @override
+  String get chatMessageWidgetRegenerateConfirmTitle => '确认重新生成';
+
+  @override
+  String get chatMessageWidgetRegenerateConfirmContent =>
+      '重新生成将会覆盖此消息之后的所有消息，且无法撤销。确定要继续吗？';
+
+  @override
+  String get chatMessageWidgetRegenerateConfirmCancel => '取消';
+
+  @override
+  String get chatMessageWidgetRegenerateConfirmOk => '重新生成';
+
+  @override
   String get chatMessageWidgetStopTooltip => '停止';
 
   @override
@@ -5655,6 +5685,10 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
   @override
   String get displaySettingsPageEnableReasoningMarkdownTitle =>
       '思维链 Markdown 渲染';
+
+  @override
+  String get displaySettingsPageEnableAssistantMarkdownTitle =>
+      '助手消息 Markdown 渲染';
 
   @override
   String get displaySettingsPageMobileCodeBlockWrapTitle => '移动端代码块自动换行';
@@ -9508,6 +9542,19 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get chatMessageWidgetRegenerateTooltip => '重新生成';
 
   @override
+  String get chatMessageWidgetRegenerateConfirmTitle => '確認重新生成';
+
+  @override
+  String get chatMessageWidgetRegenerateConfirmContent =>
+      '重新生成將會覆蓋此訊息之後的所有訊息，且無法撤銷。確定要繼續嗎？';
+
+  @override
+  String get chatMessageWidgetRegenerateConfirmCancel => '取消';
+
+  @override
+  String get chatMessageWidgetRegenerateConfirmOk => '重新生成';
+
+  @override
   String get chatMessageWidgetStopTooltip => '停止';
 
   @override
@@ -9624,6 +9671,10 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   @override
   String get displaySettingsPageEnableReasoningMarkdownTitle =>
       '思维鏈 Markdown 渲染';
+
+  @override
+  String get displaySettingsPageEnableAssistantMarkdownTitle =>
+      '助手訊息 Markdown 渲染';
 
   @override
   String get displaySettingsPageMobileCodeBlockWrapTitle => '行動端程式碼區塊自動換行';

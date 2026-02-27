@@ -1560,6 +1560,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get chatMessageWidgetRegenerateTooltip => 'Regenerate';
 
   @override
+  String get chatMessageWidgetRegenerateConfirmTitle => 'Confirm Regenerate';
+
+  @override
+  String get chatMessageWidgetRegenerateConfirmContent =>
+      'Regenerating will overwrite all messages after this one and cannot be undone. Are you sure?';
+
+  @override
+  String get chatMessageWidgetRegenerateConfirmCancel => 'Cancel';
+
+  @override
+  String get chatMessageWidgetRegenerateConfirmOk => 'Regenerate';
+
+  @override
   String get chatMessageWidgetStopTooltip => 'Stop';
 
   @override
@@ -1680,6 +1693,10 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get displaySettingsPageEnableReasoningMarkdownTitle =>
       'Render reasoning (thinking) with Markdown';
+
+  @override
+  String get displaySettingsPageEnableAssistantMarkdownTitle =>
+      'Render assistant messages with Markdown';
 
   @override
   String get displaySettingsPageMobileCodeBlockWrapTitle =>
