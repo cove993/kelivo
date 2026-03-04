@@ -8,6 +8,7 @@ import '../../icons/lucide_adapter.dart' as lucide;
 import '../../l10n/app_localizations.dart';
 import '../../core/models/backup.dart';
 import '../../core/providers/backup_provider.dart';
+import '../../core/providers/s3_backup_provider.dart';
 import '../../core/providers/settings_provider.dart';
 import '../../core/services/chat/chat_service.dart';
 import '../../core/services/backup/cherry_importer.dart';
@@ -32,19 +33,38 @@ class _DesktopBackupPaneState extends State<DesktopBackupPane> {
   late TextEditingController _username;
   late TextEditingController _password;
   late TextEditingController _path;
+  late TextEditingController _s3Endpoint;
+  late TextEditingController _s3Region;
+  late TextEditingController _s3Bucket;
+  late TextEditingController _s3AccessKeyId;
+  late TextEditingController _s3SecretAccessKey;
+  late TextEditingController _s3SessionToken;
+  late TextEditingController _s3Prefix;
   bool _includeChats = true;
   bool _includeFiles = true;
+  bool _s3PathStyle = true;
 
   @override
   void initState() {
     super.initState();
-    final cfg = context.read<SettingsProvider>().webDavConfig;
+    final settings = context.read<SettingsProvider>();
+    final cfg = settings.webDavConfig;
     _url = TextEditingController(text: cfg.url);
     _username = TextEditingController(text: cfg.username);
     _password = TextEditingController(text: cfg.password);
     _path = TextEditingController(text: cfg.path);
     _includeChats = cfg.includeChats;
     _includeFiles = cfg.includeFiles;
+
+    final s3 = settings.s3Config;
+    _s3Endpoint = TextEditingController(text: s3.endpoint);
+    _s3Region = TextEditingController(text: s3.region);
+    _s3Bucket = TextEditingController(text: s3.bucket);
+    _s3AccessKeyId = TextEditingController(text: s3.accessKeyId);
+    _s3SecretAccessKey = TextEditingController(text: s3.secretAccessKey);
+    _s3SessionToken = TextEditingController(text: s3.sessionToken);
+    _s3Prefix = TextEditingController(text: s3.prefix);
+    _s3PathStyle = s3.pathStyle;
     // Prefetch remote list with saved config
     _reloadRemote();
   }
@@ -55,6 +75,13 @@ class _DesktopBackupPaneState extends State<DesktopBackupPane> {
     _username.dispose();
     _password.dispose();
     _path.dispose();
+    _s3Endpoint.dispose();
+    _s3Region.dispose();
+    _s3Bucket.dispose();
+    _s3AccessKeyId.dispose();
+    _s3SecretAccessKey.dispose();
+    _s3SessionToken.dispose();
+    _s3Prefix.dispose();
     super.dispose();
   }
 
@@ -100,6 +127,55 @@ class _DesktopBackupPaneState extends State<DesktopBackupPane> {
     context.read<BackupProvider>().updateConfig(cfg);
   }
 
+  S3Config _buildS3ConfigFromForm() {
+    return S3Config(
+      endpoint: _s3Endpoint.text.trim(),
+      region: _s3Region.text.trim().isEmpty ? 'us-east-1' : _s3Region.text.trim(),
+      bucket: _s3Bucket.text.trim(),
+      accessKeyId: _s3AccessKeyId.text.trim(),
+      secretAccessKey: _s3SecretAccessKey.text,
+      sessionToken: _s3SessionToken.text,
+      prefix: _s3Prefix.text.trim().isEmpty ? 'kelivo_backups' : _s3Prefix.text.trim(),
+      pathStyle: _s3PathStyle,
+      includeChats: _includeChats,
+      includeFiles: _includeFiles,
+    );
+  }
+
+  Future<void> _saveS3Config() async {
+    final cfg = _buildS3ConfigFromForm();
+    await context.read<SettingsProvider>().setS3Config(cfg);
+    context.read<S3BackupProvider>().updateConfig(cfg);
+  }
+
+  Future<void> _applyS3Partial({
+    String? endpoint,
+    String? region,
+    String? bucket,
+    String? accessKeyId,
+    String? secretAccessKey,
+    String? sessionToken,
+    String? prefix,
+    bool? pathStyle,
+    bool? includeChats,
+    bool? includeFiles,
+  }) async {
+    final cfg = S3Config(
+      endpoint: endpoint ?? _s3Endpoint.text.trim(),
+      region: region ?? (_s3Region.text.trim().isEmpty ? 'us-east-1' : _s3Region.text.trim()),
+      bucket: bucket ?? _s3Bucket.text.trim(),
+      accessKeyId: accessKeyId ?? _s3AccessKeyId.text.trim(),
+      secretAccessKey: secretAccessKey ?? _s3SecretAccessKey.text,
+      sessionToken: sessionToken ?? _s3SessionToken.text,
+      prefix: prefix ?? (_s3Prefix.text.trim().isEmpty ? 'kelivo_backups' : _s3Prefix.text.trim()),
+      pathStyle: pathStyle ?? _s3PathStyle,
+      includeChats: includeChats ?? _includeChats,
+      includeFiles: includeFiles ?? _includeFiles,
+    );
+    await context.read<SettingsProvider>().setS3Config(cfg);
+    context.read<S3BackupProvider>().updateConfig(cfg);
+  }
+
   Future<void> _chooseRestoreModeAndRun(Future<void> Function(RestoreMode) action) async {
     final l10n = AppLocalizations.of(context)!;
     final mode = await showDialog<RestoreMode>(
@@ -107,10 +183,22 @@ class _DesktopBackupPaneState extends State<DesktopBackupPane> {
       builder: (ctx) => _RestoreModeDialog(),
     );
     if (mode == null) return;
-    await action(mode);
+    try {
+      await action(mode);
+    } catch (e) {
+      if (!mounted) return;
+      showAppSnackBar(
+        context,
+        message: e.toString(),
+        type: NotificationType.error,
+      );
+      return;
+    }
+    if (!mounted) return;
     // Inform restart requirement
     await showDialog(
       context: context,
+      barrierDismissible: false,
       builder: (ctx) => AlertDialog(
         backgroundColor: Theme.of(ctx).colorScheme.surface,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -131,8 +219,9 @@ class _DesktopBackupPaneState extends State<DesktopBackupPane> {
     final cs = Theme.of(context).colorScheme;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final l10n = AppLocalizations.of(context)!;
-    final busy = context.watch<BackupProvider>().busy;
-    final message = context.watch<BackupProvider>().message;
+    final webdavVm = context.watch<BackupProvider>();
+    final s3Vm = context.watch<S3BackupProvider>();
+    final busy = webdavVm.busy || s3Vm.busy;
 
     return Container(
       alignment: Alignment.topCenter,
@@ -165,7 +254,53 @@ class _DesktopBackupPaneState extends State<DesktopBackupPane> {
               ),
               const SliverToBoxAdapter(child: SizedBox(height: 6)),
 
-              // WebDAV settings card with left label right input/switch, realtime save
+              // Backup management (applies to WebDAV and local import/export)
+              SliverToBoxAdapter(
+                child: _sectionCard(children: [
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 6),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            l10n.backupPageBackupManagement,
+                            style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: cs.onSurface.withOpacity(0.95)),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  _ItemRow(
+                    label: l10n.backupPageChatsLabel,
+                    vpad: 2,
+                    trailing: IosSwitch(
+                      value: _includeChats,
+                      onChanged: busy ? null : (v) async {
+                        setState(() => _includeChats = v);
+                        await _applyPartial(includeChats: v);
+                        await _applyS3Partial(includeChats: v);
+                      },
+                    ),
+                  ),
+                  _rowDivider(context),
+                  _ItemRow(
+                    label: l10n.backupPageFilesLabel,
+                    vpad: 2,
+                    trailing: IosSwitch(
+                      value: _includeFiles,
+                      onChanged: busy ? null : (v) async {
+                        setState(() => _includeFiles = v);
+                        await _applyPartial(includeFiles: v);
+                        await _applyS3Partial(includeFiles: v);
+                      },
+                    ),
+                  ),
+                ]),
+              ),
+
+              const SliverToBoxAdapter(child: SizedBox(height: 10)),
+
+              // WebDAV settings card with left label right input, realtime save
               SliverToBoxAdapter(
                 child: _sectionCard(children: [
                   Padding(
@@ -239,31 +374,7 @@ class _DesktopBackupPaneState extends State<DesktopBackupPane> {
                   ),
                   _rowDivider(context),
                   _ItemRow(
-                    label: l10n.backupPageChatsLabel,
-                    vpad: 2,
-                    trailing: IosSwitch(
-                      value: _includeChats,
-                      onChanged: busy ? null : (v) async {
-                        setState(() => _includeChats = v);
-                        await _applyPartial(includeChats: v);
-                      },
-                    ),
-                  ),
-                  _rowDivider(context),
-                  _ItemRow(
-                    label: l10n.backupPageFilesLabel,
-                    vpad: 2,
-                    trailing: IosSwitch(
-                      value: _includeFiles,
-                      onChanged: busy ? null : (v) async {
-                        setState(() => _includeFiles = v);
-                        await _applyPartial(includeFiles: v);
-                      },
-                    ),
-                  ),
-                  _rowDivider(context),
-                  _ItemRow(
-                    label: l10n.backupPageBackupManagement,
+                    label: l10n.backupPageWebDavBackup,
                     trailing: Wrap(spacing: 8, children: [
                       _DeskIosButton(
                         label: l10n.backupPageTestConnection,
@@ -288,7 +399,24 @@ class _DesktopBackupPaneState extends State<DesktopBackupPane> {
                         label: l10n.backupPageRestore,
                         filled: false,
                         dense: true,
-                        onTap: busy ? (){} : () => _showRemoteBackupsDialog(context),
+                        onTap: busy ? (){} : () async {
+                          await _saveConfig();
+                          if (!mounted) return;
+                          _showRemoteBackupsDialog(
+                            context,
+                            title: '${l10n.backupPageRemoteBackups} (WebDAV)',
+                            listRemote: () => context.read<BackupProvider>().listRemote(),
+                            restoreFromItem: (it, mode) async {
+                              final vm = context.read<BackupProvider>();
+                              await vm.restoreFromItem(it, mode: mode);
+                              final msg = vm.message;
+                              if (msg != null && msg != 'Restored') {
+                                throw Exception(msg);
+                              }
+                            },
+                            deleteAndReload: (it) => context.read<BackupProvider>().deleteAndReload(it),
+                          );
+                        },
                       ),
                       _DeskIosButton(
                         label: l10n.backupPageBackupNow,
@@ -299,6 +427,202 @@ class _DesktopBackupPaneState extends State<DesktopBackupPane> {
                           await context.read<BackupProvider>().backup();
                           if (!mounted) return;
                           final rawMessage = context.read<BackupProvider>().message;
+                          final message = rawMessage ?? l10n.backupPageBackupUploaded;
+                          showAppSnackBar(
+                            context,
+                            message: message,
+                            type: NotificationType.info,
+                          );
+                        },
+                      ),
+                    ]),
+                  ),
+                ]),
+              ),
+
+              const SliverToBoxAdapter(child: SizedBox(height: 10)),
+
+              // S3 settings card with left label right input, realtime save
+              SliverToBoxAdapter(
+                child: _sectionCard(children: [
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 6),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            l10n.backupPageS3ServerSettings,
+                            style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: cs.onSurface.withOpacity(0.95)),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  _ItemRow(
+                    label: l10n.backupPageS3Endpoint,
+                    trailing: SizedBox(
+                      width: 420,
+                      child: TextField(
+                        controller: _s3Endpoint,
+                        enabled: !busy,
+                        style: const TextStyle(fontSize: 14),
+                        decoration: _deskInputDecoration(context).copyWith(hintText: 'https://s3.amazonaws.com'),
+                        onChanged: (v) => _applyS3Partial(endpoint: v),
+                      ),
+                    ),
+                  ),
+                  _rowDivider(context),
+                  _ItemRow(
+                    label: l10n.backupPageS3Region,
+                    trailing: SizedBox(
+                      width: 420,
+                      child: TextField(
+                        controller: _s3Region,
+                        enabled: !busy,
+                        style: const TextStyle(fontSize: 14),
+                        decoration: _deskInputDecoration(context).copyWith(hintText: 'us-east-1 / auto'),
+                        onChanged: (v) => _applyS3Partial(region: v),
+                      ),
+                    ),
+                  ),
+                  _rowDivider(context),
+                  _ItemRow(
+                    label: l10n.backupPageS3Bucket,
+                    trailing: SizedBox(
+                      width: 420,
+                      child: TextField(
+                        controller: _s3Bucket,
+                        enabled: !busy,
+                        style: const TextStyle(fontSize: 14),
+                        decoration: _deskInputDecoration(context).copyWith(hintText: l10n.backupPageS3Bucket),
+                        onChanged: (v) => _applyS3Partial(bucket: v),
+                      ),
+                    ),
+                  ),
+                  _rowDivider(context),
+                  _ItemRow(
+                    label: l10n.backupPageS3AccessKeyId,
+                    trailing: SizedBox(
+                      width: 420,
+                      child: TextField(
+                        controller: _s3AccessKeyId,
+                        enabled: !busy,
+                        style: const TextStyle(fontSize: 14),
+                        decoration: _deskInputDecoration(context).copyWith(hintText: l10n.backupPageS3AccessKeyId),
+                        onChanged: (v) => _applyS3Partial(accessKeyId: v),
+                      ),
+                    ),
+                  ),
+                  _rowDivider(context),
+                  _ItemRow(
+                    label: l10n.backupPageS3SecretAccessKey,
+                    trailing: SizedBox(
+                      width: 420,
+                      child: TextField(
+                        controller: _s3SecretAccessKey,
+                        enabled: !busy,
+                        obscureText: true,
+                        style: const TextStyle(fontSize: 14),
+                        decoration: _deskInputDecoration(context).copyWith(hintText: '••••••••'),
+                        onChanged: (v) => _applyS3Partial(secretAccessKey: v),
+                      ),
+                    ),
+                  ),
+                  _rowDivider(context),
+                  _ItemRow(
+                    label: l10n.backupPageS3SessionToken,
+                    trailing: SizedBox(
+                      width: 420,
+                      child: TextField(
+                        controller: _s3SessionToken,
+                        enabled: !busy,
+                        obscureText: true,
+                        style: const TextStyle(fontSize: 14),
+                        decoration: _deskInputDecoration(context).copyWith(hintText: l10n.backupPageS3SessionToken),
+                        onChanged: (v) => _applyS3Partial(sessionToken: v),
+                      ),
+                    ),
+                  ),
+                  _rowDivider(context),
+                  _ItemRow(
+                    label: l10n.backupPageS3Prefix,
+                    trailing: SizedBox(
+                      width: 420,
+                      child: TextField(
+                        controller: _s3Prefix,
+                        enabled: !busy,
+                        style: const TextStyle(fontSize: 14),
+                        decoration: _deskInputDecoration(context).copyWith(hintText: 'kelivo_backups'),
+                        onChanged: (v) => _applyS3Partial(prefix: v),
+                      ),
+                    ),
+                  ),
+                  _rowDivider(context),
+                  _ItemRow(
+                    label: l10n.backupPageS3PathStyle,
+                    trailing: IosSwitch(
+                      value: _s3PathStyle,
+                      onChanged: busy ? null : (v) async {
+                        setState(() => _s3PathStyle = v);
+                        await _applyS3Partial(pathStyle: v);
+                      },
+                    ),
+                  ),
+                  _rowDivider(context),
+                  _ItemRow(
+                    label: l10n.backupPageS3Backup,
+                    trailing: Wrap(spacing: 8, children: [
+                      _DeskIosButton(
+                        label: l10n.backupPageTestConnection,
+                        filled: false,
+                        dense: true,
+                        onTap: busy ? (){} : () async {
+                          await _saveS3Config();
+                          await context.read<S3BackupProvider>().test();
+                          if (!mounted) return;
+                          final rawMessage = context.read<S3BackupProvider>().message;
+                          final message = rawMessage ?? l10n.backupPageTestDone;
+                          showAppSnackBar(
+                            context,
+                            message: message,
+                            type: rawMessage != null && rawMessage != 'OK'
+                                ? NotificationType.error
+                                : NotificationType.success,
+                          );
+                        },
+                      ),
+                      _DeskIosButton(
+                        label: l10n.backupPageRestore,
+                        filled: false,
+                        dense: true,
+                        onTap: busy ? (){} : () async {
+                          await _saveS3Config();
+                          if (!mounted) return;
+                          _showRemoteBackupsDialog(
+                            context,
+                            title: '${l10n.backupPageRemoteBackups} (S3)',
+                            listRemote: () => context.read<S3BackupProvider>().listRemote(),
+                            restoreFromItem: (it, mode) async {
+                              final vm = context.read<S3BackupProvider>();
+                              await vm.restoreFromItem(it, mode: mode);
+                              final msg = vm.message;
+                              if (msg != null && msg != 'Restored') {
+                                throw Exception(msg);
+                              }
+                            },
+                            deleteAndReload: (it) => context.read<S3BackupProvider>().deleteAndReload(it),
+                          );
+                        },
+                      ),
+                      _DeskIosButton(
+                        label: l10n.backupPageBackupNow,
+                        filled: true,
+                        dense: true,
+                        onTap: busy ? (){} : () async {
+                          await _saveS3Config();
+                          await context.read<S3BackupProvider>().backup();
+                          if (!mounted) return;
+                          final rawMessage = context.read<S3BackupProvider>().message;
                           final message = rawMessage ?? l10n.backupPageBackupUploaded;
                           showAppSnackBar(
                             context,
@@ -495,7 +819,20 @@ class _RemoteItemCardState extends State<_RemoteItemCard> {
 }
 
 class _RemoteBackupsDialog extends StatefulWidget {
-  const _RemoteBackupsDialog();
+  const _RemoteBackupsDialog({
+    required this.title,
+    required this.listRemote,
+    required this.restoreFromItem,
+    required this.deleteAndReload,
+  });
+
+  final String title;
+  final Future<List<BackupFileItem>> Function() listRemote;
+  final Future<void> Function(BackupFileItem item, RestoreMode mode)
+      restoreFromItem;
+  final Future<List<BackupFileItem>> Function(BackupFileItem item)
+      deleteAndReload;
+
   @override
   State<_RemoteBackupsDialog> createState() => _RemoteBackupsDialogState();
 }
@@ -520,7 +857,7 @@ class _RemoteBackupsDialogState extends State<_RemoteBackupsDialog> {
   Future<void> _load() async {
     setState(() => _loading = true);
     try {
-      final list = await context.read<BackupProvider>().listRemote();
+      final list = await widget.listRemote();
       // Sort by newest first (desc by lastModified), mimic mobile behavior
       list.sort((a, b) {
         final aTime = a.lastModified;
@@ -539,21 +876,45 @@ class _RemoteBackupsDialogState extends State<_RemoteBackupsDialog> {
   }
 
   Future<void> _chooseRestoreModeAndRun(Future<void> Function(RestoreMode) action) async {
+    // Use a stable context so we can still show a restart prompt even if this
+    // dialog is closed while the restore task is running.
+    final rootCtx = Navigator.of(context, rootNavigator: true).context;
     final mode = await showDialog<RestoreMode>(context: context, builder: (_) => _RestoreModeDialog());
     if (mode == null) return;
-    await action(mode);
-    final l10n = AppLocalizations.of(context)!;
-    final cs = Theme.of(context).colorScheme;
-    await showDialog(context: context, builder: (_) => AlertDialog(
-      backgroundColor: cs.surface,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      title: Text(l10n.backupPageRestartRequired),
-      content: Text(l10n.backupPageRestartContent),
-      actions: [TextButton(onPressed: () async {
-        Navigator.of(context).pop();
-        PlatformUtils.restartApp();
-      }, child: Text(l10n.backupPageOK))],
-    ));
+    setState(() => _loading = true);
+    try {
+      await action(mode);
+    } catch (e) {
+      showAppSnackBar(
+        rootCtx,
+        message: e.toString(),
+        type: NotificationType.error,
+      );
+      return;
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
+    final l10n = AppLocalizations.of(rootCtx)!;
+    final cs = Theme.of(rootCtx).colorScheme;
+    await showDialog(
+      context: rootCtx,
+      barrierDismissible: false,
+      builder: (dctx) => AlertDialog(
+        backgroundColor: cs.surface,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Text(l10n.backupPageRestartRequired),
+        content: Text(l10n.backupPageRestartContent),
+        actions: [
+          TextButton(
+            onPressed: () async {
+              Navigator.of(dctx).pop();
+              PlatformUtils.restartApp();
+            },
+            child: Text(l10n.backupPageOK),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -573,7 +934,7 @@ class _RemoteBackupsDialogState extends State<_RemoteBackupsDialog> {
             children: [
               Row(
                 children: [
-                  Expanded(child: Text(l10n.backupPageRemoteBackups, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700))),
+                  Expanded(child: Text(widget.title, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700))),
                   _SmallIconBtn(icon: lucide.Lucide.RefreshCw, onTap: _loading ? (){} : _load),
                   const SizedBox(width: 6),
                   _SmallIconBtn(icon: lucide.Lucide.X, onTap: () => Navigator.of(context).maybePop()),
@@ -597,7 +958,7 @@ class _RemoteBackupsDialogState extends State<_RemoteBackupsDialog> {
                                 return _RemoteItemCard(
                                   item: it,
                                   onRestore: () => _chooseRestoreModeAndRun((mode) async {
-                                    await context.read<BackupProvider>().restoreFromItem(it, mode: mode);
+                                    await widget.restoreFromItem(it, mode);
                                   }),
                                   onDelete: () async {
                                     final confirm = await showDialog<bool>(
@@ -621,7 +982,7 @@ class _RemoteBackupsDialogState extends State<_RemoteBackupsDialog> {
 
                                     setState(() => _loading = true); // Show loading inside dialog
                                     try {
-                                      final next = await context.read<BackupProvider>().deleteAndReload(it);
+                                      final next = await widget.deleteAndReload(it);
                                       next.sort((a, b) {
                                         final aTime = a.lastModified;
                                         final bTime = b.lastModified;
@@ -648,8 +1009,24 @@ class _RemoteBackupsDialogState extends State<_RemoteBackupsDialog> {
   }
 }
 
-void _showRemoteBackupsDialog(BuildContext context) {
-  showDialog(context: context, builder: (_) => const _RemoteBackupsDialog());
+void _showRemoteBackupsDialog(
+  BuildContext context, {
+  required String title,
+  required Future<List<BackupFileItem>> Function() listRemote,
+  required Future<void> Function(BackupFileItem item, RestoreMode mode)
+      restoreFromItem,
+  required Future<List<BackupFileItem>> Function(BackupFileItem item)
+      deleteAndReload,
+}) {
+  showDialog(
+    context: context,
+    builder: (_) => _RemoteBackupsDialog(
+      title: title,
+      listRemote: listRemote,
+      restoreFromItem: restoreFromItem,
+      deleteAndReload: deleteAndReload,
+    ),
+  );
 }
 
 Widget _rowDivider(BuildContext context) {
