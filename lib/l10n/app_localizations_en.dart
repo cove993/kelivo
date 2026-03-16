@@ -638,7 +638,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get assistantEditUseAssistantAvatarSubtitle =>
-      'Use assistant avatar/name instead of model';
+      'Use assistant avatar instead of model avatar';
+
+  @override
+  String get assistantEditUseAssistantNameTitle => 'Use Assistant Name';
 
   @override
   String get assistantEditChatModelTitle => 'Chat Model';
@@ -712,6 +715,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get desktopNavStorageTooltip => 'Storage';
+
+  @override
+  String get desktopNavGlobalSearchTooltip => 'Global Search';
 
   @override
   String get desktopNavThemeToggleTooltip => 'Theme';
@@ -1503,6 +1509,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get reasoningBudgetSheetHeavy => 'Heavy Reasoning';
 
   @override
+  String get reasoningBudgetSheetXhigh => 'Extreme Reasoning';
+
+  @override
   String get reasoningBudgetSheetTitle => 'Reasoning Chain Strength';
 
   @override
@@ -1529,6 +1538,10 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get reasoningBudgetSheetHeavySubtitle =>
       'Use heavy reasoning for complex questions';
+
+  @override
+  String get reasoningBudgetSheetXhighSubtitle =>
+      'Use maximum reasoning depth for the toughest problems';
 
   @override
   String get reasoningBudgetSheetCustomLabel =>
@@ -1868,10 +1881,39 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sideDrawerDateFullPattern => 'MMM d, yyyy';
 
   @override
-  String get sideDrawerSearchHint => 'Search chat history';
+  String get sideDrawerSearchHint => 'Search current assistant';
 
   @override
   String get sideDrawerSearchAssistantsHint => 'Search assistants';
+
+  @override
+  String get sideDrawerTopicSearchModeLabel => 'Topic mode';
+
+  @override
+  String get sideDrawerGlobalSearchModeLabel => 'Global mode';
+
+  @override
+  String get sideDrawerSearchModeSwipeToTopicHint =>
+      'Swipe the search bar for topic search';
+
+  @override
+  String get sideDrawerSearchModeSwipeToGlobalHint =>
+      'Swipe the search bar for global search';
+
+  @override
+  String get sideDrawerGlobalSearchHint => 'Search all sessions';
+
+  @override
+  String get sideDrawerGlobalSearchEmptyHint =>
+      'Search across titles and messages';
+
+  @override
+  String get sideDrawerGlobalSearchNoResults => 'No matching sessions';
+
+  @override
+  String sideDrawerGlobalSearchResultCount(int count) {
+    return '$count results';
+  }
 
   @override
   String sideDrawerUpdateTitle(String version) {
@@ -2161,6 +2203,42 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get defaultModelPageSummaryModelSubtitle =>
       'Used for generating conversation summaries; prefer fast and cheap models';
+
+  @override
+  String get assistantEditRecentChatsSummaryFrequencyTitle =>
+      'Summary Refresh Frequency';
+
+  @override
+  String get assistantEditRecentChatsSummaryFrequencyDescription =>
+      'Refresh recent-chat summaries after the selected number of new messages.';
+
+  @override
+  String assistantEditRecentChatsSummaryFrequencyOption(int count) {
+    return 'Every $count';
+  }
+
+  @override
+  String get assistantEditRecentChatsSummaryFrequencyCustomButton => 'Custom';
+
+  @override
+  String get assistantEditRecentChatsSummaryFrequencyCustomTitle =>
+      'Custom Summary Frequency';
+
+  @override
+  String get assistantEditRecentChatsSummaryFrequencyCustomDescription =>
+      'Enter how many new messages should accumulate before refreshing the recent-chat summary.';
+
+  @override
+  String get assistantEditRecentChatsSummaryFrequencyCustomLabel =>
+      'New message count';
+
+  @override
+  String get assistantEditRecentChatsSummaryFrequencyCustomHint =>
+      'Enter a number greater than 0';
+
+  @override
+  String get assistantEditRecentChatsSummaryFrequencyCustomInvalid =>
+      'Please enter a whole number greater than 0';
 
   @override
   String get defaultModelPageTranslateModelTitle => 'Translation Model';
@@ -2517,6 +2595,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get providerDetailPageImportJsonButton => 'Import JSON';
+
+  @override
+  String get providerDetailPageImportJsonReadFailedMessage =>
+      'Failed to read file';
 
   @override
   String get providerDetailPageTestButton => 'Test';
@@ -2891,6 +2973,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get miniMapTooltip => 'Minimap';
 
   @override
+  String get miniMapScrollToBottomTooltip => 'Scroll to bottom';
+
+  @override
   String get searchServicesPageApiKeyRequiredStatus => 'API Key Required';
 
   @override
@@ -2913,6 +2998,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get searchServicesAddDialogApiKeyRequired => 'API Key is required';
+
+  @override
+  String get searchServicesFieldCustomUrlOptional => 'Custom URL (optional)';
 
   @override
   String get searchServicesAddDialogInstanceUrl => 'Instance URL';

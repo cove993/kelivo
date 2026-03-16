@@ -141,7 +141,8 @@
   "assistantEditDeleteTooltip": "刪除",
   "assistantEditAssistantNameLabel": "助理名稱",
   "assistantEditUseAssistantAvatarTitle": "使用助理頭像",
-  "assistantEditUseAssistantAvatarSubtitle": "在聊天中使用助理頭像和名字而不是模型頭像和名字",
+  "assistantEditUseAssistantAvatarSubtitle": "在聊天中使用助理頭像取代模型頭像",
+  "assistantEditUseAssistantNameTitle": "使用助理名字",
   "assistantEditChatModelTitle": "聊天模型",
   "assistantEditChatModelSubtitle": "為該助理設定預設聊天模型（未設定時使用全域預設）",
   "assistantEditTemperatureDescription": "控制輸出的隨機性，範圍 0–2",
@@ -164,6 +165,7 @@
   "desktopNavChatTooltip": "聊天",
   "desktopNavTranslateTooltip": "翻譯",
   "desktopNavStorageTooltip": "儲存",
+  "desktopNavGlobalSearchTooltip": "全域搜尋",
   "desktopNavThemeToggleTooltip": "主題切換",
   "desktopNavSettingsTooltip": "設定",
   "hotkeyToggleAppVisibility": "顯示/隱藏應用",
@@ -492,6 +494,7 @@
   "reasoningBudgetSheetLight": "輕度推理",
   "reasoningBudgetSheetMedium": "中度推理",
   "reasoningBudgetSheetHeavy": "重度推理",
+  "reasoningBudgetSheetXhigh": "極限推理",
   "reasoningBudgetSheetTitle": "思維鏈強度",
   "reasoningBudgetSheetCurrentLevel": "目前檔位：{level}",
   "reasoningBudgetSheetOffSubtitle": "關閉推理功能，直接回答",
@@ -499,6 +502,7 @@
   "reasoningBudgetSheetLightSubtitle": "使用少量推理來回答問題",
   "reasoningBudgetSheetMediumSubtitle": "使用較多推理來回答問題",
   "reasoningBudgetSheetHeavySubtitle": "使用大量推理來回答問題，適合複雜問題",
+  "reasoningBudgetSheetXhighSubtitle": "使用最大推理深度，適合最複雜的問題",
   "reasoningBudgetSheetCustomLabel": "自訂推理預算 (tokens)",
   "reasoningBudgetSheetCustomHint": "例如：2048 (-1 自動，0 關閉)",
   "chatMessageWidgetFileNotFound": "檔案不存在: {fileName}",
@@ -581,8 +585,23 @@
   "sideDrawerDateYesterday": "昨天",
   "sideDrawerDateShortPattern": "M月d日",
   "sideDrawerDateFullPattern": "yyyy年M月d日",
-  "sideDrawerSearchHint": "搜尋聊天記錄",
+  "sideDrawerSearchHint": "搜尋當前助理",
   "sideDrawerSearchAssistantsHint": "搜尋助理",
+  "sideDrawerTopicSearchModeLabel": "話題模式",
+  "sideDrawerGlobalSearchModeLabel": "全域模式",
+  "sideDrawerSearchModeSwipeToTopicHint": "左/右滑搜尋欄切換到話題搜尋",
+  "sideDrawerSearchModeSwipeToGlobalHint": "左/右滑搜尋欄切換到全域搜尋",
+  "sideDrawerGlobalSearchHint": "搜尋全部會話",
+  "sideDrawerGlobalSearchEmptyHint": "在標題與訊息中全域搜尋",
+  "sideDrawerGlobalSearchNoResults": "沒有匹配的會話",
+  "sideDrawerGlobalSearchResultCount": "共 {count} 筆結果",
+  "@sideDrawerGlobalSearchResultCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "sideDrawerUpdateTitle": "發現新版本：{version}",
   "sideDrawerUpdateTitleWithBuild": "發現新版本：{version} ({build})",
   "sideDrawerLinkCopied": "已複製下載連結",
@@ -674,6 +693,22 @@
   "defaultModelPageTitleModelSubtitle": "用於總結對話標題的模型，推薦使用快速且便宜的模型",
   "defaultModelPageSummaryModelTitle": "摘要模型",
   "defaultModelPageSummaryModelSubtitle": "用於生成對話摘要的模型，推薦使用快速且便宜的模型",
+  "assistantEditRecentChatsSummaryFrequencyTitle": "摘要更新頻率",
+  "assistantEditRecentChatsSummaryFrequencyDescription": "累計達到所選條數的新訊息後，會更新歷史聊天摘要。",
+  "assistantEditRecentChatsSummaryFrequencyOption": "每 {count} 則",
+  "@assistantEditRecentChatsSummaryFrequencyOption": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "assistantEditRecentChatsSummaryFrequencyCustomButton": "自訂",
+  "assistantEditRecentChatsSummaryFrequencyCustomTitle": "自訂摘要頻率",
+  "assistantEditRecentChatsSummaryFrequencyCustomDescription": "輸入累計多少則新訊息後再更新歷史聊天摘要。",
+  "assistantEditRecentChatsSummaryFrequencyCustomLabel": "新訊息數量",
+  "assistantEditRecentChatsSummaryFrequencyCustomHint": "請輸入大於 0 的整數",
+  "assistantEditRecentChatsSummaryFrequencyCustomInvalid": "請輸入大於 0 的整數",
   "defaultModelPageTranslateModelTitle": "翻譯模型",
   "defaultModelPageTranslateModelSubtitle": "用於翻譯訊息內容的模型，推薦使用快速且準確的模型",
   "defaultModelPageOcrModelTitle": "OCR 模型",
@@ -778,6 +813,7 @@
   "providerDetailPageProjectIdLabel": "專案 ID",
   "providerDetailPageServiceAccountJsonLabel": "服務帳號 JSON（貼上或匯入）",
   "providerDetailPageImportJsonButton": "匯入 JSON",
+  "providerDetailPageImportJsonReadFailedMessage": "讀取檔案失敗",
   "providerDetailPageTestButton": "測試",
   "providerDetailPageSaveButton": "儲存",
   "providerDetailPageProviderRemovedMessage": "供應商已刪除",
@@ -903,6 +939,7 @@
   "searchServicesAddDialogCancel": "取消",
   "searchServicesAddDialogAdd": "新增",
   "searchServicesAddDialogApiKeyRequired": "API Key 必填",
+  "searchServicesFieldCustomUrlOptional": "自訂 URL（可選）",
   "searchServicesAddDialogInstanceUrl": "實例 URL",
   "searchServicesAddDialogUrlRequired": "URL 必填",
   "searchServicesAddDialogEnginesOptional": "搜尋引擎（可選）",
@@ -1103,6 +1140,7 @@
   "titleForLocale": "新對話",
   "miniMapTitle": "迷你地圖",
   "miniMapTooltip": "迷你地圖",
+  "miniMapScrollToBottomTooltip": "捲動到底部",
   "displaySettingsPageEnableDollarLatexTitle": "啟用 $...$ 渲染",
   "displaySettingsPageEnableDollarLatexSubtitle": "將 $...$ 之間的內容以行內數學公式渲染",
   "displaySettingsPageEnableMathTitle": "啟用數學公式渲染",

@@ -6,6 +6,7 @@ import 'package:http/http.dart' as http;
 import 'settings_provider.dart';
 import '../services/network/dio_http_client.dart';
 import '../services/api_key_manager.dart';
+import '../services/api/provider_request_headers.dart';
 import '../services/model_override_payload_parser.dart';
 import 'package:Kelivo/secrets/fallback.dart';
 import '../services/api/google_service_account_auth.dart';
@@ -86,10 +87,12 @@ class ModelRegistry {
     if (vision.hasMatch(id)) {
       if (!inMods.contains(Modality.image)) inMods.add(Modality.image);
     }
-    if (tool.hasMatch(id) && !ab.contains(ModelAbility.tool))
+    if (tool.hasMatch(id) && !ab.contains(ModelAbility.tool)) {
       ab.add(ModelAbility.tool);
-    if (reasoning.hasMatch(id) && !ab.contains(ModelAbility.reasoning))
+    }
+    if (reasoning.hasMatch(id) && !ab.contains(ModelAbility.reasoning)) {
       ab.add(ModelAbility.reasoning);
+    }
     return base.copyWith(input: inMods, output: outMods, abilities: ab);
   }
 }
@@ -110,6 +113,7 @@ class _Http {
       return DioHttpClient(
         proxy: NetworkProxyConfig(
           enabled: true,
+          type: ProviderConfig.resolveProxyType(cfg.proxyType),
           host: host,
           port: port,
           username: user.isEmpty ? null : user,
@@ -316,7 +320,10 @@ class ProviderManager {
     ProviderConfig cfg,
     String modelId,
   ) {
-    return ModelOverridePayloadParser.modelOverride(cfg.modelOverrides, modelId);
+    return ModelOverridePayloadParser.modelOverride(
+      cfg.modelOverrides,
+      modelId,
+    );
   }
 
   static Map<String, String> _customHeaders(
@@ -324,7 +331,10 @@ class ProviderManager {
     String modelId,
   ) {
     final ov = _modelOverride(cfg, modelId);
-    return ModelOverridePayloadParser.customHeaders(ov);
+    return <String, String>{
+      ...providerDefaultHeaders(cfg),
+      ...ModelOverridePayloadParser.customHeaders(ov),
+    };
   }
 
   static Map<String, dynamic> _customBody(ProviderConfig cfg, String modelId) {
@@ -343,7 +353,6 @@ class ProviderManager {
       case ProviderKind.claude:
         return ClaudeProvider();
       case ProviderKind.openai:
-      default:
         return OpenAIProvider();
     }
   }
@@ -432,8 +441,8 @@ class ProviderManager {
             throw HttpException('Stream response expected but not received');
           }
         }
-      return;
-    } else if (kind == ProviderKind.claude) {
+        return;
+      } else if (kind == ProviderKind.claude) {
         final base = cfg.baseUrl.endsWith('/')
             ? cfg.baseUrl.substring(0, cfg.baseUrl.length - 1)
             : cfg.baseUrl;
@@ -494,7 +503,8 @@ class ProviderManager {
         final endpoint = useStream
             ? 'streamGenerateContent'
             : 'generateContent';
-        final bool isVertex = cfg.vertexAI == true &&
+        final bool isVertex =
+            cfg.vertexAI == true &&
             (cfg.location?.isNotEmpty == true) &&
             (cfg.projectId?.isNotEmpty == true);
         final bool isVertexClaude =
@@ -532,10 +542,7 @@ class ProviderManager {
             ? {
                 'anthropic_version': 'vertex-2023-10-16',
                 'messages': [
-                  {
-                    'role': 'user',
-                    'content': 'hello',
-                  },
+                  {'role': 'user', 'content': 'hello'},
                 ],
                 'max_tokens': 32,
                 if (useStream) 'stream': true,

@@ -1274,8 +1274,14 @@ abstract class AppLocalizations {
   /// No description provided for @assistantEditUseAssistantAvatarSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Use assistant avatar/name instead of model'**
+  /// **'Use assistant avatar instead of model avatar'**
   String get assistantEditUseAssistantAvatarSubtitle;
+
+  /// No description provided for @assistantEditUseAssistantNameTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Use Assistant Name'**
+  String get assistantEditUseAssistantNameTitle;
 
   /// No description provided for @assistantEditChatModelTitle.
   ///
@@ -1408,6 +1414,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Storage'**
   String get desktopNavStorageTooltip;
+
+  /// No description provided for @desktopNavGlobalSearchTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Global Search'**
+  String get desktopNavGlobalSearchTooltip;
 
   /// No description provided for @desktopNavThemeToggleTooltip.
   ///
@@ -2927,6 +2939,12 @@ abstract class AppLocalizations {
   /// **'Heavy Reasoning'**
   String get reasoningBudgetSheetHeavy;
 
+  /// No description provided for @reasoningBudgetSheetXhigh.
+  ///
+  /// In en, this message translates to:
+  /// **'Extreme Reasoning'**
+  String get reasoningBudgetSheetXhigh;
+
   /// No description provided for @reasoningBudgetSheetTitle.
   ///
   /// In en, this message translates to:
@@ -2968,6 +2986,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Use heavy reasoning for complex questions'**
   String get reasoningBudgetSheetHeavySubtitle;
+
+  /// No description provided for @reasoningBudgetSheetXhighSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Use maximum reasoning depth for the toughest problems'**
+  String get reasoningBudgetSheetXhighSubtitle;
 
   /// No description provided for @reasoningBudgetSheetCustomLabel.
   ///
@@ -3548,7 +3572,7 @@ abstract class AppLocalizations {
   /// No description provided for @sideDrawerSearchHint.
   ///
   /// In en, this message translates to:
-  /// **'Search chat history'**
+  /// **'Search current assistant'**
   String get sideDrawerSearchHint;
 
   /// No description provided for @sideDrawerSearchAssistantsHint.
@@ -3556,6 +3580,54 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Search assistants'**
   String get sideDrawerSearchAssistantsHint;
+
+  /// No description provided for @sideDrawerTopicSearchModeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Topic mode'**
+  String get sideDrawerTopicSearchModeLabel;
+
+  /// No description provided for @sideDrawerGlobalSearchModeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Global mode'**
+  String get sideDrawerGlobalSearchModeLabel;
+
+  /// No description provided for @sideDrawerSearchModeSwipeToTopicHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Swipe the search bar for topic search'**
+  String get sideDrawerSearchModeSwipeToTopicHint;
+
+  /// No description provided for @sideDrawerSearchModeSwipeToGlobalHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Swipe the search bar for global search'**
+  String get sideDrawerSearchModeSwipeToGlobalHint;
+
+  /// No description provided for @sideDrawerGlobalSearchHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search all sessions'**
+  String get sideDrawerGlobalSearchHint;
+
+  /// No description provided for @sideDrawerGlobalSearchEmptyHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search across titles and messages'**
+  String get sideDrawerGlobalSearchEmptyHint;
+
+  /// No description provided for @sideDrawerGlobalSearchNoResults.
+  ///
+  /// In en, this message translates to:
+  /// **'No matching sessions'**
+  String get sideDrawerGlobalSearchNoResults;
+
+  /// No description provided for @sideDrawerGlobalSearchResultCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} results'**
+  String sideDrawerGlobalSearchResultCount(int count);
 
   /// No description provided for @sideDrawerUpdateTitle.
   ///
@@ -4102,6 +4174,60 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Used for generating conversation summaries; prefer fast and cheap models'**
   String get defaultModelPageSummaryModelSubtitle;
+
+  /// No description provided for @assistantEditRecentChatsSummaryFrequencyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Summary Refresh Frequency'**
+  String get assistantEditRecentChatsSummaryFrequencyTitle;
+
+  /// No description provided for @assistantEditRecentChatsSummaryFrequencyDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh recent-chat summaries after the selected number of new messages.'**
+  String get assistantEditRecentChatsSummaryFrequencyDescription;
+
+  /// No description provided for @assistantEditRecentChatsSummaryFrequencyOption.
+  ///
+  /// In en, this message translates to:
+  /// **'Every {count}'**
+  String assistantEditRecentChatsSummaryFrequencyOption(int count);
+
+  /// No description provided for @assistantEditRecentChatsSummaryFrequencyCustomButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom'**
+  String get assistantEditRecentChatsSummaryFrequencyCustomButton;
+
+  /// No description provided for @assistantEditRecentChatsSummaryFrequencyCustomTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom Summary Frequency'**
+  String get assistantEditRecentChatsSummaryFrequencyCustomTitle;
+
+  /// No description provided for @assistantEditRecentChatsSummaryFrequencyCustomDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter how many new messages should accumulate before refreshing the recent-chat summary.'**
+  String get assistantEditRecentChatsSummaryFrequencyCustomDescription;
+
+  /// No description provided for @assistantEditRecentChatsSummaryFrequencyCustomLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'New message count'**
+  String get assistantEditRecentChatsSummaryFrequencyCustomLabel;
+
+  /// No description provided for @assistantEditRecentChatsSummaryFrequencyCustomHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a number greater than 0'**
+  String get assistantEditRecentChatsSummaryFrequencyCustomHint;
+
+  /// No description provided for @assistantEditRecentChatsSummaryFrequencyCustomInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter a whole number greater than 0'**
+  String get assistantEditRecentChatsSummaryFrequencyCustomInvalid;
 
   /// No description provided for @defaultModelPageTranslateModelTitle.
   ///
@@ -4741,6 +4867,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Import JSON'**
   String get providerDetailPageImportJsonButton;
+
+  /// No description provided for @providerDetailPageImportJsonReadFailedMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to read file'**
+  String get providerDetailPageImportJsonReadFailedMessage;
 
   /// No description provided for @providerDetailPageTestButton.
   ///
@@ -5462,6 +5594,12 @@ abstract class AppLocalizations {
   /// **'Minimap'**
   String get miniMapTooltip;
 
+  /// No description provided for @miniMapScrollToBottomTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Scroll to bottom'**
+  String get miniMapScrollToBottomTooltip;
+
   /// No description provided for @searchServicesPageApiKeyRequiredStatus.
   ///
   /// In en, this message translates to:
@@ -5509,6 +5647,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'API Key is required'**
   String get searchServicesAddDialogApiKeyRequired;
+
+  /// No description provided for @searchServicesFieldCustomUrlOptional.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom URL (optional)'**
+  String get searchServicesFieldCustomUrlOptional;
 
   /// No description provided for @searchServicesAddDialogInstanceUrl.
   ///

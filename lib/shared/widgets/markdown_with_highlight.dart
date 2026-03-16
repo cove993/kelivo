@@ -94,14 +94,6 @@ class MarkdownWithCodeHighlight extends StatelessWidget {
     if (settings.enableMathRendering) {
       // Block-level LaTeX (e.g., $$...$$ or \[...\])
       components.insert(0, LatexBlockScrollableMd());
-      // Inline LaTeX: $...$ and \(...\)
-      if (settings.enableDollarLatex) {
-        components.insert(0, InlineLatexParenScrollableMd());
-        components.insert(0, InlineLatexDollarScrollableMd());
-      } else {
-        // Only \(...\) inline
-        components.insert(0, InlineLatexParenScrollableMd());
-      }
     }
     components.insert(0, AtxHeadingMd());
     // Ensure fenced code blocks take precedence over headings and other blocks
@@ -113,6 +105,18 @@ class MarkdownWithCodeHighlight extends StatelessWidget {
     );
     // Add whitelist-based HTML tag renderer (e.g., <br>)
     inlineComponents.insert(0, AllowedHtmlTagsMd());
+
+    // Conditionally add inline LaTeX/math renderers
+    if (settings.enableMathRendering) {
+      // Inline LaTeX: $...$ and \(...\)
+      if (settings.enableDollarLatex) {
+        inlineComponents.insert(0, InlineLatexParenScrollableMd());
+        inlineComponents.insert(0, InlineLatexDollarScrollableMd());
+      } else {
+        // Only \(...\) inline
+        inlineComponents.insert(0, InlineLatexParenScrollableMd());
+      }
+    }
 
     final linkIdxInline = inlineComponents.indexWhere((c) => c is ATagMd);
     if (linkIdxInline != -1) {
@@ -738,7 +742,8 @@ class MarkdownWithCodeHighlight extends StatelessWidget {
 
       // For inline code (`...`), escape dollar signs to prevent LaTeX interpretation
       // Inline code is single-line and delimited by single backticks (not fenced)
-      final isInlineCode = !codeContent.contains('\n') &&
+      final isInlineCode =
+          !codeContent.contains('\n') &&
           codeContent.startsWith('`') &&
           codeContent.endsWith('`');
       if (isInlineCode) {
@@ -770,7 +775,9 @@ class MarkdownWithCodeHighlight extends StatelessWidget {
     // Skips $$...$$ blocks, which are handled separately.
     // NOW SAFE: Code blocks are masked, so $variables in code won't be converted.
     if (enableMath && enableDollarLatex) {
-      final inlineDollar = RegExp(r"(?<!\$)\$([^\$\n]+?)\$(?!\$)");
+      // Require that the matched inline math does not cross table column separators (|)
+      // to avoid breaking markdown tables.
+      final inlineDollar = RegExp(r"(?<!\$)\$([^\$\n|]+?)\$(?!\$)");
       out = out.replaceAllMapped(inlineDollar, (m) {
         return "\\(${m[1]}\\)";
       });
@@ -863,13 +870,10 @@ class MarkdownWithCodeHighlight extends StatelessWidget {
     // Replace all mask placeholders with their original content
     // NOTE: We do NOT restore ___CODE_DOLLAR_MASK___ here because we want LaTeX components
     // to never see dollar signs inside code. The unmask will happen later in highlightBuilder.
-    out = out.replaceAllMapped(
-      RegExp(r'__CODE_MASK_\d+__'),
-      (match) {
-        final key = match.group(0)!;
-        return codeMap[key] ?? key;
-      },
-    );
+    out = out.replaceAllMapped(RegExp(r'__CODE_MASK_\d+__'), (match) {
+      final key = match.group(0)!;
+      return codeMap[key] ?? key;
+    });
 
     return out;
   }
@@ -1427,14 +1431,14 @@ class _CollapsibleCodeBlockState extends State<_CollapsibleCodeBlock> {
                         int lineStart = 0;
                         for (int i = 0; i < end; i++) {
                           final cu = code.codeUnitAt(i);
-                          if (cu == 0x0A /* \n */ || cu == 0x0D /* \r */) {
+                          if (cu == 0x0A /* \n */ || cu == 0x0D /* \r */ ) {
                             if (preview.length < 2) {
                               preview.add(code.substring(lineStart, i));
                             }
                             totalLines++;
                             if (cu == 0x0D /* \r */ &&
                                 i + 1 < end &&
-                                code.codeUnitAt(i + 1) == 0x0A /* \n */) {
+                                code.codeUnitAt(i + 1) == 0x0A /* \n */ ) {
                               i++;
                             }
                             lineStart = i + 1;
@@ -1445,8 +1449,10 @@ class _CollapsibleCodeBlockState extends State<_CollapsibleCodeBlock> {
                         }
                       }
 
-                      final hiddenLines =
-                          (totalLines - preview.length).clamp(0, 999999);
+                      final hiddenLines = (totalLines - preview.length).clamp(
+                        0,
+                        999999,
+                      );
 
                       return Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1495,12 +1501,12 @@ class _CollapsibleCodeBlockState extends State<_CollapsibleCodeBlock> {
     int lines = 1;
     for (int i = 0; i < end; i++) {
       final cu = code.codeUnitAt(i);
-      if (cu == 0x0A /* \n */) {
+      if (cu == 0x0A /* \n */ ) {
         lines++;
         if (lines > threshold) return true;
         continue;
       }
-      if (cu == 0x0D /* \r */) {
+      if (cu == 0x0D /* \r */ ) {
         lines++;
         if (lines > threshold) return true;
         if (i + 1 < end && code.codeUnitAt(i + 1) == 0x0A) i++;
@@ -1513,7 +1519,7 @@ class _CollapsibleCodeBlockState extends State<_CollapsibleCodeBlock> {
     int end = s.length;
     while (end > 0) {
       final ch = s.codeUnitAt(end - 1);
-      if (ch == 0x0A /* \n */ || ch == 0x0D /* \r */) {
+      if (ch == 0x0A /* \n */ || ch == 0x0D /* \r */ ) {
         end--;
         continue;
       }
@@ -2037,7 +2043,7 @@ class FencedCodeBlockMd extends BlockMd {
   // - supports both ``` and ~~~
   String get expString =>
       (r"[ \t]*(([`~])\2{2,})[ \t]*([^\n]*?)\n"
-          r"(?:(?:([\s\S]*?)^[ \t]*\1\2*[ \t]*)|([\s\S]*))");
+      r"(?:(?:([\s\S]*?)^[ \t]*\1\2*[ \t]*)|([\s\S]*))");
 
   @override
   Widget build(BuildContext context, String text, GptMarkdownConfig config) {
@@ -2428,10 +2434,8 @@ class ModernBlockQuote extends InlineMd {
   bool get inline => false;
 
   @override
-  RegExp get exp => RegExp(
-    r"^[ \t]*>[^\n]*(?:\n[ \t]*>[^\n]*)*",
-    multiLine: true,
-  );
+  RegExp get exp =>
+      RegExp(r"^[ \t]*>[^\n]*(?:\n[ \t]*>[^\n]*)*", multiLine: true);
 
   @override
   InlineSpan span(BuildContext context, String text, GptMarkdownConfig config) {

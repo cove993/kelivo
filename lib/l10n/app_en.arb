@@ -312,7 +312,8 @@
   "assistantEditDeleteTooltip": "Delete",
   "assistantEditAssistantNameLabel": "Assistant Name",
   "assistantEditUseAssistantAvatarTitle": "Use Assistant Avatar",
-  "assistantEditUseAssistantAvatarSubtitle": "Use assistant avatar/name instead of model",
+  "assistantEditUseAssistantAvatarSubtitle": "Use assistant avatar instead of model avatar",
+  "assistantEditUseAssistantNameTitle": "Use Assistant Name",
   "assistantEditChatModelTitle": "Chat Model",
   "assistantEditChatModelSubtitle": "Default chat model for this assistant (fallback to global)",
   "assistantEditTemperatureDescription": "Controls randomness, range 0–2",
@@ -335,6 +336,7 @@
   "desktopNavChatTooltip": "Chat",
   "desktopNavTranslateTooltip": "Translate",
   "desktopNavStorageTooltip": "Storage",
+  "desktopNavGlobalSearchTooltip": "Global Search",
   "desktopNavThemeToggleTooltip": "Theme",
   "desktopNavSettingsTooltip": "Settings",
   "desktopAvatarMenuUseEmoji": "Use emoji",
@@ -612,6 +614,7 @@
   "reasoningBudgetSheetLight": "Light Reasoning",
   "reasoningBudgetSheetMedium": "Medium Reasoning",
   "reasoningBudgetSheetHeavy": "Heavy Reasoning",
+  "reasoningBudgetSheetXhigh": "Extreme Reasoning",
   "reasoningBudgetSheetTitle": "Reasoning Chain Strength",
   "reasoningBudgetSheetCurrentLevel": "Current Level: {level}",
   "@reasoningBudgetSheetCurrentLevel": {
@@ -626,6 +629,7 @@
   "reasoningBudgetSheetLightSubtitle": "Use light reasoning to answer questions",
   "reasoningBudgetSheetMediumSubtitle": "Use moderate reasoning to answer questions",
   "reasoningBudgetSheetHeavySubtitle": "Use heavy reasoning for complex questions",
+  "reasoningBudgetSheetXhighSubtitle": "Use maximum reasoning depth for the toughest problems",
   "reasoningBudgetSheetCustomLabel": "Custom Reasoning Budget (tokens)",
   "reasoningBudgetSheetCustomHint": "e.g. 2048 (-1 auto, 0 off)",
   "chatMessageWidgetFileNotFound": "File not found: {fileName}",
@@ -820,8 +824,23 @@
   "sideDrawerDateYesterday": "Yesterday",
   "sideDrawerDateShortPattern": "MMM d",
   "sideDrawerDateFullPattern": "MMM d, yyyy",
-  "sideDrawerSearchHint": "Search chat history",
+  "sideDrawerSearchHint": "Search current assistant",
   "sideDrawerSearchAssistantsHint": "Search assistants",
+  "sideDrawerTopicSearchModeLabel": "Topic mode",
+  "sideDrawerGlobalSearchModeLabel": "Global mode",
+  "sideDrawerSearchModeSwipeToTopicHint": "Swipe the search bar for topic search",
+  "sideDrawerSearchModeSwipeToGlobalHint": "Swipe the search bar for global search",
+  "sideDrawerGlobalSearchHint": "Search all sessions",
+  "sideDrawerGlobalSearchEmptyHint": "Search across titles and messages",
+  "sideDrawerGlobalSearchNoResults": "No matching sessions",
+  "sideDrawerGlobalSearchResultCount": "{count} results",
+  "@sideDrawerGlobalSearchResultCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "sideDrawerUpdateTitle": "New version: {version}",
   "@sideDrawerUpdateTitle": {
     "placeholders": {
@@ -950,6 +969,22 @@
   "defaultModelPageTitleModelSubtitle": "Used for summarizing conversation titles; prefer fast & cheap models",
   "defaultModelPageSummaryModelTitle": "Summary Model",
   "defaultModelPageSummaryModelSubtitle": "Used for generating conversation summaries; prefer fast and cheap models",
+  "assistantEditRecentChatsSummaryFrequencyTitle": "Summary Refresh Frequency",
+  "assistantEditRecentChatsSummaryFrequencyDescription": "Refresh recent-chat summaries after the selected number of new messages.",
+  "assistantEditRecentChatsSummaryFrequencyOption": "Every {count}",
+  "@assistantEditRecentChatsSummaryFrequencyOption": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "assistantEditRecentChatsSummaryFrequencyCustomButton": "Custom",
+  "assistantEditRecentChatsSummaryFrequencyCustomTitle": "Custom Summary Frequency",
+  "assistantEditRecentChatsSummaryFrequencyCustomDescription": "Enter how many new messages should accumulate before refreshing the recent-chat summary.",
+  "assistantEditRecentChatsSummaryFrequencyCustomLabel": "New message count",
+  "assistantEditRecentChatsSummaryFrequencyCustomHint": "Enter a number greater than 0",
+  "assistantEditRecentChatsSummaryFrequencyCustomInvalid": "Please enter a whole number greater than 0",
   "defaultModelPageTranslateModelTitle": "Translation Model",
   "defaultModelPageTranslateModelSubtitle": "Used for translating message content; prefer fast & accurate models",
   "defaultModelPageOcrModelTitle": "OCR Model",
@@ -1103,6 +1138,7 @@
   "providerDetailPageProjectIdLabel": "Project ID",
   "providerDetailPageServiceAccountJsonLabel": "Service Account JSON (paste or import)",
   "providerDetailPageImportJsonButton": "Import JSON",
+  "providerDetailPageImportJsonReadFailedMessage": "Failed to read file",
   "providerDetailPageTestButton": "Test",
   "providerDetailPageSaveButton": "Save",
   "providerDetailPageProviderRemovedMessage": "Provider removed",
@@ -1237,6 +1273,7 @@
   "searchServicesPageConfiguredStatus": "Configured",
   "miniMapTitle": "Minimap",
   "miniMapTooltip": "Minimap",
+  "miniMapScrollToBottomTooltip": "Scroll to bottom",
   "searchServicesPageApiKeyRequiredStatus": "API Key Required",
   "searchServicesPageUrlRequiredStatus": "URL Required",
   "searchServicesAddDialogTitle": "Add Search Service",
@@ -1245,6 +1282,7 @@
   "searchServicesAddDialogCancel": "Cancel",
   "searchServicesAddDialogAdd": "Add",
   "searchServicesAddDialogApiKeyRequired": "API Key is required",
+  "searchServicesFieldCustomUrlOptional": "Custom URL (optional)",
   "searchServicesAddDialogInstanceUrl": "Instance URL",
   "searchServicesAddDialogUrlRequired": "URL is required",
   "searchServicesAddDialogEnginesOptional": "Engines (optional)",

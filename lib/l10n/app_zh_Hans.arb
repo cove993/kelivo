@@ -141,7 +141,8 @@
   "assistantEditDeleteTooltip": "删除",
   "assistantEditAssistantNameLabel": "助手名称",
   "assistantEditUseAssistantAvatarTitle": "使用助手头像",
-  "assistantEditUseAssistantAvatarSubtitle": "在聊天中使用助手头像和名字而不是模型头像和名字",
+  "assistantEditUseAssistantAvatarSubtitle": "在聊天中使用助手头像替代模型头像",
+  "assistantEditUseAssistantNameTitle": "使用助手名字",
   "assistantEditChatModelTitle": "聊天模型",
   "assistantEditChatModelSubtitle": "为该助手设置默认聊天模型（未设置时使用全局默认）",
   "assistantEditTemperatureDescription": "控制输出的随机性，范围 0–2",
@@ -164,6 +165,7 @@
   "desktopNavChatTooltip": "聊天",
   "desktopNavTranslateTooltip": "翻译",
   "desktopNavStorageTooltip": "存储",
+  "desktopNavGlobalSearchTooltip": "全局搜索",
   "desktopNavThemeToggleTooltip": "主题切换",
   "desktopNavSettingsTooltip": "设置",
   "desktopAvatarMenuUseEmoji": "使用表情符号",
@@ -538,6 +540,7 @@
   "reasoningBudgetSheetLight": "轻度推理",
   "reasoningBudgetSheetMedium": "中度推理",
   "reasoningBudgetSheetHeavy": "重度推理",
+  "reasoningBudgetSheetXhigh": "极限推理",
   "reasoningBudgetSheetTitle": "思维链强度",
   "reasoningBudgetSheetCurrentLevel": "当前档位：{level}",
   "reasoningBudgetSheetOffSubtitle": "关闭推理功能，直接回答",
@@ -545,6 +548,7 @@
   "reasoningBudgetSheetLightSubtitle": "使用少量推理来回答问题",
   "reasoningBudgetSheetMediumSubtitle": "使用较多推理来回答问题",
   "reasoningBudgetSheetHeavySubtitle": "使用大量推理来回答问题，适合复杂问题",
+  "reasoningBudgetSheetXhighSubtitle": "使用最大推理深度，适合最复杂的问题",
   "reasoningBudgetSheetCustomLabel": "自定义推理预算 (tokens)",
   "reasoningBudgetSheetCustomHint": "例如：2048 (-1 自动，0 关闭)",
   "chatMessageWidgetFileNotFound": "文件不存在: {fileName}",
@@ -627,8 +631,23 @@
   "sideDrawerDateYesterday": "昨天",
   "sideDrawerDateShortPattern": "M月d日",
   "sideDrawerDateFullPattern": "yyyy年M月d日",
-  "sideDrawerSearchHint": "搜索聊天记录",
+  "sideDrawerSearchHint": "搜索当前助手",
   "sideDrawerSearchAssistantsHint": "搜索助手",
+  "sideDrawerTopicSearchModeLabel": "话题模式",
+  "sideDrawerGlobalSearchModeLabel": "全局模式",
+  "sideDrawerSearchModeSwipeToTopicHint": "左/右滑搜索栏切换到话题搜索",
+  "sideDrawerSearchModeSwipeToGlobalHint": "左/右滑搜索栏切换到全局搜索",
+  "sideDrawerGlobalSearchHint": "搜索全部会话",
+  "sideDrawerGlobalSearchEmptyHint": "在标题和消息中全局搜索",
+  "sideDrawerGlobalSearchNoResults": "没有匹配的会话",
+  "sideDrawerGlobalSearchResultCount": "共 {count} 条结果",
+  "@sideDrawerGlobalSearchResultCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "sideDrawerUpdateTitle": "发现新版本：{version}",
   "sideDrawerUpdateTitleWithBuild": "发现新版本：{version} ({build})",
   "sideDrawerLinkCopied": "已复制下载链接",
@@ -718,6 +737,22 @@
   "defaultModelPageChatModelSubtitle": "全局默认的聊天模型",
   "defaultModelPageTitleModelTitle": "标题总结模型",
   "defaultModelPageTitleModelSubtitle": "用于总结对话标题的模型，推荐使用快速且便宜的模型",
+  "assistantEditRecentChatsSummaryFrequencyTitle": "摘要更新频率",
+  "assistantEditRecentChatsSummaryFrequencyDescription": "累计达到所选条数的新消息后，会更新历史聊天摘要。",
+  "assistantEditRecentChatsSummaryFrequencyOption": "每 {count} 条",
+  "@assistantEditRecentChatsSummaryFrequencyOption": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "assistantEditRecentChatsSummaryFrequencyCustomButton": "自定义",
+  "assistantEditRecentChatsSummaryFrequencyCustomTitle": "自定义摘要频率",
+  "assistantEditRecentChatsSummaryFrequencyCustomDescription": "输入累计多少条新消息后再更新历史聊天摘要。",
+  "assistantEditRecentChatsSummaryFrequencyCustomLabel": "新消息条数",
+  "assistantEditRecentChatsSummaryFrequencyCustomHint": "请输入大于 0 的整数",
+  "assistantEditRecentChatsSummaryFrequencyCustomInvalid": "请输入大于 0 的整数",
   "defaultModelPageTranslateModelTitle": "翻译模型",
   "defaultModelPageTranslateModelSubtitle": "用于翻译消息内容的模型，推荐使用快速且准确的模型",
   "defaultModelPageOcrModelTitle": "OCR 模型",
@@ -816,6 +851,7 @@
   "providerDetailPageProjectIdLabel": "项目 ID",
   "providerDetailPageServiceAccountJsonLabel": "服务账号 JSON（粘贴或导入）",
   "providerDetailPageImportJsonButton": "导入 JSON",
+  "providerDetailPageImportJsonReadFailedMessage": "读取文件失败",
   "providerDetailPageTestButton": "测试",
   "providerDetailPageSaveButton": "保存",
   "providerDetailPageProviderRemovedMessage": "供应商已删除",
@@ -942,6 +978,7 @@
   "searchServicesAddDialogCancel": "取消",
   "searchServicesAddDialogAdd": "添加",
   "searchServicesAddDialogApiKeyRequired": "API Key 必填",
+  "searchServicesFieldCustomUrlOptional": "自定义 URL（可选）",
   "searchServicesAddDialogInstanceUrl": "实例 URL",
   "searchServicesAddDialogUrlRequired": "URL 必填",
   "searchServicesAddDialogEnginesOptional": "搜索引擎（可选）",
@@ -1142,6 +1179,7 @@
   "titleForLocale": "新对话",
   "miniMapTitle": "迷你地图",
   "miniMapTooltip": "迷你地图",
+  "miniMapScrollToBottomTooltip": "滚动到底部",
   "displaySettingsPageEnableDollarLatexTitle": "启用 $...$ 渲染",
   "displaySettingsPageEnableDollarLatexSubtitle": "将 $...$ 之间的内容按行内数学公式渲染",
   "displaySettingsPageEnableMathTitle": "启用数学公式渲染",

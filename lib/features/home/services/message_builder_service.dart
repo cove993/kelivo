@@ -615,8 +615,9 @@ class MessageBuilderService {
             if (entry.caseSensitive) {
               if (context.contains(keyword)) return true;
             } else {
-              if (context.toLowerCase().contains(keyword.toLowerCase()))
+              if (context.toLowerCase().contains(keyword.toLowerCase())) {
                 return true;
+              }
             }
           }
         }
@@ -805,7 +806,7 @@ class MessageBuilderService {
   ) {
     if (apiMessages.isNotEmpty && apiMessages.first['role'] == 'system') {
       apiMessages[0]['content'] =
-          ((apiMessages[0]['content'] ?? '') as String) + '\n\n' + content;
+          '${(apiMessages[0]['content'] ?? '') as String}\n\n$content';
     } else {
       apiMessages.insert(0, {'role': 'system', 'content': content});
     }
@@ -818,7 +819,10 @@ class MessageBuilderService {
   ) {
     if ((assistant?.limitContextMessages ?? true) &&
         (assistant?.contextMessageSize ?? 0) > 0) {
-      final int keep = (assistant!.contextMessageSize).clamp(1, 512);
+      final int keep = (assistant!.contextMessageSize).clamp(
+        Assistant.minContextMessageSize,
+        Assistant.maxContextMessageSize,
+      );
       int startIdx = 0;
       if (apiMessages.isNotEmpty && apiMessages.first['role'] == 'system') {
         startIdx = 1;
@@ -849,19 +853,18 @@ class MessageBuilderService {
     }
   }
 
-  /// Check if Gemini built-in search is enabled for the given provider/model.
-  bool hasBuiltInGeminiSearch(
+  /// Check if built-in search is enabled for the given provider/model.
+  bool hasBuiltInSearch(
     SettingsProvider settings,
     String providerKey,
     String modelId,
   ) {
     try {
       final cfg = settings.getProviderConfig(providerKey);
-      if (cfg.providerType != ProviderKind.google) return false;
-      final rawOv = cfg.modelOverrides[modelId];
-      final ov = rawOv is Map ? rawOv : null;
-      final builtIns = BuiltInToolNames.parseAndNormalize(ov?['builtInTools']);
-      return builtIns.contains(BuiltInToolNames.search);
+      return BuiltInToolsHelper.isBuiltInSearchEnabled(
+        cfg: cfg,
+        modelId: modelId,
+      );
     } catch (_) {
       return false;
     }

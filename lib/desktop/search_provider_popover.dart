@@ -20,7 +20,6 @@ Future<void> showDesktopSearchProviderPopover(
   required GlobalKey anchorKey,
 }) async {
   final overlay = Overlay.of(context);
-  if (overlay == null) return;
   final keyContext = anchorKey.currentContext;
   if (keyContext == null) return;
 
@@ -28,7 +27,12 @@ Future<void> showDesktopSearchProviderPopover(
   if (box == null) return;
   final offset = box.localToGlobal(Offset.zero);
   final size = box.size;
-  final anchorRect = Rect.fromLTWH(offset.dx, offset.dy, size.width, size.height);
+  final anchorRect = Rect.fromLTWH(
+    offset.dx,
+    offset.dy,
+    size.width,
+    size.height,
+  );
 
   late OverlayEntry entry;
   entry = OverlayEntry(
@@ -36,7 +40,9 @@ Future<void> showDesktopSearchProviderPopover(
       anchorRect: anchorRect,
       anchorWidth: size.width,
       onClose: () {
-        try { entry.remove(); } catch (_) {}
+        try {
+          entry.remove();
+        } catch (_) {}
       },
     ),
   );
@@ -69,13 +75,18 @@ class _SearchPopoverOverlayState extends State<_SearchPopoverOverlay>
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(vsync: this, duration: const Duration(milliseconds: 260));
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 260),
+    );
     _fadeIn = CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic);
     // Kick off enter: slide up into place from slightly below
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       if (!mounted) return;
       setState(() => _offset = Offset.zero);
-      try { await _controller.forward(); } catch (_) {}
+      try {
+        await _controller.forward();
+      } catch (_) {}
     });
   }
 
@@ -90,18 +101,22 @@ class _SearchPopoverOverlayState extends State<_SearchPopoverOverlay>
     _closing = true;
     // Slide down out of the clipped area, then fade out
     setState(() => _offset = const Offset(0, 1.0));
-    try { await _controller.reverse(); } catch (_) {}
+    try {
+      await _controller.reverse();
+    } catch (_) {}
     if (mounted) widget.onClose();
   }
 
   @override
   Widget build(BuildContext context) {
     final screen = MediaQuery.of(context).size;
-    final cs = Theme.of(context).colorScheme;
     // Slightly narrower than input width
     final width = (widget.anchorWidth - 16).clamp(260.0, 720.0);
-    final left = (widget.anchorRect.left + (widget.anchorRect.width - width) / 2)
-        .clamp(8.0, screen.width - width - 8.0);
+    final left =
+        (widget.anchorRect.left + (widget.anchorRect.width - width) / 2).clamp(
+          8.0,
+          screen.width - width - 8.0,
+        );
     final clipHeight = widget.anchorRect.top.clamp(0.0, screen.height);
 
     return Stack(
@@ -133,11 +148,13 @@ class _SearchPopoverOverlayState extends State<_SearchPopoverOverlay>
                       curve: Curves.easeOutCubic,
                       offset: _offset,
                       child: _GlassPanel(
-                        borderRadius: const BorderRadius.vertical(top: Radius.circular(14)),
+                        borderRadius: const BorderRadius.vertical(
+                          top: Radius.circular(14),
+                        ),
                         child: _SearchContent(onDone: _close),
-              ),
-            ),
-          ),
+                      ),
+                    ),
+                  ),
                 ),
               ],
             ),
@@ -162,17 +179,25 @@ class _GlassPanel extends StatelessWidget {
         filter: ui.ImageFilter.blur(sigmaX: 20, sigmaY: 20),
         child: DecoratedBox(
           decoration: BoxDecoration(
-            color: (isDark ? Colors.black : Colors.white).withOpacity(isDark ? 0.28 : 0.56),
+            color: (isDark ? Colors.black : Colors.white).withValues(
+              alpha: isDark ? 0.28 : 0.56,
+            ),
             border: Border(
-              top: BorderSide(color: Colors.white.withOpacity(isDark ? 0.06 : 0.18), width: 0.7),
-              left: BorderSide(color: Colors.white.withOpacity(isDark ? 0.04 : 0.12), width: 0.6),
-              right: BorderSide(color: Colors.white.withOpacity(isDark ? 0.04 : 0.12), width: 0.6),
+              top: BorderSide(
+                color: Colors.white.withValues(alpha: isDark ? 0.06 : 0.18),
+                width: 0.7,
+              ),
+              left: BorderSide(
+                color: Colors.white.withValues(alpha: isDark ? 0.04 : 0.12),
+                width: 0.6,
+              ),
+              right: BorderSide(
+                color: Colors.white.withValues(alpha: isDark ? 0.04 : 0.12),
+                width: 0.6,
+              ),
             ),
           ),
-          child: Material(
-            type: MaterialType.transparency,
-            child: child,
-          ),
+          child: Material(type: MaterialType.transparency, child: child),
         ),
       ),
     );
@@ -189,40 +214,10 @@ class _SearchContent extends StatelessWidget {
     final modelId = a?.chatModelId ?? settings.currentModelId;
     if (providerKey == null || (modelId ?? '').isEmpty) return false;
     final cfg = settings.getProviderConfig(providerKey);
-    final isGemini = cfg.providerType == ProviderKind.google;
-    final isClaude = cfg.providerType == ProviderKind.claude;
-    final isOpenAIResponses = cfg.providerType == ProviderKind.openai && (cfg.useResponseApi == true);
-    final isGrok = cfg.providerType == ProviderKind.openai && (modelId ?? '').toLowerCase().contains('grok');
-    if (!(isGemini || isClaude || isOpenAIResponses || isGrok)) return false;
-    final mid = modelId!.toLowerCase();
-    if (isGrok) return true; // All Grok models assumed to support search
-    if (isClaude) {
-      const supported = <String>{
-        'claude-opus-4-6',
-        'claude-sonnet-4-5-20250929',
-        'claude-sonnet-4-20250514',
-        'claude-3-7-sonnet-20250219',
-        'claude-haiku-4-5-20251001',
-        'claude-3-5-haiku-latest',
-        'claude-sonnet-4-6',
-        'claude-opus-4-1-20250805',
-        'claude-opus-4-20250514',
-      };
-      if (!supported.contains(mid)) return false;
-    }
-    if (isOpenAIResponses) {
-      bool isSupportedOpenAI(String id) {
-        final m = id.toLowerCase();
-        return m.startsWith('gpt-4o') ||
-            m.startsWith('gpt-4.1') ||
-            m.startsWith('o4-mini') ||
-            m == 'o3' ||
-            m.startsWith('o3-') ||
-            m.startsWith('gpt-5');
-      }
-      if (!isSupportedOpenAI(mid)) return false;
-    }
-    return true;
+    return BuiltInToolsHelper.supportsBuiltInSearchForModel(
+      cfg: cfg,
+      modelId: modelId,
+    );
   }
 
   bool _hasUrlContextEnabled(SettingsProvider settings, AssistantProvider ap) {
@@ -231,27 +226,31 @@ class _SearchContent extends StatelessWidget {
     final modelId = a?.chatModelId ?? settings.currentModelId;
     if (providerKey == null || (modelId ?? '').isEmpty) return false;
     final cfg = settings.getProviderConfig(providerKey);
-    final rawOv = cfg.modelOverrides[modelId!] ;
+    final rawOv = cfg.modelOverrides[modelId!];
     final ov = rawOv is Map ? rawOv : null;
     final tools = BuiltInToolNames.parseAndNormalize(ov?['builtInTools']);
     return tools.contains(BuiltInToolNames.urlContext);
   }
 
-  bool _hasBuiltInSearchEnabled(SettingsProvider settings, AssistantProvider ap) {
+  bool _hasBuiltInSearchEnabled(
+    SettingsProvider settings,
+    AssistantProvider ap,
+  ) {
     final a = ap.currentAssistant;
     final providerKey = a?.chatModelProvider ?? settings.currentModelProvider;
     final modelId = a?.chatModelId ?? settings.currentModelId;
     if (providerKey == null || (modelId ?? '').isEmpty) return false;
     final cfg = settings.getProviderConfig(providerKey);
-    final rawOv = cfg.modelOverrides[modelId!] ;
-    final ov = rawOv is Map ? rawOv : null;
-    final tools = BuiltInToolNames.parseAndNormalize(ov?['builtInTools']);
-    return tools.contains(BuiltInToolNames.search);
+    return BuiltInToolsHelper.isBuiltInSearchEnabled(
+      cfg: cfg,
+      modelId: modelId,
+    );
   }
 
-  Future<void> _enableBuiltInSearch(BuildContext context) async {
-    final sp = context.read<SettingsProvider>();
-    final ap = context.read<AssistantProvider>();
+  Future<void> _enableBuiltInSearch(
+    SettingsProvider sp,
+    AssistantProvider ap,
+  ) async {
     final a = ap.currentAssistant;
     final providerKey = a?.chatModelProvider ?? sp.currentModelProvider;
     final modelId = a?.chatModelId ?? sp.currentModelId;
@@ -260,18 +259,26 @@ class _SearchContent extends StatelessWidget {
     final overrides = Map<String, dynamic>.from(cfg.modelOverrides);
     final rawMo = overrides[modelId!];
     final existingMo = rawMo is Map ? rawMo : null;
-    final mo = Map<String, dynamic>.from(existingMo?.map((k, v) => MapEntry(k.toString(), v)) ?? const <String, dynamic>{});
+    final mo = Map<String, dynamic>.from(
+      existingMo?.map((k, v) => MapEntry(k.toString(), v)) ??
+          const <String, dynamic>{},
+    );
 
-    final tools = BuiltInToolNames.parseAndNormalize(mo['builtInTools'])..add(BuiltInToolNames.search);
+    final tools = BuiltInToolNames.parseAndNormalize(mo['builtInTools'])
+      ..add(BuiltInToolNames.search);
     mo['builtInTools'] = BuiltInToolNames.orderedForStorage(tools);
     overrides[modelId] = mo;
-    await sp.setProviderConfig(providerKey, cfg.copyWith(modelOverrides: overrides));
+    await sp.setProviderConfig(
+      providerKey,
+      cfg.copyWith(modelOverrides: overrides),
+    );
     await sp.setSearchEnabled(false);
   }
 
-  Future<void> _disableBuiltInSearch(BuildContext context) async {
-    final sp = context.read<SettingsProvider>();
-    final ap = context.read<AssistantProvider>();
+  Future<void> _disableBuiltInSearch(
+    SettingsProvider sp,
+    AssistantProvider ap,
+  ) async {
     final a = ap.currentAssistant;
     final providerKey = a?.chatModelProvider ?? sp.currentModelProvider;
     final modelId = a?.chatModelId ?? sp.currentModelId;
@@ -280,16 +287,23 @@ class _SearchContent extends StatelessWidget {
     final overrides = Map<String, dynamic>.from(cfg.modelOverrides);
     final rawMo = overrides[modelId!];
     final existingMo = rawMo is Map ? rawMo : null;
-    final mo = Map<String, dynamic>.from(existingMo?.map((k, v) => MapEntry(k.toString(), v)) ?? const <String, dynamic>{});
+    final mo = Map<String, dynamic>.from(
+      existingMo?.map((k, v) => MapEntry(k.toString(), v)) ??
+          const <String, dynamic>{},
+    );
 
-    final tools = BuiltInToolNames.parseAndNormalize(mo['builtInTools'])..remove(BuiltInToolNames.search);
+    final tools = BuiltInToolNames.parseAndNormalize(mo['builtInTools'])
+      ..remove(BuiltInToolNames.search);
     if (tools.isEmpty) {
       mo.remove('builtInTools');
     } else {
       mo['builtInTools'] = BuiltInToolNames.orderedForStorage(tools);
     }
     overrides[modelId] = mo;
-    await sp.setProviderConfig(providerKey, cfg.copyWith(modelOverrides: overrides));
+    await sp.setProviderConfig(
+      providerKey,
+      cfg.copyWith(modelOverrides: overrides),
+    );
   }
 
   @override
@@ -299,9 +313,13 @@ class _SearchContent extends StatelessWidget {
     final l10n = AppLocalizations.of(context)!;
     final cs = Theme.of(context).colorScheme;
     final services = sp.searchServices;
-    final selected = sp.searchServiceSelected
-        .clamp(0, services.isNotEmpty ? services.length - 1 : 0);
+    final selected = sp.searchServiceSelected.clamp(
+      0,
+      services.isNotEmpty ? services.length - 1 : 0,
+    );
     final enabled = sp.searchEnabled;
+    final settingsNotifier = context.read<SettingsProvider>();
+    final done = onDone;
     final supportsBuiltIn = _supportsBuiltInSearch(sp, ap);
     final builtInEnabled = _hasBuiltInSearchEnabled(sp, ap);
     final hasUrlContext = _hasUrlContextEnabled(sp, ap);
@@ -311,28 +329,32 @@ class _SearchContent extends StatelessWidget {
     final rows = <Widget>[];
 
     // 1) Cancel item at top
-    rows.add(_RowItem(
-      leading: Icon(Lucide.CircleX, size: 16, color: cs.onSurface),
-      label: l10n.homePageCancel,
-      selected: false,
-      onTap: () async {
-        await _disableBuiltInSearch(context);
-        await context.read<SettingsProvider>().setSearchEnabled(false);
-        onDone();
-      },
-    ));
+    rows.add(
+      _RowItem(
+        leading: Icon(Lucide.CircleX, size: 16, color: cs.onSurface),
+        label: l10n.homePageCancel,
+        selected: false,
+        onTap: () async {
+          await _disableBuiltInSearch(sp, ap);
+          await settingsNotifier.setSearchEnabled(false);
+          done();
+        },
+      ),
+    );
 
     // 2) Built-in search (when supported)
     if (supportsBuiltIn) {
-      rows.add(_RowItem(
-        leading: Icon(Lucide.Search, size: 16, color: cs.onSurface),
-        label: l10n.searchSettingsSheetBuiltinSearchTitle,
-        selected: builtInEnabled,
-        onTap: () async {
-          await _enableBuiltInSearch(context);
-          onDone();
-        },
-      ));
+      rows.add(
+        _RowItem(
+          leading: Icon(Lucide.Search, size: 16, color: cs.onSurface),
+          label: l10n.searchSettingsSheetBuiltinSearchTitle,
+          selected: builtInEnabled,
+          onTap: () async {
+            await _enableBuiltInSearch(sp, ap);
+            done();
+          },
+        ),
+      );
     }
 
     // 3) External services list (hidden when url_context is active)
@@ -342,17 +364,19 @@ class _SearchContent extends StatelessWidget {
         final svc = SearchService.getService(s);
         final name = svc.name;
         final isSelectedActive = enabled && (i == selected);
-        rows.add(_RowItem(
-          leading: _BrandIcon(name: name),
-          label: name,
-          selected: isSelectedActive,
-          onTap: () async {
-            await context.read<SettingsProvider>().setSearchServiceSelected(i);
-            await _disableBuiltInSearch(context);
-            await context.read<SettingsProvider>().setSearchEnabled(true);
-            onDone();
-          },
-        ));
+        rows.add(
+          _RowItem(
+            leading: _BrandIcon(name: name),
+            label: name,
+            selected: isSelectedActive,
+            onTap: () async {
+              await settingsNotifier.setSearchServiceSelected(i);
+              await _disableBuiltInSearch(sp, ap);
+              await settingsNotifier.setSearchEnabled(true);
+              done();
+            },
+          ),
+        );
       }
     }
 
@@ -365,7 +389,12 @@ class _SearchContent extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              ...rows.map((w) => Padding(padding: const EdgeInsets.only(bottom: 1), child: w)),
+              ...rows.map(
+                (w) => Padding(
+                  padding: const EdgeInsets.only(bottom: 1),
+                  child: w,
+                ),
+              ),
             ],
           ),
         ),
@@ -401,7 +430,9 @@ class _RowItemState extends State<_RowItem> {
     final onColor = widget.selected ? cs.primary : cs.onSurface;
     // Use stronger overlay for hover to be clearly visible on glass
     final baseBg = Colors.transparent;
-    final hoverBg = (isDark ? Colors.white : Colors.black).withOpacity(isDark ? 0.12 : 0.10);
+    final hoverBg = (isDark ? Colors.white : Colors.black).withValues(
+      alpha: isDark ? 0.12 : 0.10,
+    );
 
     return MouseRegion(
       cursor: SystemMouseCursors.click,
@@ -420,7 +451,11 @@ class _RowItemState extends State<_RowItem> {
           ),
           child: Row(
             children: [
-              SizedBox(width: 22, height: 22, child: Center(child: widget.leading)),
+              SizedBox(
+                width: 22,
+                height: 22,
+                child: Center(child: widget.leading),
+              ),
               const SizedBox(width: 6),
               Expanded(
                 child: Text(
@@ -437,7 +472,12 @@ class _RowItemState extends State<_RowItem> {
               AnimatedSwitcher(
                 duration: const Duration(milliseconds: 160),
                 child: widget.selected
-                    ? Icon(Lucide.Check, key: const ValueKey('check'), size: 16, color: cs.primary)
+                    ? Icon(
+                        Lucide.Check,
+                        key: const ValueKey('check'),
+                        size: 16,
+                        color: cs.primary,
+                      )
                     : const SizedBox(width: 16, key: ValueKey('space')),
               ),
             ],
@@ -468,7 +508,9 @@ class _BrandIcon extends StatelessWidget {
         width: 16,
         height: 16,
         // Keep original colors if provided; otherwise tint to onSurface subtly
-        colorFilter: asset.contains('color') ? null : ColorFilter.mode(color, BlendMode.srcIn),
+        colorFilter: asset.contains('color')
+            ? null
+            : ColorFilter.mode(color, BlendMode.srcIn),
       );
     }
     return Image.asset(

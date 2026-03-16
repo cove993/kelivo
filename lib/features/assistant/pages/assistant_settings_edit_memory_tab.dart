@@ -341,6 +341,18 @@ class _MemoryTab extends StatelessWidget {
                   );
                 },
               ),
+              AnimatedSize(
+                duration: const Duration(milliseconds: 180),
+                curve: Curves.easeOutCubic,
+                child: a.enableRecentChatsReference
+                    ? Column(
+                        children: [
+                          _iosDivider(context),
+                          _RecentChatsSummaryFrequencySection(assistant: a),
+                        ],
+                      )
+                    : const SizedBox.shrink(),
+              ),
             ],
           ),
         ),
@@ -881,5 +893,405 @@ class _MemoryTab extends StatelessWidget {
     if (confirmed == true && context.mounted) {
       await chatService.clearConversationSummary(conversationId);
     }
+  }
+}
+
+class _RecentChatsSummaryFrequencySection extends StatelessWidget {
+  const _RecentChatsSummaryFrequencySection({required this.assistant});
+
+  final Assistant assistant;
+
+  Future<void> _showCustomCountInput(BuildContext context) async {
+    final l10n = AppLocalizations.of(context)!;
+    final cs = Theme.of(context).colorScheme;
+    final controller = TextEditingController(
+      text: assistant.recentChatsSummaryMessageCount.toString(),
+    );
+    final ap = context.read<AssistantProvider>();
+    final platform = Theme.of(context).platform;
+    final isDesktop =
+        platform == TargetPlatform.macOS ||
+        platform == TargetPlatform.linux ||
+        platform == TargetPlatform.windows;
+
+    int? parseValue() {
+      final value = int.tryParse(controller.text.trim());
+      if (value == null || value < 1) return null;
+      return value;
+    }
+
+    Future<void> submit(BuildContext sheetContext) async {
+      final parsed = parseValue();
+      if (parsed == null) return;
+      if (parsed != assistant.recentChatsSummaryMessageCount) {
+        await ap.updateAssistant(
+          assistant.copyWith(recentChatsSummaryMessageCount: parsed),
+        );
+      }
+      if (sheetContext.mounted) Navigator.of(sheetContext).pop();
+    }
+
+    if (isDesktop) {
+      await showDialog<void>(
+        context: context,
+        builder: (ctx) {
+          return StatefulBuilder(
+            builder: (ctx, setLocal) {
+              final parsed = parseValue();
+              return AlertDialog(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                title: Text(
+                  l10n.assistantEditRecentChatsSummaryFrequencyCustomTitle,
+                ),
+                content: SizedBox(
+                  width: 360,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        l10n.assistantEditRecentChatsSummaryFrequencyCustomDescription,
+                        style: TextStyle(
+                          fontSize: 12,
+                          height: 1.4,
+                          color: cs.onSurface.withOpacity(0.68),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      TextField(
+                        controller: controller,
+                        autofocus: true,
+                        keyboardType: TextInputType.number,
+                        inputFormatters: [
+                          FilteringTextInputFormatter.digitsOnly,
+                        ],
+                        decoration: InputDecoration(
+                          labelText: l10n
+                              .assistantEditRecentChatsSummaryFrequencyCustomLabel,
+                          hintText: l10n
+                              .assistantEditRecentChatsSummaryFrequencyCustomHint,
+                        ),
+                        onChanged: (_) => setLocal(() {}),
+                        onSubmitted: (_) async {
+                          if (parsed != null) await submit(ctx);
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.of(ctx).pop(),
+                    child: Text(l10n.assistantEditEmojiDialogCancel),
+                  ),
+                  TextButton(
+                    onPressed: parsed == null ? null : () => submit(ctx),
+                    child: Text(l10n.assistantEditEmojiDialogSave),
+                  ),
+                ],
+              );
+            },
+          );
+        },
+      );
+      return;
+    }
+
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: cs.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (ctx, setLocal) {
+            final parsed = parseValue();
+            return SafeArea(
+              top: false,
+              child: Padding(
+                padding: EdgeInsets.fromLTRB(
+                  16,
+                  16,
+                  16,
+                  MediaQuery.of(ctx).viewInsets.bottom + 16,
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(Lucide.FileClock, size: 18, color: cs.primary),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            l10n.assistantEditRecentChatsSummaryFrequencyCustomTitle,
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      l10n.assistantEditRecentChatsSummaryFrequencyCustomDescription,
+                      style: TextStyle(
+                        fontSize: 12,
+                        height: 1.4,
+                        color: cs.onSurface.withOpacity(0.68),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    TextField(
+                      controller: controller,
+                      autofocus: true,
+                      keyboardType: TextInputType.number,
+                      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                      decoration: InputDecoration(
+                        labelText: l10n
+                            .assistantEditRecentChatsSummaryFrequencyCustomLabel,
+                        hintText: l10n
+                            .assistantEditRecentChatsSummaryFrequencyCustomHint,
+                        filled: true,
+                        fillColor: Theme.of(ctx).brightness == Brightness.dark
+                            ? Colors.white10
+                            : const Color(0xFFF7F7F9),
+                        border: OutlineInputBorder(
+                          borderSide: BorderSide(
+                            color: cs.outlineVariant.withOpacity(0.2),
+                          ),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderSide: BorderSide(
+                            color: cs.primary.withOpacity(0.5),
+                          ),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                      onChanged: (_) => setLocal(() {}),
+                      onSubmitted: (_) async {
+                        if (parsed != null) await submit(ctx);
+                      },
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _IosButton(
+                            label: l10n.assistantEditEmojiDialogCancel,
+                            icon: Lucide.X,
+                            onTap: () => Navigator.of(ctx).pop(),
+                            filled: false,
+                            neutral: true,
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: _IosButton(
+                            label: l10n.assistantEditEmojiDialogSave,
+                            icon: Lucide.Check,
+                            onTap: parsed == null
+                                ? () {
+                                    showAppSnackBar(
+                                      context,
+                                      message: l10n
+                                          .assistantEditRecentChatsSummaryFrequencyCustomInvalid,
+                                      type: NotificationType.error,
+                                    );
+                                  }
+                                : () => submit(ctx),
+                            filled: true,
+                            neutral: false,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final cs = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final ap = context.read<AssistantProvider>();
+    final selected = assistant.recentChatsSummaryMessageCount;
+    final options = <int>{
+      ...Assistant.recentChatsSummaryMessageCountOptions,
+      selected,
+    }.toList()..sort();
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(12, 8, 12, 10),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SizedBox(
+                width: 36,
+                child: Icon(
+                  Lucide.FileClock,
+                  size: 20,
+                  color: cs.onSurface.withOpacity(0.9),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      l10n.assistantEditRecentChatsSummaryFrequencyTitle,
+                      style: TextStyle(
+                        fontSize: 15,
+                        color: cs.onSurface.withOpacity(0.9),
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      l10n.assistantEditRecentChatsSummaryFrequencyDescription,
+                      style: TextStyle(
+                        fontSize: 12,
+                        height: 1.35,
+                        color: cs.onSurface.withOpacity(0.65),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Padding(
+            padding: const EdgeInsets.only(left: 48),
+            child: Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                ...options.map((count) {
+                  final isSelected = count == selected;
+                  return _FrequencyChipButton(
+                    label: l10n.assistantEditRecentChatsSummaryFrequencyOption(
+                      count,
+                    ),
+                    selected: isSelected,
+                    onTap: isSelected
+                        ? null
+                        : () async {
+                            await ap.updateAssistant(
+                              assistant.copyWith(
+                                recentChatsSummaryMessageCount: count,
+                              ),
+                            );
+                          },
+                  );
+                }),
+                _FrequencyChipButton(
+                  label:
+                      l10n.assistantEditRecentChatsSummaryFrequencyCustomButton,
+                  icon: Lucide.Pencil,
+                  emphasized: true,
+                  onTap: () => _showCustomCountInput(context),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _FrequencyChipButton extends StatelessWidget {
+  const _FrequencyChipButton({
+    required this.label,
+    required this.onTap,
+    this.selected = false,
+    this.emphasized = false,
+    this.icon,
+  });
+
+  final String label;
+  final VoidCallback? onTap;
+  final bool selected;
+  final bool emphasized;
+  final IconData? icon;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final baseBackground = selected
+        ? cs.primary.withOpacity(isDark ? 0.22 : 0.12)
+        : (isDark ? Colors.white10 : const Color(0xFFF2F3F5));
+    final borderColor = selected
+        ? cs.primary.withOpacity(0.38)
+        : (emphasized
+              ? cs.primary.withOpacity(isDark ? 0.24 : 0.18)
+              : cs.outlineVariant.withOpacity(isDark ? 0.18 : 0.14));
+    final foregroundColor = selected || emphasized
+        ? cs.primary
+        : cs.onSurface.withOpacity(0.8);
+
+    return MouseRegion(
+      cursor: onTap == null
+          ? SystemMouseCursors.basic
+          : SystemMouseCursors.click,
+      child: _TactileRow(
+        onTap: onTap,
+        haptics: true,
+        pressedScale: 0.985,
+        releaseDelayMs: 0,
+        builder: (pressed) {
+          return AnimatedOpacity(
+            duration: const Duration(milliseconds: 90),
+            curve: Curves.easeOutCubic,
+            opacity: pressed ? (selected ? 0.94 : 0.82) : 1.0,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
+              decoration: BoxDecoration(
+                color: baseBackground,
+                borderRadius: BorderRadius.circular(999),
+                border: Border.all(color: borderColor),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (icon != null) ...[
+                    Icon(icon, size: 14, color: foregroundColor),
+                    const SizedBox(width: 6),
+                  ],
+                  Text(
+                    label,
+                    style: TextStyle(
+                      fontSize: 12.5,
+                      fontWeight: FontWeight.w600,
+                      color: foregroundColor,
+                      height: 1.0,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
   }
 }

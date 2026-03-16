@@ -235,7 +235,11 @@ class _BasicSettingsTabState extends State<_BasicSettingsTab> {
                       currentBudget,
                     );
                   }
-                  await showReasoningBudgetSheet(context);
+                  await showReasoningBudgetSheet(
+                    context,
+                    modelProvider: a.chatModelProvider,
+                    modelId: a.chatModelId,
+                  );
                   final chosen = context
                       .read<SettingsProvider>()
                       .thinkingBudget;
@@ -264,6 +268,16 @@ class _BasicSettingsTabState extends State<_BasicSettingsTab> {
                 onChanged: (v) => context
                     .read<AssistantProvider>()
                     .updateAssistant(a.copyWith(useAssistantAvatar: v)),
+              ),
+              _iosDivider(context),
+              _iosSwitchRow(
+                context,
+                icon: Lucide.CaseSensitive,
+                label: l10n.assistantEditUseAssistantNameTitle,
+                value: a.useAssistantName,
+                onChanged: (v) => context
+                    .read<AssistantProvider>()
+                    .updateAssistant(a.copyWith(useAssistantName: v)),
               ),
               _iosDivider(context),
               // Stream output
@@ -983,10 +997,11 @@ class _BasicSettingsTabState extends State<_BasicSettingsTab> {
                         label: value.toString(),
                         customLabelStops: const <double>[
                           1.0,
-                          32.0,
                           64.0,
                           128.0,
                           256.0,
+                          512.0,
+                          1024.0,
                         ],
                         onLabelTap: () async {
                           final chosen = await _showContextMessageInputDialog(

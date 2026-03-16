@@ -55,8 +55,8 @@ part 'assistant_settings_edit_quick_phrase_tab.dart';
 part 'assistant_settings_edit_custom_request_tab.dart';
 part 'assistant_settings_edit_mcp_tab.dart';
 
-const int _contextMessageMin = 1;
-const int _contextMessageMax = 256;
+const int _contextMessageMin = Assistant.minContextMessageSize;
+const int _contextMessageMax = Assistant.maxContextMessageSize;
 
 int _clampContextMessages(num value) =>
     value.clamp(_contextMessageMin, _contextMessageMax).toInt();
@@ -821,11 +821,13 @@ class _TactileRow extends StatefulWidget {
     this.onTap,
     this.haptics = true,
     this.pressedScale = 1.0,
+    this.releaseDelayMs = 60,
   });
   final Widget Function(bool pressed) builder;
   final VoidCallback? onTap;
   final bool haptics;
   final double pressedScale;
+  final int releaseDelayMs;
 
   @override
   State<_TactileRow> createState() => _TactileRowState();
@@ -855,7 +857,11 @@ class _TactileRowState extends State<_TactileRow> {
       onTapUp: widget.onTap == null
           ? null
           : (_) async {
-              await Future.delayed(const Duration(milliseconds: 60));
+              if (widget.releaseDelayMs > 0) {
+                await Future.delayed(
+                  Duration(milliseconds: widget.releaseDelayMs),
+                );
+              }
               if (mounted) _setPressed(false);
             },
       onTapCancel: widget.onTap == null ? null : () => _setPressed(false),
@@ -1701,10 +1707,11 @@ class _DesktopAssistantBasicPaneState
                         ).toString(),
                         customLabelStops: const <double>[
                           1.0,
-                          32.0,
                           64.0,
                           128.0,
                           256.0,
+                          512.0,
+                          1024.0,
                         ],
                         onLabelTap: a.limitContextMessages
                             ? () async {
@@ -1817,6 +1824,14 @@ class _DesktopAssistantBasicPaneState
                     onChanged: (v) => context
                         .read<AssistantProvider>()
                         .updateAssistant(a.copyWith(useAssistantAvatar: v)),
+                  ),
+                  sectionDivider(),
+                  simpleSwitchRow(
+                    label: l10n.assistantEditUseAssistantNameTitle,
+                    value: a.useAssistantName,
+                    onChanged: (v) => context
+                        .read<AssistantProvider>()
+                        .updateAssistant(a.copyWith(useAssistantName: v)),
                   ),
                   sectionDivider(),
                   simpleSwitchRow(
