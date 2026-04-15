@@ -1,6 +1,5 @@
 import 'package:flutter/foundation.dart';
 import 'dart:io';
-import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as p;
 import 'package:hive_flutter/hive_flutter.dart';
 import '../../models/chat_message.dart';
@@ -12,6 +11,7 @@ class ChatService extends ChangeNotifier {
   static const String _conversationsBoxName = 'conversations';
   static const String _messagesBoxName = 'messages';
   static const String _toolEventsBoxName = 'tool_events_v1';
+  static const String _activeStreamingKey = '_active_streaming_ids';
 
   late Box<Conversation> _conversationsBox;
   late Box<ChatMessage> _messagesBox;
@@ -56,6 +56,10 @@ class ChatService extends ChangeNotifier {
 
     // Migrate any persisted message content that references old iOS sandbox paths
     await _migrateSandboxPaths();
+
+    // Reset any stale isStreaming flags left over from a previous app crash or
+    // force-quit.  After a fresh launch no message can be actively streaming.
+    await _resetStaleStreamingFlags();
 
     _initialized = true;
     notifyListeners();
@@ -279,13 +283,68 @@ class ChatService extends ChangeNotifier {
     }
   }
 
+  /// Reset stale isStreaming flags left over from a previous app crash or
+  /// force-quit.  After a fresh launch no message can be actively streaming,
+  /// so any persisted `isStreaming: true` is stale and must be cleared to
+  /// avoid stuck loading indicators.
+  ///
+  /// Uses a tracked set of streaming message IDs for O(1) lookup instead of
+  /// scanning every message in the box.
+  Future<void> _resetStaleStreamingFlags() async {
+    try {
+      final raw = _toolEventsBox.get(_activeStreamingKey);
+      if (raw == null) return;
+      final ids = (raw as List).cast<String>();
+      if (ids.isEmpty) return;
+      for (final id in ids) {
+        final msg = _messagesBox.get(id);
+        if (msg != null && msg.isStreaming) {
+          await _messagesBox.put(id, msg.copyWith(isStreaming: false));
+        }
+      }
+      await _toolEventsBox.delete(_activeStreamingKey);
+    } catch (_) {
+      // best-effort; ignore errors
+    }
+  }
+
+  /// Record a message ID as actively streaming.
+  void _trackStreamingId(String messageId) {
+    try {
+      final raw = _toolEventsBox.get(_activeStreamingKey);
+      final ids = raw != null
+          ? (raw as List).cast<String>().toList()
+          : <String>[];
+      if (!ids.contains(messageId)) {
+        ids.add(messageId);
+        _toolEventsBox.put(_activeStreamingKey, ids);
+      }
+    } catch (_) {}
+  }
+
+  /// Remove a message ID from the active streaming set.
+  void _untrackStreamingId(String messageId) {
+    try {
+      final raw = _toolEventsBox.get(_activeStreamingKey);
+      if (raw == null) return;
+      final ids = (raw as List).cast<String>().toList();
+      if (ids.remove(messageId)) {
+        if (ids.isEmpty) {
+          _toolEventsBox.delete(_activeStreamingKey);
+        } else {
+          _toolEventsBox.put(_activeStreamingKey, ids);
+        }
+      }
+    } catch (_) {}
+  }
+
   Future<void> _cleanupOrphanUploads() async {
     try {
       final uploadDir = await AppDirectories.getUploadDirectory();
       if (!await uploadDir.exists()) return;
 
       // Build the set of all referenced paths across all messages
-      String _canon(String pth) {
+      String canon(String pth) {
         // Normalize separators and resolve redundant segments to enable
         // reliable equality checks across platforms (esp. Windows).
         final normalized = p.normalize(pth);
@@ -296,7 +355,7 @@ class ChatService extends ChangeNotifier {
       final referenced = <String>{};
       for (final m in _messagesBox.values) {
         for (final pth in _extractAttachmentPaths(m.content)) {
-          referenced.add(_canon(pth));
+          referenced.add(canon(pth));
         }
       }
 
@@ -304,7 +363,7 @@ class ChatService extends ChangeNotifier {
       final entries = uploadDir.listSync(recursive: true, followLinks: false);
       for (final ent in entries) {
         if (ent is File) {
-          final filePath = _canon(ent.path);
+          final filePath = canon(ent.path);
           if (!referenced.contains(filePath)) {
             try {
               await ent.delete();
@@ -567,6 +626,11 @@ class ChatService extends ChangeNotifier {
 
     await _messagesBox.put(message.id, message);
 
+    // Track streaming state for crash-recovery cleanup
+    if (isStreaming) {
+      _trackStreamingId(message.id);
+    }
+
     conversation.messageIds.add(message.id);
     conversation.updatedAt = DateTime.now();
     await conversation.save();
@@ -590,6 +654,10 @@ class ChatService extends ChangeNotifier {
     DateTime? reasoningFinishedAt,
     String? translation,
     String? reasoningSegmentsJson,
+    int? promptTokens,
+    int? completionTokens,
+    int? cachedTokens,
+    int? durationMs,
   }) async {
     if (!_initialized) return;
 
@@ -606,9 +674,18 @@ class ChatService extends ChangeNotifier {
       translation: translation,
       reasoningSegmentsJson:
           reasoningSegmentsJson ?? message.reasoningSegmentsJson,
+      promptTokens: promptTokens ?? message.promptTokens,
+      completionTokens: completionTokens ?? message.completionTokens,
+      cachedTokens: cachedTokens ?? message.cachedTokens,
+      durationMs: durationMs ?? message.durationMs,
     );
 
     await _messagesBox.put(messageId, updatedMessage);
+
+    // Update streaming tracking for crash-recovery
+    if (isStreaming == false) {
+      _untrackStreamingId(messageId);
+    }
 
     // Update cache
     final conversationId = message.conversationId;
@@ -636,6 +713,10 @@ class ChatService extends ChangeNotifier {
     DateTime? reasoningFinishedAt,
     String? translation,
     String? reasoningSegmentsJson,
+    int? promptTokens,
+    int? completionTokens,
+    int? cachedTokens,
+    int? durationMs,
   }) async {
     if (!_initialized) return;
 
@@ -652,9 +733,18 @@ class ChatService extends ChangeNotifier {
       translation: translation,
       reasoningSegmentsJson:
           reasoningSegmentsJson ?? message.reasoningSegmentsJson,
+      promptTokens: promptTokens ?? message.promptTokens,
+      completionTokens: completionTokens ?? message.completionTokens,
+      cachedTokens: cachedTokens ?? message.cachedTokens,
+      durationMs: durationMs ?? message.durationMs,
     );
 
     await _messagesBox.put(messageId, updatedMessage);
+
+    // Update streaming tracking for crash-recovery
+    if (isStreaming == false) {
+      _untrackStreamingId(messageId);
+    }
 
     // Update cache
     final conversationId = message.conversationId;
@@ -891,6 +981,25 @@ class ChatService extends ChangeNotifier {
     final c = _conversationsBox.get(conversationId);
     if (c == null) return;
     c.versionSelections[groupId] = version;
+    c.updatedAt = DateTime.now();
+    await c.save();
+    notifyListeners();
+  }
+
+  Future<void> clearSelectedVersion(
+    String conversationId,
+    String groupId,
+  ) async {
+    if (_draftConversations.containsKey(conversationId)) {
+      final draft = _draftConversations[conversationId]!;
+      draft.versionSelections.remove(groupId);
+      draft.updatedAt = DateTime.now();
+      notifyListeners();
+      return;
+    }
+    final c = _conversationsBox.get(conversationId);
+    if (c == null) return;
+    c.versionSelections.remove(groupId);
     c.updatedAt = DateTime.now();
     await c.save();
     notifyListeners();

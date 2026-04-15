@@ -13,7 +13,7 @@ import 'package:flutter/foundation.dart';
 /// 3. Only the streaming message widget rebuilds, not the entire page
 class StreamingContentNotifier {
   /// Map of message ID to its content notifier.
-  /// Each streaming message has its own ValueNotifier<String>.
+  /// Each streaming message has its own `ValueNotifier<String>`.
   final Map<String, ValueNotifier<StreamingContentData>> _notifiers =
       <String, ValueNotifier<StreamingContentData>>{};
 
@@ -32,7 +32,18 @@ class StreamingContentNotifier {
 
   /// Update content for a streaming message.
   /// This will only notify the specific widget listening to this message's notifier.
-  void updateContent(String messageId, String content, int totalTokens) {
+  void updateContent(
+    String messageId,
+    String content,
+    int totalTokens, {
+    List<int>? contentSplitOffsets,
+    List<int>? reasoningCountAtSplit,
+    List<int>? toolCountAtSplit,
+    int? promptTokens,
+    int? completionTokens,
+    int? cachedTokens,
+    int? durationMs,
+  }) {
     final notifier = _notifiers[messageId];
     if (notifier != null) {
       final current = notifier.value;
@@ -42,8 +53,16 @@ class StreamingContentNotifier {
         reasoningText: current.reasoningText,
         reasoningStartAt: current.reasoningStartAt,
         reasoningFinishedAt: current.reasoningFinishedAt,
+        contentSplitOffsets: contentSplitOffsets ?? current.contentSplitOffsets,
+        reasoningCountAtSplit:
+            reasoningCountAtSplit ?? current.reasoningCountAtSplit,
+        toolCountAtSplit: toolCountAtSplit ?? current.toolCountAtSplit,
         toolPartsVersion: current.toolPartsVersion,
         uiVersion: current.uiVersion,
+        promptTokens: promptTokens ?? current.promptTokens,
+        completionTokens: completionTokens ?? current.completionTokens,
+        cachedTokens: cachedTokens ?? current.cachedTokens,
+        durationMs: durationMs ?? current.durationMs,
       );
     }
   }
@@ -54,6 +73,9 @@ class StreamingContentNotifier {
     String? reasoningText,
     DateTime? reasoningStartAt,
     DateTime? reasoningFinishedAt,
+    List<int>? contentSplitOffsets,
+    List<int>? reasoningCountAtSplit,
+    List<int>? toolCountAtSplit,
   }) {
     final notifier = _notifiers[messageId];
     if (notifier != null) {
@@ -64,15 +86,28 @@ class StreamingContentNotifier {
         reasoningText: reasoningText ?? current.reasoningText,
         reasoningStartAt: reasoningStartAt ?? current.reasoningStartAt,
         reasoningFinishedAt: reasoningFinishedAt ?? current.reasoningFinishedAt,
+        contentSplitOffsets: contentSplitOffsets ?? current.contentSplitOffsets,
+        reasoningCountAtSplit:
+            reasoningCountAtSplit ?? current.reasoningCountAtSplit,
+        toolCountAtSplit: toolCountAtSplit ?? current.toolCountAtSplit,
         toolPartsVersion: current.toolPartsVersion,
         uiVersion: current.uiVersion,
+        promptTokens: current.promptTokens,
+        completionTokens: current.completionTokens,
+        cachedTokens: current.cachedTokens,
+        durationMs: current.durationMs,
       );
     }
   }
 
   /// Notify that tool parts have been updated.
   /// Uses a version counter to trigger rebuild without copying tool data.
-  void notifyToolPartsUpdated(String messageId) {
+  void notifyToolPartsUpdated(
+    String messageId, {
+    List<int>? contentSplitOffsets,
+    List<int>? reasoningCountAtSplit,
+    List<int>? toolCountAtSplit,
+  }) {
     final notifier = _notifiers[messageId];
     if (notifier != null) {
       final current = notifier.value;
@@ -82,8 +117,16 @@ class StreamingContentNotifier {
         reasoningText: current.reasoningText,
         reasoningStartAt: current.reasoningStartAt,
         reasoningFinishedAt: current.reasoningFinishedAt,
+        contentSplitOffsets: contentSplitOffsets ?? current.contentSplitOffsets,
+        reasoningCountAtSplit:
+            reasoningCountAtSplit ?? current.reasoningCountAtSplit,
+        toolCountAtSplit: toolCountAtSplit ?? current.toolCountAtSplit,
         toolPartsVersion: current.toolPartsVersion + 1,
         uiVersion: current.uiVersion,
+        promptTokens: current.promptTokens,
+        completionTokens: current.completionTokens,
+        cachedTokens: current.cachedTokens,
+        durationMs: current.durationMs,
       );
     }
   }
@@ -102,6 +145,10 @@ class StreamingContentNotifier {
         reasoningFinishedAt: current.reasoningFinishedAt,
         toolPartsVersion: current.toolPartsVersion,
         uiVersion: current.uiVersion + 1,
+        promptTokens: current.promptTokens,
+        completionTokens: current.completionTokens,
+        cachedTokens: current.cachedTokens,
+        durationMs: current.durationMs,
       );
     }
   }
@@ -135,8 +182,15 @@ class StreamingContentData {
     this.reasoningText,
     this.reasoningStartAt,
     this.reasoningFinishedAt,
+    this.contentSplitOffsets,
+    this.reasoningCountAtSplit,
+    this.toolCountAtSplit,
     this.toolPartsVersion = 0,
     this.uiVersion = 0,
+    this.promptTokens,
+    this.completionTokens,
+    this.cachedTokens,
+    this.durationMs,
   });
 
   final String content;
@@ -144,12 +198,21 @@ class StreamingContentData {
   final String? reasoningText;
   final DateTime? reasoningStartAt;
   final DateTime? reasoningFinishedAt;
+  final List<int>? contentSplitOffsets;
+  final List<int>? reasoningCountAtSplit;
+  final List<int>? toolCountAtSplit;
 
   /// Version counter for tool parts updates. Incrementing this triggers rebuild.
   final int toolPartsVersion;
 
   /// Version counter for UI state changes (e.g., reasoning expanded toggle).
   final int uiVersion;
+
+  /// Detailed token usage fields.
+  final int? promptTokens;
+  final int? completionTokens;
+  final int? cachedTokens;
+  final int? durationMs;
 
   @override
   bool operator ==(Object other) =>
@@ -161,8 +224,15 @@ class StreamingContentData {
           reasoningText == other.reasoningText &&
           reasoningStartAt == other.reasoningStartAt &&
           reasoningFinishedAt == other.reasoningFinishedAt &&
+          listEquals(contentSplitOffsets, other.contentSplitOffsets) &&
+          listEquals(reasoningCountAtSplit, other.reasoningCountAtSplit) &&
+          listEquals(toolCountAtSplit, other.toolCountAtSplit) &&
           toolPartsVersion == other.toolPartsVersion &&
-          uiVersion == other.uiVersion;
+          uiVersion == other.uiVersion &&
+          promptTokens == other.promptTokens &&
+          completionTokens == other.completionTokens &&
+          cachedTokens == other.cachedTokens &&
+          durationMs == other.durationMs;
 
   @override
   int get hashCode =>
@@ -171,6 +241,13 @@ class StreamingContentData {
       reasoningText.hashCode ^
       reasoningStartAt.hashCode ^
       reasoningFinishedAt.hashCode ^
+      Object.hashAll(contentSplitOffsets ?? const <int>[]) ^
+      Object.hashAll(reasoningCountAtSplit ?? const <int>[]) ^
+      Object.hashAll(toolCountAtSplit ?? const <int>[]) ^
       toolPartsVersion.hashCode ^
-      uiVersion.hashCode;
+      uiVersion.hashCode ^
+      promptTokens.hashCode ^
+      completionTokens.hashCode ^
+      cachedTokens.hashCode ^
+      durationMs.hashCode;
 }

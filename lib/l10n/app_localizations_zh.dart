@@ -286,6 +286,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get sponsorPageWeChatSubtitle => '微信赞助码';
 
   @override
+  String get sponsorPageScanQrHint => '扫描二维码赞助';
+
+  @override
   String get languageDisplaySimplifiedChinese => '简体中文';
 
   @override
@@ -426,6 +429,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get mcpTransportTagInmemory => '内置';
 
   @override
+  String get mcpTransportTagSse => 'SSE';
+
+  @override
+  String get mcpTransportTagHttp => 'HTTP';
+
+  @override
   String get mcpServerEditSheetStdioOnlyDesktop => 'STDIO 仅在桌面端可用';
 
   @override
@@ -489,10 +498,16 @@ class AppLocalizationsZh extends AppLocalizations {
   String get userProviderDefaultUserName => '用户';
 
   @override
-  String get homePageDeleteMessage => '删除消息';
+  String get homePageDeleteMessage => '删除本版本';
 
   @override
-  String get homePageDeleteMessageConfirm => '确定要删除这条消息吗？此操作不可撤销。';
+  String get homePageDeleteMessageConfirm => '确定要删除当前版本吗？此操作不可撤销。';
+
+  @override
+  String get homePageDeleteAllVersions => '删除全部版本';
+
+  @override
+  String get homePageDeleteAllVersionsConfirm => '确定要删除这条消息的全部版本吗？此操作不可撤销。';
 
   @override
   String get homePageCancel => '取消';
@@ -1457,7 +1472,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get messageMoreSheetCreateBranch => '创建分支';
 
   @override
-  String get messageMoreSheetDelete => '删除';
+  String get messageMoreSheetDelete => '删除本版本';
+
+  @override
+  String get messageMoreSheetDeleteAllVersions => '删除全部版本';
 
   @override
   String get reasoningBudgetSheetOff => '关闭';
@@ -1504,7 +1522,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get reasoningBudgetSheetXhighSubtitle => '使用最大推理深度，适合最复杂的问题';
 
   @override
-  String get reasoningBudgetSheetCustomLabel => '自定义推理预算 (tokens)';
+  String get reasoningBudgetSheetCustomLabel => '自定义推理预算';
 
   @override
   String get reasoningBudgetSheetCustomHint => '例如：2048 (-1 自动，0 关闭)';
@@ -1958,6 +1976,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get chatInputBarMoreTooltip => '更多';
 
   @override
+  String get chatInputBarQueuedPending => '排队中';
+
+  @override
+  String get chatInputBarQueuedCancel => '取消排队';
+
+  @override
   String get chatInputBarInsertNewline => '换行';
 
   @override
@@ -2341,10 +2365,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get modelDetailSheetBuiltinToolsDescription => '内置工具仅支持官方 API。';
-
-  @override
-  String get modelDetailSheetGeminiCodeExecutionMutuallyExclusiveHint =>
-      '代码执行无法与搜索/URL 上下文/MCP 工具共存。';
 
   @override
   String get modelDetailSheetBuiltinToolsUnsupportedHint => '当前供应商不支持这些内置工具。';
@@ -2993,6 +3013,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get aboutPageEasterEggButton => '好的';
 
   @override
+  String get aboutPageAppName => 'Kelivo';
+
+  @override
   String get aboutPageAppDescription => '开源AI 助手';
 
   @override
@@ -3002,10 +3025,44 @@ class AppLocalizationsZh extends AppLocalizations {
   String get aboutPageVersion => '版本';
 
   @override
+  String aboutPageVersionDetail(String version, String buildNumber) {
+    return '$version / $buildNumber';
+  }
+
+  @override
   String get aboutPageSystem => '系统';
 
   @override
+  String get aboutPageLoadingPlaceholder => '...';
+
+  @override
+  String get aboutPageUnknownPlaceholder => '-';
+
+  @override
+  String get aboutPagePlatformMacos => 'macOS';
+
+  @override
+  String get aboutPagePlatformWindows => 'Windows';
+
+  @override
+  String get aboutPagePlatformLinux => 'Linux';
+
+  @override
+  String get aboutPagePlatformAndroid => 'Android';
+
+  @override
+  String get aboutPagePlatformIos => 'iOS';
+
+  @override
+  String aboutPagePlatformOther(String os) {
+    return '其他（$os）';
+  }
+
+  @override
   String get aboutPageWebsite => '官网';
+
+  @override
+  String get aboutPageGithub => 'GitHub';
 
   @override
   String get aboutPageLicense => '许可证';
@@ -3030,6 +3087,12 @@ class AppLocalizationsZh extends AppLocalizations {
       '是否在聊天消息中显示用户名称和时间戳';
 
   @override
+  String get displaySettingsPageShowUserNameTitle => '显示用户名称';
+
+  @override
+  String get displaySettingsPageShowUserTimestampTitle => '显示用户时间戳';
+
+  @override
   String get displaySettingsPageShowUserMessageActionsTitle => '显示用户消息操作按钮';
 
   @override
@@ -3042,6 +3105,12 @@ class AppLocalizationsZh extends AppLocalizations {
   @override
   String get displaySettingsPageShowModelNameTimestampSubtitle =>
       '是否在聊天消息中显示模型名称和时间戳';
+
+  @override
+  String get displaySettingsPageShowModelNameTitle => '显示模型名称';
+
+  @override
+  String get displaySettingsPageShowModelTimestampTitle => '显示模型时间戳';
 
   @override
   String get displaySettingsPageShowProviderInChatMessageTitle => '模型名称后显示供应商';
@@ -3068,6 +3137,28 @@ class AppLocalizationsZh extends AppLocalizations {
   @override
   String get displaySettingsPageAutoCollapseThinkingSubtitle =>
       '思考完成后自动折叠，保持界面简洁';
+
+  @override
+  String get displaySettingsPageCollapseThinkingStepsTitle => '折叠思考步骤';
+
+  @override
+  String get displaySettingsPageCollapseThinkingStepsSubtitle =>
+      '默认只显示最新步骤，展开后查看全部';
+
+  @override
+  String get displaySettingsPageShowToolResultSummaryTitle => '显示工具结果摘要';
+
+  @override
+  String get displaySettingsPageShowToolResultSummarySubtitle =>
+      '在工具步骤下方显示摘要文本';
+
+  @override
+  String chainOfThoughtExpandSteps(Object count) {
+    return '展开更多 $count 步';
+  }
+
+  @override
+  String get chainOfThoughtCollapse => '收起';
 
   @override
   String get displaySettingsPageShowChatListDateTitle => '显示对话列表日期';
@@ -3098,6 +3189,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get displaySettingsPageMessageNavButtonsSubtitle => '滚动时显示快速跳转按钮';
+
+  @override
+  String get displaySettingsPageUseNewAssistantAvatarUxTitle => '聊天标题栏显示助手头像';
 
   @override
   String get displaySettingsPageHapticsOnSidebarTitle => '侧边栏触觉反馈';
@@ -4157,6 +4251,59 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get worldBookInjectionRoleAssistant => '助手';
+
+  @override
+  String get mcpToolNeedsApproval => '需要审批';
+
+  @override
+  String get toolApprovalPending => '等待审批';
+
+  @override
+  String get toolApprovalApprove => '批准';
+
+  @override
+  String get toolApprovalDeny => '拒绝';
+
+  @override
+  String get toolApprovalDenyTitle => '拒绝工具调用';
+
+  @override
+  String get toolApprovalDenyHint => '原因（可选）';
+
+  @override
+  String toolApprovalDeniedMessage(Object reason, Object toolName) {
+    return '工具调用 \"$toolName\" 已被用户拒绝。原因：$reason';
+  }
+
+  @override
+  String tokenDetailPromptTokens(int count) {
+    return '$count tokens';
+  }
+
+  @override
+  String tokenDetailPromptTokensWithCache(int count, int cached) {
+    return '$count tokens ($cached cached)';
+  }
+
+  @override
+  String tokenDetailCompletionTokens(int count) {
+    return '$count tokens';
+  }
+
+  @override
+  String tokenDetailSpeed(String value) {
+    return '$value tok/s';
+  }
+
+  @override
+  String tokenDetailDuration(String value) {
+    return '${value}s';
+  }
+
+  @override
+  String tokenDetailTotalTokens(int count) {
+    return '$count tokens';
+  }
 }
 
 /// The translations for Chinese, using the Han script (`zh_Hans`).
@@ -4441,6 +4588,9 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
   String get sponsorPageWeChatSubtitle => '微信赞助码';
 
   @override
+  String get sponsorPageScanQrHint => '扫描二维码赞助';
+
+  @override
   String get languageDisplaySimplifiedChinese => '简体中文';
 
   @override
@@ -4581,6 +4731,12 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
   String get mcpTransportTagInmemory => '内置';
 
   @override
+  String get mcpTransportTagSse => 'SSE';
+
+  @override
+  String get mcpTransportTagHttp => 'HTTP';
+
+  @override
   String get mcpServerEditSheetStdioOnlyDesktop => 'STDIO 仅在桌面端可用';
 
   @override
@@ -4644,10 +4800,16 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
   String get userProviderDefaultUserName => '用户';
 
   @override
-  String get homePageDeleteMessage => '删除消息';
+  String get homePageDeleteMessage => '删除本版本';
 
   @override
-  String get homePageDeleteMessageConfirm => '确定要删除这条消息吗？此操作不可撤销。';
+  String get homePageDeleteMessageConfirm => '确定要删除当前版本吗？此操作不可撤销。';
+
+  @override
+  String get homePageDeleteAllVersions => '删除全部版本';
+
+  @override
+  String get homePageDeleteAllVersionsConfirm => '确定要删除这条消息的全部版本吗？此操作不可撤销。';
 
   @override
   String get homePageCancel => '取消';
@@ -5612,7 +5774,10 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
   String get messageMoreSheetCreateBranch => '创建分支';
 
   @override
-  String get messageMoreSheetDelete => '删除';
+  String get messageMoreSheetDelete => '删除本版本';
+
+  @override
+  String get messageMoreSheetDeleteAllVersions => '删除全部版本';
 
   @override
   String get reasoningBudgetSheetOff => '关闭';
@@ -5659,7 +5824,7 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
   String get reasoningBudgetSheetXhighSubtitle => '使用最大推理深度，适合最复杂的问题';
 
   @override
-  String get reasoningBudgetSheetCustomLabel => '自定义推理预算 (tokens)';
+  String get reasoningBudgetSheetCustomLabel => '自定义推理预算';
 
   @override
   String get reasoningBudgetSheetCustomHint => '例如：2048 (-1 自动，0 关闭)';
@@ -6113,6 +6278,12 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
   String get chatInputBarMoreTooltip => '更多';
 
   @override
+  String get chatInputBarQueuedPending => '排队中';
+
+  @override
+  String get chatInputBarQueuedCancel => '取消排队';
+
+  @override
   String get chatInputBarInsertNewline => '换行';
 
   @override
@@ -6465,10 +6636,6 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
 
   @override
   String get modelDetailSheetBuiltinToolsDescription => '内置工具仅支持官方 API。';
-
-  @override
-  String get modelDetailSheetGeminiCodeExecutionMutuallyExclusiveHint =>
-      '代码执行无法与搜索/URL 上下文/MCP 工具共存。';
 
   @override
   String get modelDetailSheetBuiltinToolsUnsupportedHint => '当前供应商不支持这些内置工具。';
@@ -7117,6 +7284,9 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
   String get aboutPageEasterEggButton => '好的';
 
   @override
+  String get aboutPageAppName => 'Kelivo';
+
+  @override
   String get aboutPageAppDescription => '开源 AI 助手';
 
   @override
@@ -7126,10 +7296,44 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
   String get aboutPageVersion => '版本';
 
   @override
+  String aboutPageVersionDetail(String version, String buildNumber) {
+    return '$version / $buildNumber';
+  }
+
+  @override
   String get aboutPageSystem => '系统';
 
   @override
+  String get aboutPageLoadingPlaceholder => '...';
+
+  @override
+  String get aboutPageUnknownPlaceholder => '-';
+
+  @override
+  String get aboutPagePlatformMacos => 'macOS';
+
+  @override
+  String get aboutPagePlatformWindows => 'Windows';
+
+  @override
+  String get aboutPagePlatformLinux => 'Linux';
+
+  @override
+  String get aboutPagePlatformAndroid => 'Android';
+
+  @override
+  String get aboutPagePlatformIos => 'iOS';
+
+  @override
+  String aboutPagePlatformOther(String os) {
+    return '其他（$os）';
+  }
+
+  @override
   String get aboutPageWebsite => '官网';
+
+  @override
+  String get aboutPageGithub => 'GitHub';
 
   @override
   String get aboutPageLicense => '许可证';
@@ -7154,6 +7358,12 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
       '是否在聊天消息中显示用户名称和时间戳';
 
   @override
+  String get displaySettingsPageShowUserNameTitle => '显示用户名称';
+
+  @override
+  String get displaySettingsPageShowUserTimestampTitle => '显示用户时间戳';
+
+  @override
   String get displaySettingsPageShowUserMessageActionsTitle => '显示用户消息操作按钮';
 
   @override
@@ -7166,6 +7376,12 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
   @override
   String get displaySettingsPageShowModelNameTimestampSubtitle =>
       '是否在聊天消息中显示模型名称和时间戳';
+
+  @override
+  String get displaySettingsPageShowModelNameTitle => '显示模型名称';
+
+  @override
+  String get displaySettingsPageShowModelTimestampTitle => '显示模型时间戳';
 
   @override
   String get displaySettingsPageShowProviderInChatMessageTitle => '模型名称后显示供应商';
@@ -7192,6 +7408,28 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
   @override
   String get displaySettingsPageAutoCollapseThinkingSubtitle =>
       '思考完成后自动折叠，保持界面简洁';
+
+  @override
+  String get displaySettingsPageCollapseThinkingStepsTitle => '折叠思考步骤';
+
+  @override
+  String get displaySettingsPageCollapseThinkingStepsSubtitle =>
+      '默认只显示最新步骤，展开后查看全部';
+
+  @override
+  String get displaySettingsPageShowToolResultSummaryTitle => '显示工具结果摘要';
+
+  @override
+  String get displaySettingsPageShowToolResultSummarySubtitle =>
+      '在工具步骤下方显示摘要文本';
+
+  @override
+  String chainOfThoughtExpandSteps(Object count) {
+    return '展开更多 $count 步';
+  }
+
+  @override
+  String get chainOfThoughtCollapse => '收起';
 
   @override
   String get displaySettingsPageShowChatListDateTitle => '显示对话列表日期';
@@ -7222,6 +7460,9 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
 
   @override
   String get displaySettingsPageMessageNavButtonsSubtitle => '滚动时显示快速跳转按钮';
+
+  @override
+  String get displaySettingsPageUseNewAssistantAvatarUxTitle => '聊天标题栏显示助手头像';
 
   @override
   String get displaySettingsPageHapticsOnSidebarTitle => '侧边栏触觉反馈';
@@ -8260,6 +8501,59 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
 
   @override
   String get worldBookInjectionRoleAssistant => '助手';
+
+  @override
+  String get mcpToolNeedsApproval => '需要审批';
+
+  @override
+  String get toolApprovalPending => '等待审批';
+
+  @override
+  String get toolApprovalApprove => '批准';
+
+  @override
+  String get toolApprovalDeny => '拒绝';
+
+  @override
+  String get toolApprovalDenyTitle => '拒绝工具调用';
+
+  @override
+  String get toolApprovalDenyHint => '原因（可选）';
+
+  @override
+  String toolApprovalDeniedMessage(Object reason, Object toolName) {
+    return '工具调用 \"$toolName\" 已被用户拒绝。原因：$reason';
+  }
+
+  @override
+  String tokenDetailPromptTokens(int count) {
+    return '$count tokens';
+  }
+
+  @override
+  String tokenDetailPromptTokensWithCache(int count, int cached) {
+    return '$count tokens ($cached cached)';
+  }
+
+  @override
+  String tokenDetailCompletionTokens(int count) {
+    return '$count tokens';
+  }
+
+  @override
+  String tokenDetailSpeed(String value) {
+    return '$value tok/s';
+  }
+
+  @override
+  String tokenDetailDuration(String value) {
+    return '${value}s';
+  }
+
+  @override
+  String tokenDetailTotalTokens(int count) {
+    return '$count tokens';
+  }
 }
 
 /// The translations for Chinese, using the Han script (`zh_Hant`).
@@ -8544,6 +8838,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get sponsorPageWeChatSubtitle => '微信贊助碼';
 
   @override
+  String get sponsorPageScanQrHint => '掃描二維碼贊助';
+
+  @override
   String get languageDisplaySimplifiedChinese => '简体中文';
 
   @override
@@ -8684,6 +8981,12 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get mcpTransportTagInmemory => '內建';
 
   @override
+  String get mcpTransportTagSse => 'SSE';
+
+  @override
+  String get mcpTransportTagHttp => 'HTTP';
+
+  @override
   String get mcpServerEditSheetStdioOnlyDesktop => 'STDIO 僅在桌面端可用';
 
   @override
@@ -8747,10 +9050,16 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get userProviderDefaultUserName => '使用者';
 
   @override
-  String get homePageDeleteMessage => '刪除訊息';
+  String get homePageDeleteMessage => '刪除本版本';
 
   @override
-  String get homePageDeleteMessageConfirm => '確定要刪除這條訊息嗎？此操作不可撤銷。';
+  String get homePageDeleteMessageConfirm => '確定要刪除目前版本嗎？此操作不可撤銷。';
+
+  @override
+  String get homePageDeleteAllVersions => '刪除全部版本';
+
+  @override
+  String get homePageDeleteAllVersionsConfirm => '確定要刪除這則訊息的全部版本嗎？此操作不可撤銷。';
 
   @override
   String get homePageCancel => '取消';
@@ -9714,7 +10023,10 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get messageMoreSheetCreateBranch => '建立分支';
 
   @override
-  String get messageMoreSheetDelete => '刪除';
+  String get messageMoreSheetDelete => '刪除本版本';
+
+  @override
+  String get messageMoreSheetDeleteAllVersions => '刪除全部版本';
 
   @override
   String get reasoningBudgetSheetOff => '關閉';
@@ -9761,7 +10073,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get reasoningBudgetSheetXhighSubtitle => '使用最大推理深度，適合最複雜的問題';
 
   @override
-  String get reasoningBudgetSheetCustomLabel => '自訂推理預算 (tokens)';
+  String get reasoningBudgetSheetCustomLabel => '自訂推理預算';
 
   @override
   String get reasoningBudgetSheetCustomHint => '例如：2048 (-1 自動，0 關閉)';
@@ -10215,6 +10527,12 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get chatInputBarMoreTooltip => '更多';
 
   @override
+  String get chatInputBarQueuedPending => '排隊中';
+
+  @override
+  String get chatInputBarQueuedCancel => '取消排隊';
+
+  @override
   String get chatInputBarInsertNewline => '換行';
 
   @override
@@ -10598,10 +10916,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get modelDetailSheetBuiltinToolsDescription => '內建工具僅支援官方 API。';
-
-  @override
-  String get modelDetailSheetGeminiCodeExecutionMutuallyExclusiveHint =>
-      '程式碼執行無法與搜尋/URL 上下文/MCP 工具共存。';
 
   @override
   String get modelDetailSheetBuiltinToolsUnsupportedHint => '目前供應商不支援這些內建工具。';
@@ -11246,6 +11560,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get aboutPageEasterEggButton => '好的';
 
   @override
+  String get aboutPageAppName => 'Kelivo';
+
+  @override
   String get aboutPageAppDescription => '開源 AI 助理';
 
   @override
@@ -11255,10 +11572,44 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get aboutPageVersion => '版本';
 
   @override
+  String aboutPageVersionDetail(String version, String buildNumber) {
+    return '$version / $buildNumber';
+  }
+
+  @override
   String get aboutPageSystem => '系統';
 
   @override
+  String get aboutPageLoadingPlaceholder => '...';
+
+  @override
+  String get aboutPageUnknownPlaceholder => '-';
+
+  @override
+  String get aboutPagePlatformMacos => 'macOS';
+
+  @override
+  String get aboutPagePlatformWindows => 'Windows';
+
+  @override
+  String get aboutPagePlatformLinux => 'Linux';
+
+  @override
+  String get aboutPagePlatformAndroid => 'Android';
+
+  @override
+  String get aboutPagePlatformIos => 'iOS';
+
+  @override
+  String aboutPagePlatformOther(String os) {
+    return '其他（$os）';
+  }
+
+  @override
   String get aboutPageWebsite => '官網';
+
+  @override
+  String get aboutPageGithub => 'GitHub';
 
   @override
   String get aboutPageLicense => '授權';
@@ -11283,6 +11634,12 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
       '是否在聊天訊息中顯示使用者名稱以時間戳';
 
   @override
+  String get displaySettingsPageShowUserNameTitle => '顯示使用者名稱';
+
+  @override
+  String get displaySettingsPageShowUserTimestampTitle => '顯示使用者時間戳';
+
+  @override
   String get displaySettingsPageShowUserMessageActionsTitle => '顯示使用者訊息操作按鈕';
 
   @override
@@ -11295,6 +11652,12 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   @override
   String get displaySettingsPageShowModelNameTimestampSubtitle =>
       '是否在聊天訊息中顯示模型名稱及時間戳';
+
+  @override
+  String get displaySettingsPageShowModelNameTitle => '顯示模型名稱';
+
+  @override
+  String get displaySettingsPageShowModelTimestampTitle => '顯示模型時間戳';
 
   @override
   String get displaySettingsPageShowProviderInChatMessageTitle => '模型名稱後顯示供應商';
@@ -11321,6 +11684,28 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   @override
   String get displaySettingsPageAutoCollapseThinkingSubtitle =>
       '思考完成後自動折疊，保持介面簡潔';
+
+  @override
+  String get displaySettingsPageCollapseThinkingStepsTitle => '折疊思考步驟';
+
+  @override
+  String get displaySettingsPageCollapseThinkingStepsSubtitle =>
+      '預設只顯示最新步驟，展開後查看全部';
+
+  @override
+  String get displaySettingsPageShowToolResultSummaryTitle => '顯示工具結果摘要';
+
+  @override
+  String get displaySettingsPageShowToolResultSummarySubtitle =>
+      '在工具步驟下方顯示摘要文字';
+
+  @override
+  String chainOfThoughtExpandSteps(Object count) {
+    return '展開更多 $count 步';
+  }
+
+  @override
+  String get chainOfThoughtCollapse => '收起';
 
   @override
   String get displaySettingsPageShowChatListDateTitle => '顯示對話列表日期';
@@ -11351,6 +11736,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get displaySettingsPageMessageNavButtonsSubtitle => '滾動時顯示快速跳轉按鈕';
+
+  @override
+  String get displaySettingsPageUseNewAssistantAvatarUxTitle => '聊天標題欄顯示助手頭像';
 
   @override
   String get displaySettingsPageHapticsOnSidebarTitle => '側邊欄觸覺回饋';
@@ -12409,4 +12797,57 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get worldBookInjectionRoleAssistant => '助手';
+
+  @override
+  String get mcpToolNeedsApproval => '需要審批';
+
+  @override
+  String get toolApprovalPending => '等待審批';
+
+  @override
+  String get toolApprovalApprove => '批准';
+
+  @override
+  String get toolApprovalDeny => '拒絕';
+
+  @override
+  String get toolApprovalDenyTitle => '拒絕工具調用';
+
+  @override
+  String get toolApprovalDenyHint => '原因（可選）';
+
+  @override
+  String toolApprovalDeniedMessage(Object reason, Object toolName) {
+    return '工具調用 \"$toolName\" 已被使用者拒絕。原因：$reason';
+  }
+
+  @override
+  String tokenDetailPromptTokens(int count) {
+    return '$count tokens';
+  }
+
+  @override
+  String tokenDetailPromptTokensWithCache(int count, int cached) {
+    return '$count tokens ($cached cached)';
+  }
+
+  @override
+  String tokenDetailCompletionTokens(int count) {
+    return '$count tokens';
+  }
+
+  @override
+  String tokenDetailSpeed(String value) {
+    return '$value tok/s';
+  }
+
+  @override
+  String tokenDetailDuration(String value) {
+    return '${value}s';
+  }
+
+  @override
+  String tokenDetailTotalTokens(int count) {
+    return '$count tokens';
+  }
 }

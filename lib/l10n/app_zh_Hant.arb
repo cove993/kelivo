@@ -86,6 +86,7 @@
   "sponsorPageAfdianSubtitle": "afdian.com/a/kelivo",
   "sponsorPageWeChatTitle": "微信贊助",
   "sponsorPageWeChatSubtitle": "微信贊助碼",
+  "sponsorPageScanQrHint": "掃描二維碼贊助",
   "languageDisplaySimplifiedChinese": "简体中文",
   "languageDisplayEnglish": "English",
   "languageDisplayTraditionalChinese": "繁體中文",
@@ -318,6 +319,8 @@
   "mcpTransportOptionStdio": "STDIO",
   "mcpTransportTagStdio": "STDIO",
   "mcpTransportTagInmemory": "內建",
+  "mcpTransportTagSse": "SSE",
+  "mcpTransportTagHttp": "HTTP",
   "mcpServerEditSheetStdioOnlyDesktop": "STDIO 僅在桌面端可用",
   "mcpServerEditSheetStdioCommandLabel": "命令",
   "mcpServerEditSheetStdioArgumentsLabel": "參數",
@@ -436,8 +439,10 @@
   "homePageClearContext": "清空上下文",
   "homePageClearContextWithCount": "清空上下文 ({actual}/{configured})",
   "homePageDefaultAssistant": "預設助理",
-  "homePageDeleteMessage": "刪除訊息",
-  "homePageDeleteMessageConfirm": "確定要刪除這條訊息嗎？此操作不可撤銷。",
+  "homePageDeleteMessage": "刪除本版本",
+  "homePageDeleteMessageConfirm": "確定要刪除目前版本嗎？此操作不可撤銷。",
+  "homePageDeleteAllVersions": "刪除全部版本",
+  "homePageDeleteAllVersionsConfirm": "確定要刪除這則訊息的全部版本嗎？此操作不可撤銷。",
   "homePageCancel": "取消",
   "homePageDelete": "刪除",
   "homePageSelectMessagesToShare": "請選擇要分享的訊息",
@@ -489,7 +494,8 @@
   "messageMoreSheetEdit": "編輯",
   "messageMoreSheetShare": "分享",
   "messageMoreSheetCreateBranch": "建立分支",
-  "messageMoreSheetDelete": "刪除",
+  "messageMoreSheetDelete": "刪除本版本",
+  "messageMoreSheetDeleteAllVersions": "刪除全部版本",
   "reasoningBudgetSheetOff": "關閉",
   "reasoningBudgetSheetAuto": "自動",
   "reasoningBudgetSheetLight": "輕度推理",
@@ -504,7 +510,7 @@
   "reasoningBudgetSheetMediumSubtitle": "使用較多推理來回答問題",
   "reasoningBudgetSheetHeavySubtitle": "使用大量推理來回答問題，適合複雜問題",
   "reasoningBudgetSheetXhighSubtitle": "使用最大推理深度，適合最複雜的問題",
-  "reasoningBudgetSheetCustomLabel": "自訂推理預算 (tokens)",
+  "reasoningBudgetSheetCustomLabel": "自訂推理預算",
   "reasoningBudgetSheetCustomHint": "例如：2048 (-1 自動，0 關閉)",
   "chatMessageWidgetFileNotFound": "檔案不存在: {fileName}",
   "chatMessageWidgetCannotOpenFile": "無法開啟檔案: {message}",
@@ -635,6 +641,8 @@
   "chatInputBarReasoningStrengthTooltip": "思維鏈強度",
   "chatInputBarMcpServersTooltip": "MCP伺服器",
   "chatInputBarMoreTooltip": "更多",
+  "chatInputBarQueuedPending": "排隊中",
+  "chatInputBarQueuedCancel": "取消排隊",
   "chatInputBarInsertNewline": "換行",
   "chatInputBarExpand": "展開",
   "chatInputBarCollapse": "收起",
@@ -760,7 +768,6 @@
   "modelDetailSheetCustomBodyTitle": "自訂 Body",
   "modelDetailSheetAddBody": "新增 Body",
   "modelDetailSheetBuiltinToolsDescription": "內建工具僅支援官方 API。",
-  "modelDetailSheetGeminiCodeExecutionMutuallyExclusiveHint": "程式碼執行無法與搜尋/URL 上下文/MCP 工具共存。",
   "modelDetailSheetBuiltinToolsUnsupportedHint": "目前供應商不支援這些內建工具。",
   "modelDetailSheetSearchTool": "搜尋",
   "modelDetailSheetSearchToolDescription": "啟用 Google 搜尋整合",
@@ -969,11 +976,39 @@
   "searchSettingsSheetNoServicesMessage": "暫無可用服務，請先在\"搜尋服務\"中新增",
   "aboutPageEasterEggMessage": "\n（好吧現在還沒彩蛋）",
   "aboutPageEasterEggButton": "好的",
+  "aboutPageAppName": "Kelivo",
   "aboutPageAppDescription": "開源 AI 助理",
   "aboutPageNoQQGroup": "暫無QQ群",
   "aboutPageVersion": "版本",
+  "aboutPageVersionDetail": "{version} / {buildNumber}",
+  "@aboutPageVersionDetail": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      },
+      "buildNumber": {
+        "type": "String"
+      }
+    }
+  },
   "aboutPageSystem": "系統",
+  "aboutPageLoadingPlaceholder": "...",
+  "aboutPageUnknownPlaceholder": "-",
+  "aboutPagePlatformMacos": "macOS",
+  "aboutPagePlatformWindows": "Windows",
+  "aboutPagePlatformLinux": "Linux",
+  "aboutPagePlatformAndroid": "Android",
+  "aboutPagePlatformIos": "iOS",
+  "aboutPagePlatformOther": "其他（{os}）",
+  "@aboutPagePlatformOther": {
+    "placeholders": {
+      "os": {
+        "type": "String"
+      }
+    }
+  },
   "aboutPageWebsite": "官網",
+  "aboutPageGithub": "GitHub",
   "aboutPageLicense": "授權",
   "aboutPageJoinQQGroup": "加入 QQ 群",
   "aboutPageJoinDiscord": "加入我們的 Discord",
@@ -981,10 +1016,14 @@
   "displaySettingsPageShowUserAvatarSubtitle": "是否在聊天訊息中顯示使用者頭像",
   "displaySettingsPageShowUserNameTimestampTitle": "顯示使用者名稱與時間戳",
   "displaySettingsPageShowUserNameTimestampSubtitle": "是否在聊天訊息中顯示使用者名稱以時間戳",
+  "displaySettingsPageShowUserNameTitle": "顯示使用者名稱",
+  "displaySettingsPageShowUserTimestampTitle": "顯示使用者時間戳",
   "displaySettingsPageShowUserMessageActionsTitle": "顯示使用者訊息操作按鈕",
   "displaySettingsPageShowUserMessageActionsSubtitle": "在使用者訊息下方顯示複製、重傳與更多按鈕",
   "displaySettingsPageShowModelNameTimestampTitle": "顯示模型名稱與時間戳",
   "displaySettingsPageShowModelNameTimestampSubtitle": "是否在聊天訊息中顯示模型名稱及時間戳",
+  "displaySettingsPageShowModelNameTitle": "顯示模型名稱",
+  "displaySettingsPageShowModelTimestampTitle": "顯示模型時間戳",
   "displaySettingsPageShowProviderInChatMessageTitle": "模型名稱後顯示供應商",
   "displaySettingsPageShowProviderInChatMessageSubtitle": "在聊天訊息的模型名稱後面顯示供應商名稱（如 模型 | 供應商）",
   "displaySettingsPageChatModelIconTitle": "聊天列表模型圖示",
@@ -993,6 +1032,17 @@
   "displaySettingsPageShowTokenStatsSubtitle": "顯示 token 用量與訊息數量",
   "displaySettingsPageAutoCollapseThinkingTitle": "自動折疊思考",
   "displaySettingsPageAutoCollapseThinkingSubtitle": "思考完成後自動折疊，保持介面簡潔",
+  "displaySettingsPageCollapseThinkingStepsTitle": "折疊思考步驟",
+  "displaySettingsPageCollapseThinkingStepsSubtitle": "預設只顯示最新步驟，展開後查看全部",
+  "displaySettingsPageShowToolResultSummaryTitle": "顯示工具結果摘要",
+  "displaySettingsPageShowToolResultSummarySubtitle": "在工具步驟下方顯示摘要文字",
+  "chainOfThoughtExpandSteps": "展開更多 {count} 步",
+  "@chainOfThoughtExpandSteps": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "chainOfThoughtCollapse": "收起",
   "displaySettingsPageShowChatListDateTitle": "顯示對話列表日期",
   "displaySettingsPageShowChatListDateSubtitle": "在左側對話列表中顯示日期分組標籤",
   "displaySettingsPageKeepSidebarOpenOnAssistantTapTitle": "點選助手時不自動關閉側邊欄",
@@ -1002,6 +1052,7 @@
   "displaySettingsPageShowUpdatesSubtitle": "顯示應用程式更新通知",
   "displaySettingsPageMessageNavButtonsTitle": "訊息導航按鈕",
   "displaySettingsPageMessageNavButtonsSubtitle": "滾動時顯示快速跳轉按鈕",
+  "displaySettingsPageUseNewAssistantAvatarUxTitle": "聊天標題欄顯示助手頭像",
   "displaySettingsPageHapticsOnSidebarTitle": "側邊欄觸覺回饋",
   "displaySettingsPageHapticsOnSidebarSubtitle": "開啟/關閉側邊欄時啟用觸覺回饋",
   "displaySettingsPageHapticsGlobalTitle": "全域觸覺回饋",
@@ -1432,5 +1483,18 @@
   "worldBookInjectionPositionBottomOfChat": "對話底部",
   "worldBookInjectionPositionAtDepth": "指定深度",
   "worldBookInjectionRoleUser": "使用者",
-  "worldBookInjectionRoleAssistant": "助手"
+  "worldBookInjectionRoleAssistant": "助手",
+  "mcpToolNeedsApproval": "需要審批",
+  "toolApprovalPending": "等待審批",
+  "toolApprovalApprove": "批准",
+  "toolApprovalDeny": "拒絕",
+  "toolApprovalDenyTitle": "拒絕工具調用",
+  "toolApprovalDenyHint": "原因（可選）",
+  "toolApprovalDeniedMessage": "工具調用 \"{toolName}\" 已被使用者拒絕。原因：{reason}",
+  "tokenDetailPromptTokens": "{count} tokens",
+  "tokenDetailPromptTokensWithCache": "{count} tokens ({cached} cached)",
+  "tokenDetailCompletionTokens": "{count} tokens",
+  "tokenDetailSpeed": "{value} tok/s",
+  "tokenDetailDuration": "{value}s",
+  "tokenDetailTotalTokens": "{count} tokens"
 }

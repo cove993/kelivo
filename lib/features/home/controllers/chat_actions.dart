@@ -13,6 +13,7 @@ import '../../../utils/assistant_regex.dart';
 import '../../../core/models/assistant_regex.dart';
 import '../../../utils/markdown_media_sanitizer.dart';
 import '../services/message_generation_service.dart';
+import '../services/tool_approval_service.dart';
 import 'chat_controller.dart';
 import 'generation_controller.dart';
 import 'home_view_model.dart';
@@ -251,6 +252,11 @@ class ChatActions {
         .read<AssistantProvider>()
         .currentAssistant;
     final assistantId = assistant?.id;
+    // Capture approval service reference before async gap
+    ToolApprovalService? approvalService;
+    try {
+      approvalService = contextProvider.read<ToolApprovalService>();
+    } catch (_) {}
     final modelConfig = messageGenerationService.getModelConfig(
       settings,
       assistant,
@@ -327,6 +333,7 @@ class ChatActions {
             assistantId: assistantId,
             providerKey: providerKey,
             modelId: modelId,
+            approvalService: approvalService,
           );
 
       // Build user image paths
@@ -378,6 +385,17 @@ class ChatActions {
     required Conversation conversation,
     bool assistantAsNewReply = false,
   }) async {
+    // Avoid using BuildContext across async gaps (this class holds a BuildContext).
+    final settings = contextProvider.read<SettingsProvider>();
+    final assistant = contextProvider
+        .read<AssistantProvider>()
+        .currentAssistant;
+    // Capture approval service reference before async gap
+    ToolApprovalService? regenApprovalService;
+    try {
+      regenApprovalService = contextProvider.read<ToolApprovalService>();
+    } catch (_) {}
+
     await cancelStreaming(conversation);
 
     final idx = _messages.indexWhere((m) => m.id == message.id);
@@ -396,10 +414,6 @@ class ChatActions {
     }
 
     // Get model config
-    final settings = contextProvider.read<SettingsProvider>();
-    final assistant = contextProvider
-        .read<AssistantProvider>()
-        .currentAssistant;
     final assistantId = assistant?.id;
     final modelConfig = messageGenerationService.getModelConfig(
       settings,
@@ -489,6 +503,7 @@ class ChatActions {
           assistantId: assistantId,
           providerKey: providerKey,
           modelId: modelId,
+          approvalService: regenApprovalService,
         );
 
     // Build user image paths
@@ -526,6 +541,13 @@ class ChatActions {
   Future<void> cancelStreaming(Conversation? conversation) async {
     final cid = conversation?.id;
     if (cid == null) return;
+
+    // Cancel any pending tool approval requests to prevent deadlock
+    try {
+      contextProvider.read<ToolApprovalService>().cancelAll();
+    } catch (_) {
+      // ToolApprovalService may not be registered yet
+    }
 
     // Reset file processing state on cancel
     onFileProcessingFinished?.call();
@@ -775,7 +797,35 @@ class ChatActions {
     final messageId = state.messageId;
     final conversationId = state.conversationId;
 
+    if (state.hadThinkingBlock && chunkContent.isNotEmpty) {
+      state.contentSplitOffsets.add(state.fullContentRaw.length);
+      state.reasoningCountAtSplit.add(
+        streamController.getReasoningSegmentCount(messageId),
+      );
+      state.toolCountAtSplit.add(streamController.getToolPartsCount(messageId));
+      state.hadThinkingBlock = false;
+      streamController.setContentSplitData(
+        messageId,
+        stream_ctrl.ContentSplitData(
+          offsets: List<int>.of(state.contentSplitOffsets),
+          reasoningCounts: List<int>.of(state.reasoningCountAtSplit),
+          toolCounts: List<int>.of(state.toolCountAtSplit),
+        ),
+      );
+      await chatService.updateMessageSilent(
+        messageId,
+        reasoningSegmentsJson: streamController
+            .serializeReasoningSegmentsWithSplits(
+              streamController.getReasoningSegments(messageId) ?? const [],
+              contentSplitOffsets: state.contentSplitOffsets,
+              reasoningCountAtSplit: state.reasoningCountAtSplit,
+              toolCountAtSplit: state.toolCountAtSplit,
+            ),
+      );
+    }
+
     state.fullContentRaw += chunkContent;
+    state.streamStartedAt ??= DateTime.now();
     if (chunk.totalTokens > 0) {
       state.totalTokens = chunk.totalTokens;
     }
@@ -851,6 +901,15 @@ class ChatActions {
         conversationId,
         streamingProcessed,
         totalTokens: state.totalTokens,
+        contentSplitOffsets: state.contentSplitOffsets,
+        reasoningCountAtSplit: state.reasoningCountAtSplit,
+        toolCountAtSplit: state.toolCountAtSplit,
+        promptTokens: state.usage?.promptTokens,
+        completionTokens: state.usage?.completionTokens,
+        cachedTokens: state.usage?.cachedTokens,
+        durationMs: state.streamStartedAt != null
+            ? DateTime.now().difference(state.streamStartedAt!).inMilliseconds
+            : null,
         updateMessageInList: (id, content, tokens) {
           onContentUpdated?.call(id, content, tokens);
         },
@@ -890,6 +949,27 @@ class ChatActions {
   ) async {
     final messageId = state.messageId;
     final conversationId = state.conversationId;
+    final autoCollapseThinking =
+        (!state.ctx.streamOutput && state.bufferedReasoning.isNotEmpty)
+        ? contextProvider.read<SettingsProvider>().autoCollapseThinking
+        : null;
+
+    if (state.hadThinkingBlock && chunkContent.isNotEmpty) {
+      state.contentSplitOffsets.add(state.fullContentRaw.length);
+      state.reasoningCountAtSplit.add(
+        streamController.getReasoningSegmentCount(messageId),
+      );
+      state.toolCountAtSplit.add(streamController.getToolPartsCount(messageId));
+      state.hadThinkingBlock = false;
+      streamController.setContentSplitData(
+        messageId,
+        stream_ctrl.ContentSplitData(
+          offsets: List<int>.of(state.contentSplitOffsets),
+          reasoningCounts: List<int>.of(state.reasoningCountAtSplit),
+          toolCounts: List<int>.of(state.toolCountAtSplit),
+        ),
+      );
+    }
 
     if (chunkContent.isNotEmpty) {
       state.fullContentRaw += chunkContent;
@@ -931,14 +1011,11 @@ class ChatActions {
         reasoningStartAt: startAt,
         reasoningFinishedAt: now,
       );
-      final autoCollapse = contextProvider
-          .read<SettingsProvider>()
-          .autoCollapseThinking;
       streamController.reasoning[messageId] = stream_ctrl.ReasoningData()
         ..text = state.bufferedReasoning
         ..startAt = startAt
         ..finishedAt = now
-        ..expanded = !autoCollapse;
+        ..expanded = !(autoCollapseThinking ?? false);
     }
 
     await _conversationStreams.remove(conversationId)?.cancel();
@@ -986,6 +1063,14 @@ class ChatActions {
     // Replace extremely long inline base64 images with local files to avoid jank
     final processedContent = _transformAssistantContent(state);
 
+    // Compute final duration
+    final finalDurationMs = state.streamStartedAt != null
+        ? DateTime.now().difference(state.streamStartedAt!).inMilliseconds
+        : null;
+    final finalPromptTokens = state.usage?.promptTokens;
+    final finalCompletionTokens = state.usage?.completionTokens;
+    final finalCachedTokens = state.usage?.cachedTokens;
+
     // Flush final content to the streaming notifier before async operations.
     // This ensures any intermediate rebuild (e.g., from isProcessingFiles change
     // or onDone firing concurrently) still shows the correct content via the
@@ -994,6 +1079,13 @@ class ChatActions {
       messageId,
       processedContent,
       state.totalTokens,
+      contentSplitOffsets: state.contentSplitOffsets,
+      reasoningCountAtSplit: state.reasoningCountAtSplit,
+      toolCountAtSplit: state.toolCountAtSplit,
+      promptTokens: finalPromptTokens,
+      completionTokens: finalCompletionTokens,
+      cachedTokens: finalCachedTokens,
+      durationMs: finalDurationMs,
     );
 
     final sanitizedContent =
@@ -1005,6 +1097,10 @@ class ChatActions {
       content: sanitizedContent,
       totalTokens: state.totalTokens,
       isStreaming: false,
+      promptTokens: finalPromptTokens,
+      completionTokens: finalCompletionTokens,
+      cachedTokens: finalCachedTokens,
+      durationMs: finalDurationMs,
     );
 
     final index = _messages.indexWhere((m) => m.id == messageId);
@@ -1013,6 +1109,10 @@ class ChatActions {
         content: sanitizedContent,
         totalTokens: state.totalTokens,
         isStreaming: false,
+        promptTokens: finalPromptTokens,
+        completionTokens: finalCompletionTokens,
+        cachedTokens: finalCachedTokens,
+        durationMs: finalDurationMs,
       );
       onMessagesChanged?.call();
     }
@@ -1193,9 +1293,31 @@ class ChatActions {
       if (segs != null && segs.isNotEmpty) {
         await chatService.updateMessage(
           streaming.id,
-          reasoningSegmentsJson: streamController.serializeReasoningSegments(
-            segs,
-          ),
+          reasoningSegmentsJson: streamController
+              .serializeReasoningSegmentsWithSplits(
+                segs,
+                contentSplitOffsets: streamController
+                    .getContentSplitData(streaming.id)
+                    ?.offsets,
+                reasoningCountAtSplit: streamController
+                    .getContentSplitData(streaming.id)
+                    ?.reasoningCounts,
+                toolCountAtSplit: streamController
+                    .getContentSplitData(streaming.id)
+                    ?.toolCounts,
+              ),
+        );
+      } else if (streamController.getContentSplitData(streaming.id) != null) {
+        final splits = streamController.getContentSplitData(streaming.id)!;
+        await chatService.updateMessage(
+          streaming.id,
+          reasoningSegmentsJson: streamController
+              .serializeReasoningSegmentsWithSplits(
+                const [],
+                contentSplitOffsets: splits.offsets,
+                reasoningCountAtSplit: splits.reasoningCounts,
+                toolCountAtSplit: splits.toolCounts,
+              ),
         );
       }
       // Ensure any inline data URLs get converted even if the user navigates away mid-stream

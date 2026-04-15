@@ -73,7 +73,7 @@ class _IosSwitchState extends State<IosSwitch> {
                 CupertinoColors.systemGrey6,
                 context,
               )
-            : const Color(0x14_000000)); // subtle black overlay on light
+            : const Color(0x14000000)); // subtle black overlay on light
 
     final bool enabled = widget.onChanged != null;
     final double radius = widget.height / 2;
@@ -96,7 +96,7 @@ class _IosSwitchState extends State<IosSwitch> {
             (brightness == Brightness.dark
                     ? CupertinoColors.systemGrey3
                     : CupertinoColors.systemGrey4)
-                .withOpacity(enabled ? 0.65 : 0.35),
+                .withValues(alpha: enabled ? 0.65 : 0.35),
         width: 1,
       ),
     );
@@ -157,7 +157,7 @@ class _IosSwitchState extends State<IosSwitch> {
                           : Alignment.centerLeft,
                       child: _Thumb(
                         size: thumbSize,
-                        color: enabled ? thumb : thumb.withOpacity(0.7),
+                        color: enabled ? thumb : thumb.withValues(alpha: 0.7),
                       ),
                     ),
                   ],

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../core/providers/settings_provider.dart';
-import 'package:provider/provider.dart';
 import '../../../icons/lucide_adapter.dart';
 import '../../../core/providers/tts_provider.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -39,18 +38,7 @@ class TtsServicesPage extends StatelessWidget {
               icon: Lucide.Plus,
               color: cs.onSurface,
               size: 22,
-              onTap: () async {
-                final created = await _showAddNetworkTtsSheet(context);
-                if (created != null) {
-                  final sp = context.read<SettingsProvider>();
-                  final list = List<TtsServiceOptions>.from(sp.ttsServices)
-                    ..add(created);
-                  await sp.setTtsServices(list);
-                  if (sp.usingSystemTts) {
-                    await sp.setTtsServiceSelected(list.length - 1);
-                  }
-                }
-              },
+              onTap: () => _handleAddNetworkTts(context),
             ),
           ),
           const SizedBox(width: 12),
@@ -84,14 +72,12 @@ class TtsServicesPage extends StatelessWidget {
                     haptics: false,
                     onTap: available
                         ? () async {
-                            try {
-                              await sp.setTtsServiceSelected(-1);
-                            } catch (_) {}
+                            await sp.setTtsServiceSelected(-1);
                           }
                         : null,
                     builder: (pressed) {
                       final cs2 = Theme.of(context).colorScheme;
-                      final base = cs2.onSurface.withOpacity(0.9);
+                      final base = cs2.onSurface.withValues(alpha: 0.9);
                       return _AnimatedPressColor(
                         pressed: pressed,
                         base: base,
@@ -100,8 +86,8 @@ class TtsServicesPage extends StatelessWidget {
                               Theme.of(context).brightness == Brightness.dark;
                           final overlay = pressed
                               ? (isDark
-                                    ? Colors.black.withOpacity(0.06)
-                                    : Colors.white.withOpacity(0.05))
+                                    ? Colors.black.withValues(alpha: 0.06)
+                                    : Colors.white.withValues(alpha: 0.05))
                               : Colors.transparent;
                           return Padding(
                             padding: const EdgeInsets.symmetric(
@@ -137,7 +123,7 @@ class TtsServicesPage extends StatelessWidget {
                                         overflow: TextOverflow.ellipsis,
                                         style: TextStyle(
                                           fontSize: 12,
-                                          color: c.withOpacity(0.7),
+                                          color: c.withValues(alpha: 0.7),
                                         ),
                                       ),
                                     ],
@@ -212,10 +198,24 @@ Widget _header(BuildContext context, String text, {bool first = false}) {
       style: TextStyle(
         fontSize: 13,
         fontWeight: FontWeight.w600,
-        color: cs.onSurface.withOpacity(0.8),
+        color: cs.onSurface.withValues(alpha: 0.8),
       ),
     ),
   );
+}
+
+Future<void> _handleAddNetworkTts(BuildContext context) async {
+  final sp = context.read<SettingsProvider>();
+  final created = await _showAddNetworkTtsSheet(context);
+  if (created == null) {
+    return;
+  }
+
+  final list = List<TtsServiceOptions>.from(sp.ttsServices)..add(created);
+  await sp.setTtsServices(list);
+  if (sp.usingSystemTts) {
+    await sp.setTtsServiceSelected(list.length - 1);
+  }
 }
 
 class _TactileIconButton extends StatefulWidget {
@@ -223,18 +223,12 @@ class _TactileIconButton extends StatefulWidget {
     required this.icon,
     required this.color,
     required this.onTap,
-    this.onLongPress,
-    this.semanticLabel,
     this.size = 22,
-    this.haptics = true,
   });
   final IconData icon;
   final Color color;
   final VoidCallback onTap;
-  final VoidCallback? onLongPress;
-  final String? semanticLabel;
   final double size;
-  final bool haptics;
   @override
   State<_TactileIconButton> createState() => _TactileIconButtonState();
 }
@@ -244,31 +238,23 @@ class _TactileIconButtonState extends State<_TactileIconButton> {
   @override
   Widget build(BuildContext context) {
     final base = widget.color;
-    final pressColor = base.withOpacity(0.7);
+    final pressColor = base.withValues(alpha: 0.7);
     final icon = Icon(
       widget.icon,
       size: widget.size,
       color: _pressed ? pressColor : base,
-      semanticLabel: widget.semanticLabel,
     );
     return Semantics(
       button: true,
-      label: widget.semanticLabel,
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
         onTapDown: (_) => setState(() => _pressed = true),
         onTapUp: (_) => setState(() => _pressed = false),
         onTapCancel: () => setState(() => _pressed = false),
         onTap: () {
-          if (widget.haptics) Haptics.light();
+          Haptics.light();
           widget.onTap();
         },
-        onLongPress: widget.onLongPress == null
-            ? null
-            : () {
-                if (widget.haptics) Haptics.light();
-                widget.onLongPress!.call();
-              },
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
           child: icon,
@@ -310,8 +296,9 @@ class _TactileRowState extends State<_TactileRow> {
           ? null
           : () {
               if (widget.haptics &&
-                  context.read<SettingsProvider>().hapticsOnListItemTap)
+                  context.read<SettingsProvider>().hapticsOnListItemTap) {
                 Haptics.soft();
+              }
               widget.onTap!.call();
             },
       child: AnimatedScale(
@@ -354,13 +341,15 @@ Widget _iosSectionCard({required List<Widget> children}) {
       final theme = Theme.of(context);
       final cs = theme.colorScheme;
       final isDark = theme.brightness == Brightness.dark;
-      final Color bg = isDark ? Colors.white10 : Colors.white.withOpacity(0.96);
+      final Color bg = isDark
+          ? Colors.white10
+          : Colors.white.withValues(alpha: 0.96);
       return Container(
         decoration: BoxDecoration(
           color: bg,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: cs.outlineVariant.withOpacity(isDark ? 0.08 : 0.06),
+            color: cs.outlineVariant.withValues(alpha: isDark ? 0.08 : 0.06),
             width: 0.6,
           ),
         ),
@@ -381,7 +370,7 @@ Widget _iosDivider(BuildContext context) {
     thickness: 0.6,
     indent: 54,
     endIndent: 12,
-    color: cs.outlineVariant.withOpacity(0.18),
+    color: cs.outlineVariant.withValues(alpha: 0.18),
   );
 }
 
@@ -407,8 +396,8 @@ class _SmallTactileIconState extends State<_SmallTactileIcon> {
     final cs = Theme.of(context).colorScheme;
     final base = widget.baseColor ?? cs.onSurface;
     final c = widget.enabled
-        ? base.withOpacity(_pressed ? 0.6 : 0.9)
-        : base.withOpacity(0.3);
+        ? base.withValues(alpha: _pressed ? 0.6 : 0.9)
+        : base.withValues(alpha: 0.3);
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
       onTapDown: widget.enabled ? (_) => setState(() => _pressed = true) : null,
@@ -438,7 +427,7 @@ class _AvatarBadge extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final baseBg = isDark ? Colors.white10 : cs.primary.withOpacity(0.1);
+    final baseBg = isDark ? Colors.white10 : cs.primary.withValues(alpha: 0.1);
     return Stack(
       alignment: Alignment.center,
       children: [
@@ -475,7 +464,7 @@ class _AvatarBrandBadge extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final baseBg = isDark ? Colors.white10 : cs.primary.withOpacity(0.1);
+    final baseBg = isDark ? Colors.white10 : cs.primary.withValues(alpha: 0.1);
     final asset =
         BrandAssets.assetForName(name) ??
         BrandAssets.assetForName(name.split(' ').first);
@@ -543,7 +532,7 @@ class _NetworkTtsRowMobileState extends State<_NetworkTtsRowMobile> {
               .read<SettingsProvider>()
               .setTtsServiceSelected(widget.index),
           builder: (pressed) {
-            final base = cs.onSurface.withOpacity(0.9);
+            final base = cs.onSurface.withValues(alpha: 0.9);
             return _AnimatedPressColor(
               pressed: pressed,
               base: base,
@@ -551,8 +540,8 @@ class _NetworkTtsRowMobileState extends State<_NetworkTtsRowMobile> {
                 final isDark = Theme.of(context).brightness == Brightness.dark;
                 final overlay = pressed
                     ? (isDark
-                          ? Colors.black.withOpacity(0.06)
-                          : Colors.white.withOpacity(0.05))
+                          ? Colors.black.withValues(alpha: 0.06)
+                          : Colors.white.withValues(alpha: 0.05))
                     : Colors.transparent;
                 return Padding(
                   padding: const EdgeInsets.symmetric(
@@ -580,18 +569,17 @@ class _NetworkTtsRowMobileState extends State<_NetworkTtsRowMobile> {
                         icon: Lucide.Settings2,
                         baseColor: c,
                         onTap: () async {
+                          final sp = context.read<SettingsProvider>();
                           final updated = await _showEditNetworkTtsSheet(
                             context,
                             widget.service,
                           );
                           if (updated != null) {
                             final list = List<TtsServiceOptions>.from(
-                              context.read<SettingsProvider>().ttsServices,
+                              sp.ttsServices,
                             );
                             list[widget.index] = updated;
-                            await context
-                                .read<SettingsProvider>()
-                                .setTtsServices(list);
+                            await sp.setTtsServices(list);
                           }
                         },
                       ),
@@ -629,8 +617,9 @@ class _NetworkTtsRowMobileState extends State<_NetworkTtsRowMobile> {
                           list.removeAt(widget.index);
                           await sp.setTtsServices(list);
                           var idx = sp.ttsServiceSelected;
-                          if (idx >= list.length)
+                          if (idx >= list.length) {
                             idx = list.isEmpty ? -1 : list.length - 1;
+                          }
                           await sp.setTtsServiceSelected(idx);
                         },
                       ),
@@ -670,9 +659,9 @@ class _ErrorInlineMobile extends StatelessWidget {
     final oneLine = message.replaceAll('\n', ' ');
     return Container(
       decoration: BoxDecoration(
-        color: cs.error.withOpacity(0.08),
+        color: cs.error.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: cs.error.withOpacity(0.3), width: 0.6),
+        border: Border.all(color: cs.error.withValues(alpha: 0.3), width: 0.6),
       ),
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
       child: Row(
@@ -718,7 +707,7 @@ void _showMobileErrorDetails(BuildContext context, String message) {
                   width: 40,
                   height: 4,
                   decoration: BoxDecoration(
-                    color: cs.onSurface.withOpacity(0.2),
+                    color: cs.onSurface.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(999),
                   ),
                 ),
@@ -738,7 +727,7 @@ void _showMobileErrorDetails(BuildContext context, String message) {
               SelectableText(
                 message,
                 style: TextStyle(
-                  color: cs.onSurface.withOpacity(0.9),
+                  color: cs.onSurface.withValues(alpha: 0.9),
                   fontSize: 13,
                 ),
               ),
@@ -785,6 +774,8 @@ Future<TtsServiceOptions?> _showNetworkTtsSheet(
         ? initial.apiKey
         : (initial is ElevenLabsTtsOptions)
         ? initial.apiKey
+        : (initial is MimoTtsOptions)
+        ? initial.apiKey
         : '',
   );
   final baseCtl = TextEditingController(
@@ -795,6 +786,8 @@ Future<TtsServiceOptions?> _showNetworkTtsSheet(
         : (initial is MiniMaxTtsOptions)
         ? initial.baseUrl
         : (initial is ElevenLabsTtsOptions)
+        ? initial.baseUrl
+        : (initial is MimoTtsOptions)
         ? initial.baseUrl
         : '',
   );
@@ -807,6 +800,8 @@ Future<TtsServiceOptions?> _showNetworkTtsSheet(
         ? initial.model
         : (initial is ElevenLabsTtsOptions)
         ? initial.modelId
+        : (initial is MimoTtsOptions)
+        ? initial.model
         : '',
   );
   final voiceCtl = TextEditingController(
@@ -818,6 +813,8 @@ Future<TtsServiceOptions?> _showNetworkTtsSheet(
         ? initial.voiceId
         : (initial is ElevenLabsTtsOptions)
         ? initial.voiceId
+        : (initial is MimoTtsOptions)
+        ? initial.voice
         : '',
   );
   final emotionCtl = TextEditingController(
@@ -847,7 +844,7 @@ Future<TtsServiceOptions?> _showNetworkTtsSheet(
                 width: 40,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: cs.onSurface.withOpacity(0.2),
+                  color: cs.onSurface.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(999),
                 ),
               ),
@@ -930,7 +927,7 @@ Future<TtsServiceOptions?> _showNetworkTtsSheet(
                               : emotionCtl.text.trim(),
                           speed: spd,
                         );
-                      } else {
+                      } else if (kind == NetworkTtsKind.elevenlabs) {
                         // ElevenLabs
                         result = ElevenLabsTtsOptions(
                           enabled: true,
@@ -939,6 +936,15 @@ Future<TtsServiceOptions?> _showNetworkTtsSheet(
                           baseUrl: base,
                           modelId: model.isEmpty ? _defaultModel(kind) : model,
                           voiceId: voice,
+                        );
+                      } else if (kind == NetworkTtsKind.mimo) {
+                        result = MimoTtsOptions(
+                          enabled: true,
+                          name: name,
+                          apiKey: apiKey,
+                          baseUrl: base,
+                          model: model,
+                          voice: voice,
                         );
                       }
                       Navigator.of(ctx).pop();
@@ -969,22 +975,39 @@ Future<TtsServiceOptions?> _showNetworkTtsSheet(
                           networkTtsKindDisplayName(NetworkTtsKind.gemini),
                           networkTtsKindDisplayName(NetworkTtsKind.minimax),
                           networkTtsKindDisplayName(NetworkTtsKind.elevenlabs),
+                          networkTtsKindDisplayName(NetworkTtsKind.mimo),
                         ],
                         onSelected: (picked) async {
                           if (picked ==
-                              networkTtsKindDisplayName(NetworkTtsKind.openai))
+                              networkTtsKindDisplayName(
+                                NetworkTtsKind.openai,
+                              )) {
                             kind = NetworkTtsKind.openai;
+                          }
                           if (picked ==
-                              networkTtsKindDisplayName(NetworkTtsKind.gemini))
+                              networkTtsKindDisplayName(
+                                NetworkTtsKind.gemini,
+                              )) {
                             kind = NetworkTtsKind.gemini;
+                          }
                           if (picked ==
-                              networkTtsKindDisplayName(NetworkTtsKind.minimax))
+                              networkTtsKindDisplayName(
+                                NetworkTtsKind.minimax,
+                              )) {
                             kind = NetworkTtsKind.minimax;
+                          }
                           if (picked ==
                               networkTtsKindDisplayName(
                                 NetworkTtsKind.elevenlabs,
-                              ))
+                              )) {
                             kind = NetworkTtsKind.elevenlabs;
+                          }
+                          if (picked ==
+                              networkTtsKindDisplayName(
+                                NetworkTtsKind.mimo,
+                              )) {
+                            kind = NetworkTtsKind.mimo;
+                          }
                           (ctx as Element).markNeedsBuild();
                         },
                       ),
@@ -1039,6 +1062,7 @@ Future<TtsServiceOptions?> _showNetworkTtsSheet(
                           hint: '1.0',
                         ),
                       ],
+
                     ],
                   );
                 },
@@ -1078,7 +1102,7 @@ Future<void> _showSystemTtsConfig(BuildContext context) async {
                   width: 40,
                   height: 4,
                   decoration: BoxDecoration(
-                    color: cs.onSurface.withOpacity(0.2),
+                    color: cs.onSurface.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(999),
                   ),
                 ),
@@ -1144,7 +1168,7 @@ Future<void> _showSystemTtsConfig(BuildContext context) async {
                 l10n.ttsServicesPageSpeechRateLabel,
                 style: TextStyle(
                   fontSize: 12,
-                  color: cs.onSurface.withOpacity(0.7),
+                  color: cs.onSurface.withValues(alpha: 0.7),
                 ),
               ),
               Slider(
@@ -1165,7 +1189,7 @@ Future<void> _showSystemTtsConfig(BuildContext context) async {
                 l10n.ttsServicesPagePitchLabel,
                 style: TextStyle(
                   fontSize: 12,
-                  color: cs.onSurface.withOpacity(0.7),
+                  color: cs.onSurface.withValues(alpha: 0.7),
                 ),
               ),
               Slider(
@@ -1250,7 +1274,7 @@ Widget _sheetSelectRow(
     builder: (pressed) {
       final baseColor = Theme.of(
         context,
-      ).colorScheme.onSurface.withOpacity(0.9);
+      ).colorScheme.onSurface.withValues(alpha: 0.9);
       return _AnimatedPressColor(
         pressed: pressed,
         base: baseColor,
@@ -1270,7 +1294,7 @@ Widget _sheetSelectRow(
                       fontSize: 13,
                       color: Theme.of(
                         context,
-                      ).colorScheme.onSurface.withOpacity(0.6),
+                      ).colorScheme.onSurface.withValues(alpha: 0.6),
                     ),
                   ),
                 ),
@@ -1304,8 +1328,8 @@ Widget _sheetOption(
           : base;
       final bgTarget = pressed
           ? (isDark
-                ? Colors.white.withOpacity(0.06)
-                : Colors.black.withOpacity(0.05))
+                ? Colors.white.withValues(alpha: 0.06)
+                : Colors.black.withValues(alpha: 0.05))
           : Colors.transparent;
       return TweenAnimationBuilder<Color?>(
         tween: ColorTween(end: target),
@@ -1339,7 +1363,7 @@ Widget _sheetDivider(BuildContext context) {
     thickness: 0.6,
     indent: 16,
     endIndent: 16,
-    color: cs.outlineVariant.withOpacity(0.18),
+    color: cs.outlineVariant.withValues(alpha: 0.18),
   );
 }
 
@@ -1358,7 +1382,10 @@ Widget _inputRowMobile(
       children: [
         Text(
           label,
-          style: TextStyle(fontSize: 12, color: cs.onSurface.withOpacity(0.7)),
+          style: TextStyle(
+            fontSize: 12,
+            color: cs.onSurface.withValues(alpha: 0.7),
+          ),
         ),
         const SizedBox(height: 6),
         TextField(
@@ -1385,6 +1412,8 @@ String _defaultBaseUrl(NetworkTtsKind k) {
       return 'https://api.minimaxi.com/v1';
     case NetworkTtsKind.elevenlabs:
       return 'https://api.elevenlabs.io';
+    case NetworkTtsKind.mimo:
+      return 'https://api.xiaomimimo.com/v1';
   }
 }
 
@@ -1398,6 +1427,8 @@ String _defaultModel(NetworkTtsKind k) {
       return 'speech-2.5-hd-preview';
     case NetworkTtsKind.elevenlabs:
       return 'eleven_multilingual_v2';
+    case NetworkTtsKind.mimo:
+      return 'mimo-v2-tts';
   }
 }
 
@@ -1411,6 +1442,8 @@ String _defaultVoice(NetworkTtsKind k) {
       return 'female-shaonv';
     case NetworkTtsKind.elevenlabs:
       return '';
+    case NetworkTtsKind.mimo:
+      return 'mimo_default';
   }
 }
 
@@ -1424,5 +1457,7 @@ String _voiceLabelFor(NetworkTtsKind k, AppLocalizations l10n) {
       return l10n.ttsServicesFieldVoiceIdLabel;
     case NetworkTtsKind.elevenlabs:
       return l10n.ttsServicesFieldVoiceIdLabel;
+    case NetworkTtsKind.mimo:
+      return l10n.ttsServicesFieldVoiceLabel;
   }
 }

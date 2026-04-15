@@ -397,7 +397,10 @@ abstract class BuiltInToolsHelper {
     final rawOv = cfg.modelOverrides[modelId];
     final builtInSet = BuiltInToolNames.parseFromOverride(rawOv);
 
-    final bool searchActive = isBuiltInSearchEnabled(cfg: cfg, modelId: modelId);
+    final bool searchActive = isBuiltInSearchEnabled(
+      cfg: cfg,
+      modelId: modelId,
+    );
     bool codeExecutionActive = false;
     bool urlContextActive = false;
     bool youtubeActive = false;
@@ -449,8 +452,4 @@ class BuiltInToolsState {
   /// Returns true if any Gemini-specific built-in tool is active.
   bool get anyGeminiToolActive =>
       codeExecutionActive || urlContextActive || youtubeActive;
-
-  /// Returns true if any built-in tool that conflicts with MCP is active.
-  bool get anyMcpConflictingToolActive =>
-      searchActive || codeExecutionActive || urlContextActive;
 }

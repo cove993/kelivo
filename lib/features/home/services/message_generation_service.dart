@@ -14,6 +14,7 @@ import '../../../core/models/assistant_regex.dart';
 import '../controllers/stream_controller.dart' as stream_ctrl;
 import '../controllers/generation_controller.dart';
 import 'message_builder_service.dart';
+import 'tool_approval_service.dart';
 
 /// Callback types for UI updates from MessageGenerationService
 typedef OnMessagesChanged = void Function();
@@ -23,6 +24,26 @@ typedef OnScrollToBottom = void Function();
 typedef OnShowError = void Function(String message);
 typedef OnShowWarning = void Function(String message);
 typedef OnHapticFeedback = void Function();
+
+const String conversationIdHeaderName = 'X-Conversation-Id';
+const String _conversationIdHeaderNameLower = 'x-conversation-id';
+
+Map<String, String>? buildConversationRequestHeaders({
+  required String conversationId,
+  Map<String, String>? customHeaders,
+}) {
+  final headers = <String, String>{
+    if (customHeaders != null)
+      for (final entry in customHeaders.entries)
+        if (entry.key.toLowerCase() != _conversationIdHeaderNameLower)
+          entry.key: entry.value,
+  };
+  final normalizedConversationId = conversationId.trim();
+  if (normalizedConversationId.isNotEmpty) {
+    headers[conversationIdHeaderName] = normalizedConversationId;
+  }
+  return headers.isEmpty ? null : headers;
+}
 
 /// Result of preparing a message generation
 class PreparedGeneration {
@@ -96,6 +117,7 @@ class MessageGenerationService {
     required String? assistantId,
     required String providerKey,
     required String modelId,
+    ToolApprovalService? approvalService,
   }) async {
     final cfg = settings.getProviderConfig(providerKey);
     final kind = ProviderConfig.classify(
@@ -177,7 +199,11 @@ class MessageGenerationService {
       hasBuiltInSearch,
     );
     final onToolCall = toolDefs.isNotEmpty
-        ? generationController.buildToolCallHandler(settings, assistant)
+        ? generationController.buildToolCallHandler(
+            settings,
+            assistant,
+            approvalService: approvalService,
+          )
         : null;
 
     return PreparedGeneration(
@@ -274,7 +300,10 @@ class MessageGenerationService {
       config: settings.getProviderConfig(providerKey),
       toolDefs: prepared.toolDefs,
       onToolCall: prepared.onToolCall,
-      extraHeaders: generationController.buildCustomHeaders(assistant),
+      extraHeaders: buildConversationRequestHeaders(
+        conversationId: assistantMessage.conversationId,
+        customHeaders: generationController.buildCustomHeaders(assistant),
+      ),
       extraBody: generationController.buildCustomBody(assistant),
       supportsReasoning: supportsReasoning,
       enableReasoning: enableReasoning,

@@ -164,6 +164,7 @@
   "sponsorPageAfdianSubtitle": "afdian.com/a/kelivo",
   "sponsorPageWeChatTitle": "WeChat Sponsor",
   "sponsorPageWeChatSubtitle": "WeChat sponsor code",
+  "sponsorPageScanQrHint": "Scan the QR code to sponsor",
   "languageDisplaySimplifiedChinese": "Simplified Chinese",
   "languageDisplayEnglish": "English",
   "languageDisplayTraditionalChinese": "Traditional Chinese",
@@ -239,6 +240,8 @@
   "mcpTransportOptionStdio": "STDIO",
   "mcpTransportTagStdio": "STDIO",
   "mcpTransportTagInmemory": "Built-in",
+  "mcpTransportTagSse": "SSE",
+  "mcpTransportTagHttp": "HTTP",
   "mcpServerEditSheetStdioOnlyDesktop": "STDIO is only available on desktop",
   "mcpServerEditSheetStdioCommandLabel": "Command",
   "mcpServerEditSheetStdioArgumentsLabel": "Arguments",
@@ -266,8 +269,10 @@
   },
   "chatServiceDefaultConversationTitle": "New Chat",
   "userProviderDefaultUserName": "User",
-  "homePageDeleteMessage": "Delete Message",
-  "homePageDeleteMessageConfirm": "Are you sure you want to delete this message? This cannot be undone.",
+  "homePageDeleteMessage": "Delete This Version",
+  "homePageDeleteMessageConfirm": "Are you sure you want to delete this version? This cannot be undone.",
+  "homePageDeleteAllVersions": "Delete All Versions",
+  "homePageDeleteAllVersionsConfirm": "Are you sure you want to delete all versions of this message? This cannot be undone.",
   "homePageCancel": "Cancel",
   "homePageDelete": "Delete",
   "homePageSelectMessagesToShare": "Please select messages to share",
@@ -609,7 +614,8 @@
   "messageMoreSheetEdit": "Edit",
   "messageMoreSheetShare": "Share",
   "messageMoreSheetCreateBranch": "Create Branch",
-  "messageMoreSheetDelete": "Delete",
+  "messageMoreSheetDelete": "Delete This Version",
+  "messageMoreSheetDeleteAllVersions": "Delete All Versions",
   "reasoningBudgetSheetOff": "Off",
   "reasoningBudgetSheetAuto": "Auto",
   "reasoningBudgetSheetLight": "Light Reasoning",
@@ -631,7 +637,7 @@
   "reasoningBudgetSheetMediumSubtitle": "Use moderate reasoning to answer questions",
   "reasoningBudgetSheetHeavySubtitle": "Use heavy reasoning for complex questions",
   "reasoningBudgetSheetXhighSubtitle": "Use maximum reasoning depth for the toughest problems",
-  "reasoningBudgetSheetCustomLabel": "Custom Reasoning Budget (tokens)",
+  "reasoningBudgetSheetCustomLabel": "Custom Reasoning Budget",
   "reasoningBudgetSheetCustomHint": "e.g. 2048 (-1 auto, 0 off)",
   "chatMessageWidgetFileNotFound": "File not found: {fileName}",
   "@chatMessageWidgetFileNotFound": {
@@ -891,6 +897,8 @@
   "chatInputBarReasoningStrengthTooltip": "Reasoning Strength",
   "chatInputBarMcpServersTooltip": "MCP Servers",
   "chatInputBarMoreTooltip": "Add",
+  "chatInputBarQueuedPending": "Queued to send",
+  "chatInputBarQueuedCancel": "Cancel Queue",
   "chatInputBarInsertNewline": "Newline",
   "chatInputBarExpand": "Expand",
   "chatInputBarCollapse": "Collapse",
@@ -1085,7 +1093,6 @@
   "modelDetailSheetSaveFailedMessage": "Save failed. Please try again.",
   "modelDetailSheetAddBody": "Add Body",
   "modelDetailSheetBuiltinToolsDescription": "Built-in tools only support official APIs.",
-  "modelDetailSheetGeminiCodeExecutionMutuallyExclusiveHint": "Code execution cannot coexist with Search/URL Context/MCP tools.",
   "modelDetailSheetBuiltinToolsUnsupportedHint": "Current provider does not support these built-in tools.",
   "modelDetailSheetSearchTool": "Search",
   "modelDetailSheetSearchToolDescription": "Enable Google Search integration",
@@ -1312,11 +1319,39 @@
   "searchSettingsSheetNoServicesMessage": "No services. Add from Search Services.",
   "aboutPageEasterEggMessage": "Thanks for exploring! \n (No egg yet)",
   "aboutPageEasterEggButton": "Nice!",
+  "aboutPageAppName": "Kelivo",
   "aboutPageAppDescription": "Open-source AI Assistant",
   "aboutPageNoQQGroup": "No QQ group yet",
   "aboutPageVersion": "Version",
+  "aboutPageVersionDetail": "{version} / {buildNumber}",
+  "@aboutPageVersionDetail": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      },
+      "buildNumber": {
+        "type": "String"
+      }
+    }
+  },
   "aboutPageSystem": "System",
+  "aboutPageLoadingPlaceholder": "...",
+  "aboutPageUnknownPlaceholder": "-",
+  "aboutPagePlatformMacos": "macOS",
+  "aboutPagePlatformWindows": "Windows",
+  "aboutPagePlatformLinux": "Linux",
+  "aboutPagePlatformAndroid": "Android",
+  "aboutPagePlatformIos": "iOS",
+  "aboutPagePlatformOther": "Other ({os})",
+  "@aboutPagePlatformOther": {
+    "placeholders": {
+      "os": {
+        "type": "String"
+      }
+    }
+  },
   "aboutPageWebsite": "Website",
+  "aboutPageGithub": "GitHub",
   "aboutPageLicense": "License",
   "aboutPageJoinQQGroup": "Join our QQ Group",
   "aboutPageJoinDiscord": "Join us on Discord",
@@ -1324,10 +1359,14 @@
   "displaySettingsPageShowUserAvatarSubtitle": "Display user avatar in chat messages",
   "displaySettingsPageShowUserNameTimestampTitle": "Show User Name & Timestamp",
   "displaySettingsPageShowUserNameTimestampSubtitle": "Show user name and the timestamp below it in chat messages",
+  "displaySettingsPageShowUserNameTitle": "Show User Name",
+  "displaySettingsPageShowUserTimestampTitle": "Show User Timestamp",
   "displaySettingsPageShowUserMessageActionsTitle": "Show User Message Actions",
   "displaySettingsPageShowUserMessageActionsSubtitle": "Display copy, resend, and more buttons below your messages",
   "displaySettingsPageShowModelNameTimestampTitle": "Show Model Name & Timestamp",
   "displaySettingsPageShowModelNameTimestampSubtitle": "Show model name and the timestamp below it in chat messages",
+  "displaySettingsPageShowModelNameTitle": "Show Model Name",
+  "displaySettingsPageShowModelTimestampTitle": "Show Model Timestamp",
   "displaySettingsPageShowProviderInChatMessageTitle": "Show Provider After Model Name",
   "displaySettingsPageShowProviderInChatMessageSubtitle": "Display provider name after the model ID in chat messages (e.g. model | provider)",
   "displaySettingsPageChatModelIconTitle": "Chat Model Icon",
@@ -1336,6 +1375,17 @@
   "displaySettingsPageShowTokenStatsSubtitle": "Show token usage and message count",
   "displaySettingsPageAutoCollapseThinkingTitle": "Auto-collapse Thinking",
   "displaySettingsPageAutoCollapseThinkingSubtitle": "Collapse reasoning after finish",
+  "displaySettingsPageCollapseThinkingStepsTitle": "Collapse Thinking Steps",
+  "displaySettingsPageCollapseThinkingStepsSubtitle": "Show only the latest steps until expanded",
+  "displaySettingsPageShowToolResultSummaryTitle": "Show Tool Result Summary",
+  "displaySettingsPageShowToolResultSummarySubtitle": "Display the summary text below tool steps",
+  "chainOfThoughtExpandSteps": "Show {count} more steps",
+  "@chainOfThoughtExpandSteps": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "chainOfThoughtCollapse": "Collapse",
   "displaySettingsPageShowChatListDateTitle": "Show Chat List Dates",
   "displaySettingsPageShowChatListDateSubtitle": "Display date group labels in the conversation list",
   "displaySettingsPageKeepSidebarOpenOnAssistantTapTitle": "Keep sidebar open when selecting assistant",
@@ -1345,6 +1395,7 @@
   "displaySettingsPageShowUpdatesSubtitle": "Show app update notifications",
   "displaySettingsPageMessageNavButtonsTitle": "Message Navigation Buttons",
   "displaySettingsPageMessageNavButtonsSubtitle": "Show quick jump buttons when scrolling",
+  "displaySettingsPageUseNewAssistantAvatarUxTitle": "Show assistant avatar in chat title bar",
   "displaySettingsPageHapticsOnSidebarTitle": "Haptics on Sidebar",
   "displaySettingsPageHapticsOnSidebarSubtitle": "Enable haptic feedback when opening/closing sidebar",
   "displaySettingsPageHapticsGlobalTitle": "Global Haptics",
@@ -1786,5 +1837,49 @@
   "worldBookInjectionPositionBottomOfChat": "Bottom of chat",
   "worldBookInjectionPositionAtDepth": "At depth",
   "worldBookInjectionRoleUser": "User",
-  "worldBookInjectionRoleAssistant": "Assistant"
+  "worldBookInjectionRoleAssistant": "Assistant",
+  "mcpToolNeedsApproval": "Require approval",
+  "toolApprovalPending": "Waiting for approval",
+  "toolApprovalApprove": "Approve",
+  "toolApprovalDeny": "Deny",
+  "toolApprovalDenyTitle": "Deny tool call",
+  "toolApprovalDenyHint": "Reason (optional)",
+  "toolApprovalDeniedMessage": "Tool call \"{toolName}\" was denied by user. Reason: {reason}",
+  "tokenDetailPromptTokens": "{count} tokens",
+  "@tokenDetailPromptTokens": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "tokenDetailPromptTokensWithCache": "{count} tokens ({cached} cached)",
+  "@tokenDetailPromptTokensWithCache": {
+    "placeholders": {
+      "count": {"type": "int"},
+      "cached": {"type": "int"}
+    }
+  },
+  "tokenDetailCompletionTokens": "{count} tokens",
+  "@tokenDetailCompletionTokens": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "tokenDetailSpeed": "{value} tok/s",
+  "@tokenDetailSpeed": {
+    "placeholders": {
+      "value": {"type": "String"}
+    }
+  },
+  "tokenDetailDuration": "{value}s",
+  "@tokenDetailDuration": {
+    "placeholders": {
+      "value": {"type": "String"}
+    }
+  },
+  "tokenDetailTotalTokens": "{count} tokens",
+  "@tokenDetailTotalTokens": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  }
 }

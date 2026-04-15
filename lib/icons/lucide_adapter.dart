@@ -63,6 +63,7 @@ class Lucide {
   static const IconData User = lucide.LucideIcons.user;
   static const IconData Hammer = lucide.LucideIcons.hammer;
   static const IconData Brain = lucide.LucideIcons.brain;
+  static const IconData Lightbulb = lucide.LucideIcons.lightbulb;
   static const IconData Check = lucide.LucideIcons.check;
   static const IconData Trash2 = lucide.LucideIcons.trash2;
   static const IconData HeartOff = lucide.LucideIcons.heartOff;
@@ -78,7 +79,6 @@ class Lucide {
   static const IconData Clipboard = lucide.LucideIcons.clipboard;
   static const IconData Sparkles = lucide.LucideIcons.sparkles;
   static const IconData Phone = lucide.LucideIcons.phone;
-  static const IconData Github = lucide.LucideIcons.github;
   static const IconData Code = lucide.LucideIcons.code;
   static const IconData Hash = lucide.LucideIcons.hash;
   static const IconData Link = lucide.LucideIcons.link;
@@ -164,4 +164,5 @@ class Lucide {
   static const IconData CornerDownLeft = lucide.LucideIcons.cornerDownLeft;
   static const IconData package2 = lucide.LucideIcons.package2;
   static const IconData workflow = lucide.LucideIcons.workflow;
+  static const IconData clock = lucide.LucideIcons.clock;
 }

@@ -16,7 +16,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 # https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
 # In Windows, build-name is used as the major, minor, and patch parts
 # of the product and file versions while build-number is used as the build suffix.
-version: 1.1.8+26
+version: 1.1.10+28
 
 environment:
   sdk: ^3.8.1
@@ -33,6 +33,7 @@ dependencies:
   logging: ^1.2.0
   
   window_manager: ^0.5.1
+  screen_retriever: ^0.2.0
   tray_manager:
     path: ./dependencies/tray_manager/packages/tray_manager
   desktop_drop: ^0.7.0
@@ -43,7 +44,7 @@ dependencies:
     sdk: flutter
   provider: ^6.0.5
   dynamic_color: ^1.8.1
-  lucide_icons_flutter: ^3.1.4
+  lucide_icons_flutter: ^3.1.11
   shared_preferences: ^2.2.3
   image_picker: 1.1.2
   flutter_svg: ^2.2.1
@@ -75,6 +76,8 @@ dependencies:
   mcp_client: # ^1.0.2
     path: ./dependencies/mcp_client
   flutter_highlight: ^0.7.0
+  highlight: ^0.7.0
+  syncfusion_flutter_core: ^31.2.5
   syncfusion_flutter_sliders: ^31.2.5
   syncfusion_flutter_pdf: ^31.2.5
   audioplayers: ^6.5.1
@@ -86,6 +89,7 @@ dependencies:
   webview_windows: ^0.4.0
   flutter_math_fork: ^0.7.4
   scrollable_positioned_list: ^0.3.8
+  scrollview_observer: ^1.26.0
   image_gallery_saver_plus: ^4.0.1
   haptic_feedback: ^0.5.1+1
   system_fonts: ^1.0.1

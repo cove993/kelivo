@@ -3,22 +3,20 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 import 'dart:ui' as ui;
-import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:flutter/scheduler.dart';
 import 'package:flutter/rendering.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
-import 'package:share_plus/share_plus.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:path/path.dart' as p;
 import 'image_preview_sheet.dart';
 
 import '../../../icons/lucide_adapter.dart';
+import '../../../icons/reasoning_icons.dart';
 import '../../../core/models/chat_message.dart';
 import '../../../core/models/conversation.dart';
 import '../../../core/providers/settings_provider.dart';
@@ -41,7 +39,7 @@ import 'chat_message_widget.dart' show ToolUIPart;
 
 // Regular expression to extract thinking content from message
 final RegExp thinkingRegex = RegExp(
-  r"<think>([\s\S]*?)(?:</think>|$)",
+  r"<(?:think|thought)>([\s\S]*?)(?:</(?:think|thought)>|$)",
   dotAll: true,
 );
 
@@ -55,10 +53,17 @@ String _guessImageMime(String path) {
 }
 
 String? _modelDisplayName(BuildContext context, ChatMessage msg) {
+  final settings = context.read<SettingsProvider>();
+  return _modelDisplayNameFromSettings(settings, msg);
+}
+
+String? _modelDisplayNameFromSettings(
+  SettingsProvider settings,
+  ChatMessage msg,
+) {
   if (msg.role != 'assistant') return null;
   final modelId = msg.modelId;
   if (modelId == null || modelId.isEmpty) return null;
-  final settings = context.read<SettingsProvider>();
   String? name;
   String baseId = modelId;
   final providerId = msg.providerId;
@@ -90,21 +95,23 @@ String? _modelDisplayName(BuildContext context, ChatMessage msg) {
   return name ?? (fallback.isNotEmpty ? fallback : baseId);
 }
 
-String _getRoleName(BuildContext context, ChatMessage msg) {
-  final l10n = AppLocalizations.of(context)!;
+String _getRoleNameFromDependencies({
+  required AppLocalizations l10n,
+  required SettingsProvider settings,
+  required UserProvider userProvider,
+  required Assistant? assistant,
+  required ChatMessage msg,
+}) {
   if (msg.role == 'user') {
-    final userProvider = context.read<UserProvider>();
     return userProvider.name;
-  } else if (msg.role == 'assistant') {
-    // Check if using assistant name override
-    final assistant = context.read<AssistantProvider>().currentAssistant;
+  }
+  if (msg.role == 'assistant') {
     if (assistant != null &&
         assistant.useAssistantName == true &&
         assistant.name.trim().isNotEmpty) {
       return assistant.name.trim();
     }
-    // Otherwise use model display name
-    final modelName = _modelDisplayName(context, msg);
+    final modelName = _modelDisplayNameFromSettings(settings, msg);
     if (modelName != null && modelName.isNotEmpty) {
       return modelName;
     }
@@ -242,12 +249,6 @@ _ThinkingExportData _thinkingExportDataForMessage(ChatMessage message) {
   );
 }
 
-String _formatExportTime(BuildContext context, DateTime time) {
-  final l10n = AppLocalizations.of(context)!;
-  final fmt = DateFormat(l10n.messageExportSheetDateTimeWithSecondsPattern);
-  return fmt.format(time);
-}
-
 Future<void> _saveExportTextWithPicker(
   BuildContext context, {
   required String filename,
@@ -269,6 +270,7 @@ Future<void> _saveExportTextWithPicker(
       await File(savePath).parent.create(recursive: true);
       await File(savePath).writeAsString(content);
     } catch (e) {
+      if (!context.mounted) return;
       showAppSnackBar(
         context,
         message: l10n.messageExportSheetExportFailed('$e'),
@@ -277,6 +279,7 @@ Future<void> _saveExportTextWithPicker(
       return;
     }
 
+    if (!context.mounted) return;
     showAppSnackBar(
       context,
       message: l10n.messageExportSheetExportedAs(p.basename(savePath)),
@@ -295,6 +298,7 @@ Future<void> _saveExportTextWithPicker(
     bytes: Uint8List.fromList(contentBytes),
   );
   if (savePath == null) return;
+  if (!context.mounted) return;
   showAppSnackBar(
     context,
     message: l10n.messageExportSheetExportedAs(p.basename(savePath)),
@@ -310,7 +314,13 @@ Future<void> exportChatMessagesMarkdown(
   bool expandThinkingContent = false,
 }) async {
   final l10n = AppLocalizations.of(context)!;
+  final settings = context.read<SettingsProvider>();
+  final userProvider = context.read<UserProvider>();
+  final assistant = context.read<AssistantProvider>().currentAssistant;
   final thinkingLabel = l10n.messageExportThinkingContentLabel;
+  final timeFormatter = DateFormat(
+    l10n.messageExportSheetDateTimeWithSecondsPattern,
+  );
   try {
     showAppSnackBar(
       context,
@@ -328,8 +338,15 @@ Future<void> exportChatMessagesMarkdown(
     buf.writeln('');
 
     for (final msg in messages) {
-      final time = _formatExportTime(context, msg.timestamp);
-      buf.writeln('> $time · ${_getRoleName(context, msg)}');
+      final time = timeFormatter.format(msg.timestamp);
+      final roleName = _getRoleNameFromDependencies(
+        l10n: l10n,
+        settings: settings,
+        userProvider: userProvider,
+        assistant: assistant,
+        msg: msg,
+      );
+      buf.writeln('> $time · $roleName');
       buf.writeln('');
 
       final exportData = (msg.role == 'assistant')
@@ -384,6 +401,7 @@ Future<void> exportChatMessagesMarkdown(
     }
 
     final filename = 'chat-export-${DateTime.now().millisecondsSinceEpoch}.md';
+    if (!context.mounted) return;
     await _saveExportTextWithPicker(
       context,
       filename: filename,
@@ -391,6 +409,7 @@ Future<void> exportChatMessagesMarkdown(
       allowedExtensions: const ['md'],
     );
   } catch (e) {
+    if (!context.mounted) return;
     showAppSnackBar(
       context,
       message: l10n.messageExportSheetExportFailed('$e'),
@@ -407,7 +426,13 @@ Future<void> exportChatMessagesTxt(
   bool expandThinkingContent = false,
 }) async {
   final l10n = AppLocalizations.of(context)!;
+  final settings = context.read<SettingsProvider>();
+  final userProvider = context.read<UserProvider>();
+  final assistant = context.read<AssistantProvider>().currentAssistant;
   final thinkingLabel = l10n.messageExportThinkingContentLabel;
+  final timeFormatter = DateFormat(
+    l10n.messageExportSheetDateTimeWithSecondsPattern,
+  );
   try {
     showAppSnackBar(
       context,
@@ -425,8 +450,15 @@ Future<void> exportChatMessagesTxt(
     buf.writeln('');
 
     for (final msg in messages) {
-      final time = _formatExportTime(context, msg.timestamp);
-      buf.writeln('$time · ${_getRoleName(context, msg)}');
+      final time = timeFormatter.format(msg.timestamp);
+      final roleName = _getRoleNameFromDependencies(
+        l10n: l10n,
+        settings: settings,
+        userProvider: userProvider,
+        assistant: assistant,
+        msg: msg,
+      );
+      buf.writeln('$time · $roleName');
       buf.writeln('');
 
       final exportData = (msg.role == 'assistant')
@@ -467,6 +499,7 @@ Future<void> exportChatMessagesTxt(
       allowedExtensions: const ['txt'],
     );
   } catch (e) {
+    if (!context.mounted) return;
     showAppSnackBar(
       context,
       message: l10n.messageExportSheetExportFailed('$e'),
@@ -494,8 +527,10 @@ Future<void> exportChatMessagesImage(
       );
     });
     if (file == null) throw 'render error';
+    if (!context.mounted) return;
     await showImagePreviewSheet(context, file: file!);
   } catch (e) {
+    if (!context.mounted) return;
     final l10n = AppLocalizations.of(context)!;
     showAppSnackBar(
       context,
@@ -514,6 +549,10 @@ Future<File?> _renderAndSaveMessageImage(
   final cs = Theme.of(context).colorScheme;
   final settings = context.read<SettingsProvider>();
   final l10n = AppLocalizations.of(context)!;
+  final chatService = context.read<ChatService>();
+  final title =
+      chatService.getConversation(message.conversationId)?.title ??
+      l10n.messageExportSheetDefaultTitle;
   // Pre-render mermaid diagrams to images for export
   try {
     final codes = extractMermaidCodes(message.content);
@@ -528,12 +567,7 @@ Future<File?> _renderAndSaveMessageImage(
     enabled: true,
     child: _ExportedMessageCard(
       message: message,
-      title:
-          context
-              .read<ChatService>()
-              .getConversation(message.conversationId)
-              ?.title ??
-          l10n.messageExportSheetDefaultTitle,
+      title: title,
       cs: cs,
       chatFontScale: settings.chatFontScale,
       showThinkingAndToolCards: showThinkingAndToolCards,
@@ -541,28 +575,13 @@ Future<File?> _renderAndSaveMessageImage(
       isDesktop: isDesktop,
     ),
   );
+  if (!context.mounted) return null;
   return _renderWidgetDirectly(
     context,
     content,
     width: isDesktop ? 720 : 480,
     pixelRatio: isDesktop ? 2.0 : 3.0,
   );
-}
-
-Rect _shareAnchorRect(BuildContext context) {
-  try {
-    final box = context.findRenderObject() as RenderBox?;
-    if (box != null &&
-        box.hasSize &&
-        box.size.width > 0 &&
-        box.size.height > 0) {
-      final offset = box.localToGlobal(Offset.zero);
-      return offset & box.size;
-    }
-  } catch (_) {}
-  final size = MediaQuery.sizeOf(context);
-  final center = Offset(size.width / 2, size.height / 2);
-  return Rect.fromCenter(center: center, width: 1, height: 1);
 }
 
 Future<File?> _renderAndSaveChatImage(
@@ -603,6 +622,7 @@ Future<File?> _renderAndSaveChatImage(
       isDesktop: isDesktop,
     ),
   );
+  if (!context.mounted) return null;
   return _renderWidgetDirectly(
     context,
     content,
@@ -619,7 +639,6 @@ Future<File?> _renderWidgetDirectly(
   double pixelRatio = 3.0,
 }) async {
   final overlay = Overlay.of(context);
-  if (overlay == null) return null;
 
   final boundaryKey = GlobalKey();
   final completer = Completer<void>();
@@ -650,7 +669,7 @@ Future<File?> _renderWidgetDirectly(
           key: boundaryKey,
           child: Container(
             width: width,
-            color: Theme.of(ctx).colorScheme.background,
+            color: Theme.of(ctx).colorScheme.surface,
             child: Material(type: MaterialType.transparency, child: content),
           ),
         ),
@@ -679,7 +698,7 @@ Future<File?> _renderWidgetDirectly(
         break;
       } catch (e) {
         if (retry == 9) {
-          print('Failed to capture image after 10 retries: $e');
+          debugPrint('Failed to capture image after 10 retries: $e');
           return null;
         }
         // Wait before retrying
@@ -700,147 +719,6 @@ Future<File?> _renderWidgetDirectly(
     );
     await file.writeAsBytes(data.buffer.asUint8List());
 
-    return file;
-  } finally {
-    entry.remove();
-  }
-}
-
-// Keep the old paginated version for reference but renamed
-Future<File?> _renderAndSavePagedOld(
-  BuildContext context,
-  Widget content, {
-  double width = 480, // 宽度*3
-  double pageHeight = 1600,
-  double pixelRatio = 3.0,
-}) async {
-  final overlay = Overlay.of(context);
-  if (overlay == null) return null;
-  final boundaryKey = GlobalKey();
-  final contentKey = GlobalKey();
-  final controller = ScrollController();
-
-  // Create a completer to signal when the widget is ready
-  final completer = Completer<void>();
-
-  late OverlayEntry entry;
-  entry = OverlayEntry(
-    builder: (ctx) {
-      // Schedule a callback after the frame is built
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!completer.isCompleted) {
-          completer.complete();
-        }
-      });
-
-      return Material(
-        type: MaterialType.transparency,
-        child: IgnorePointer(
-          ignoring: true,
-          child: Opacity(
-            opacity: 0.001,
-            child: Align(
-              alignment: Alignment.topLeft,
-              child: RepaintBoundary(
-                key: boundaryKey,
-                child: SizedBox(
-                  width: width,
-                  height: pageHeight,
-                  child: SingleChildScrollView(
-                    controller: controller,
-                    child: KeyedSubtree(key: contentKey, child: content),
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ),
-      );
-    },
-  );
-
-  overlay.insert(entry);
-
-  try {
-    // Wait for the initial frame to be ready
-    await completer.future;
-    await Future<void>.delayed(const Duration(milliseconds: 200));
-
-    final contentSize = contentKey.currentContext?.size;
-    if (contentSize == null) return null;
-
-    final totalHeight = contentSize.height;
-    final pages = (totalHeight / pageHeight).ceil().clamp(1, 200);
-    final images = <ui.Image>[];
-    final drawHeights = <int>[];
-
-    for (int i = 0; i < pages; i++) {
-      final offset = i * pageHeight;
-      controller.jumpTo(offset);
-
-      // Wait for the scroll to complete and the new content to render
-      await Future<void>.delayed(const Duration(milliseconds: 200));
-
-      // Force a frame
-      SchedulerBinding.instance.scheduleFrameCallback((_) {});
-      await SchedulerBinding.instance.endOfFrame;
-
-      final boundary =
-          boundaryKey.currentContext?.findRenderObject()
-              as RenderRepaintBoundary?;
-      if (boundary == null) break;
-
-      // Capture with retry logic
-      ui.Image? img;
-      for (int retry = 0; retry < 5; retry++) {
-        try {
-          img = await boundary.toImage(pixelRatio: pixelRatio);
-          break;
-        } catch (e) {
-          // Wait and retry
-          await Future<void>.delayed(const Duration(milliseconds: 100));
-          SchedulerBinding.instance.scheduleFrameCallback((_) {});
-          await SchedulerBinding.instance.endOfFrame;
-        }
-      }
-
-      if (img == null) continue;
-
-      images.add(img);
-      final drawn = drawHeights.fold<int>(0, (a, b) => a + b);
-      final remaining = (totalHeight * pixelRatio).round() - drawn;
-      final h = remaining <= 0 ? 0 : math.min(img.height, remaining);
-      drawHeights.add(h);
-    }
-
-    if (images.isEmpty) return null;
-
-    final composedHeightPx = drawHeights.fold<int>(0, (a, b) => a + b);
-    final widthPx = (width * pixelRatio).round();
-    final recorder = ui.PictureRecorder();
-    final canvas = Canvas(recorder);
-    double y = 0;
-
-    for (int i = 0; i < images.length; i++) {
-      final ui.Image page = images[i];
-      final int drawH = drawHeights[i];
-      if (drawH <= 0) break;
-      final src = Rect.fromLTWH(0, 0, page.width.toDouble(), drawH.toDouble());
-      final dst = Rect.fromLTWH(0, y, widthPx.toDouble(), drawH.toDouble());
-      canvas.drawImageRect(page, src, dst, Paint());
-      y += drawH.toDouble();
-    }
-
-    final pic = recorder.endRecording();
-    final img = await pic.toImage(widthPx, composedHeightPx);
-    final data = await img.toByteData(format: ui.ImageByteFormat.png);
-    if (data == null) return null;
-
-    final dir = await getTemporaryDirectory();
-    final file = File(
-      '${dir.path}/chat-export-${DateTime.now().millisecondsSinceEpoch}.png',
-    );
-    await file.writeAsBytes(data.buffer.asUint8List());
     return file;
   } finally {
     entry.remove();
@@ -956,20 +834,12 @@ class _ExportDialog extends StatefulWidget {
 }
 
 class _ExportDialogState extends State<_ExportDialog> {
-  bool _exporting = false;
+  final bool _exporting = false;
   bool _showThinkingAndToolCards = false;
   bool _expandThinkingContent = false;
 
-  String _formatTime(BuildContext context, DateTime time) {
-    final l10n = AppLocalizations.of(context)!;
-    final fmt = DateFormat(l10n.messageExportSheetDateTimeWithSecondsPattern);
-    return fmt.format(time);
-  }
-
   Future<void> _onExportMarkdown() async {
     if (_exporting) return;
-    // Close dialog first to avoid overlapping UI
-    if (mounted) await Navigator.of(context).maybePop();
     try {
       final pctx = widget.parentContext;
       final msg = widget.message;
@@ -977,6 +847,8 @@ class _ExportDialogState extends State<_ExportDialog> {
       final convo = service.getConversation(msg.conversationId);
       final effectiveConvo =
           convo ?? Conversation(id: msg.conversationId, title: '');
+      await Navigator.of(context).maybePop();
+      if (!pctx.mounted) return;
       await exportChatMessagesMarkdown(
         pctx,
         conversation: effectiveConvo,
@@ -986,6 +858,7 @@ class _ExportDialogState extends State<_ExportDialog> {
       );
     } catch (e) {
       final pctx = widget.parentContext;
+      if (!pctx.mounted) return;
       final l10n = AppLocalizations.of(pctx)!;
       showAppSnackBar(
         pctx,
@@ -997,8 +870,6 @@ class _ExportDialogState extends State<_ExportDialog> {
 
   Future<void> _onExportTxt() async {
     if (_exporting) return;
-    // Close dialog first to avoid overlapping UI
-    if (mounted) await Navigator.of(context).maybePop();
     try {
       final pctx = widget.parentContext;
       final msg = widget.message;
@@ -1006,6 +877,8 @@ class _ExportDialogState extends State<_ExportDialog> {
       final convo = service.getConversation(msg.conversationId);
       final effectiveConvo =
           convo ?? Conversation(id: msg.conversationId, title: '');
+      await Navigator.of(context).maybePop();
+      if (!pctx.mounted) return;
       await exportChatMessagesTxt(
         pctx,
         conversation: effectiveConvo,
@@ -1015,6 +888,7 @@ class _ExportDialogState extends State<_ExportDialog> {
       );
     } catch (e) {
       final pctx = widget.parentContext;
+      if (!pctx.mounted) return;
       final l10n = AppLocalizations.of(pctx)!;
       showAppSnackBar(
         pctx,
@@ -1026,25 +900,29 @@ class _ExportDialogState extends State<_ExportDialog> {
 
   Future<void> _onExportImage() async {
     if (_exporting) return;
-    // Close dialog first to avoid overlapping UI
-    if (mounted) await Navigator.of(context).maybePop();
     try {
+      final pctx = widget.parentContext;
+      await Navigator.of(context).maybePop();
+      if (!pctx.mounted) return;
       File? file;
-      await _runWithExportingOverlay(widget.parentContext, () async {
+      await _runWithExportingOverlay(pctx, () async {
         file = await _renderAndSaveMessageImage(
-          widget.parentContext,
+          pctx,
           widget.message,
           showThinkingAndToolCards: _showThinkingAndToolCards,
           expandThinkingContent: _expandThinkingContent,
         );
       });
       if (file == null) throw 'render error';
-      await showImagePreviewSheet(widget.parentContext, file: file!);
+      if (!pctx.mounted) return;
+      await showImagePreviewSheet(pctx, file: file!);
       return;
     } catch (e) {
-      final l10n = AppLocalizations.of(widget.parentContext)!;
+      final pctx = widget.parentContext;
+      if (!pctx.mounted) return;
+      final l10n = AppLocalizations.of(pctx)!;
       showAppSnackBar(
-        widget.parentContext,
+        pctx,
         message: l10n.messageExportSheetExportFailed('$e'),
         type: NotificationType.error,
       );
@@ -1089,7 +967,7 @@ class _ExportDialogState extends State<_ExportDialog> {
                       icon: Icon(
                         Lucide.X,
                         size: 18,
-                        color: cs.onSurface.withOpacity(0.75),
+                        color: cs.onSurface.withValues(alpha: 0.75),
                       ),
                       onPressed: () => Navigator.of(context).maybePop(),
                     ),
@@ -1184,7 +1062,9 @@ class _ExportDialogState extends State<_ExportDialog> {
               title,
               style: TextStyle(
                 fontSize: 14,
-                color: isEnabled ? cs.onSurface : cs.onSurface.withOpacity(0.4),
+                color: isEnabled
+                    ? cs.onSurface
+                    : cs.onSurface.withValues(alpha: 0.4),
               ),
             ),
           ),
@@ -1215,22 +1095,17 @@ class _BatchExportDialog extends StatefulWidget {
 }
 
 class _BatchExportDialogState extends State<_BatchExportDialog> {
-  bool _exporting = false;
+  final bool _exporting = false;
   bool _showThinkingAndToolCards = false;
   bool _expandThinkingContent = false;
 
-  String _formatTime(BuildContext context, DateTime time) {
-    final l10n = AppLocalizations.of(context)!;
-    final fmt = DateFormat(l10n.messageExportSheetDateTimeWithSecondsPattern);
-    return fmt.format(time);
-  }
-
   Future<void> _onExportMarkdown() async {
     if (_exporting) return;
-    // Close dialog first to avoid overlapping UI
-    if (mounted) await Navigator.of(context).maybePop();
+    final pctx = widget.parentContext;
+    await Navigator.of(context).maybePop();
+    if (!pctx.mounted) return;
     await exportChatMessagesMarkdown(
-      widget.parentContext,
+      pctx,
       conversation: widget.conversation,
       messages: widget.messages,
       showThinkingAndToolCards: _showThinkingAndToolCards,
@@ -1240,10 +1115,11 @@ class _BatchExportDialogState extends State<_BatchExportDialog> {
 
   Future<void> _onExportTxt() async {
     if (_exporting) return;
-    // Close dialog first to avoid overlapping UI
-    if (mounted) await Navigator.of(context).maybePop();
+    final pctx = widget.parentContext;
+    await Navigator.of(context).maybePop();
+    if (!pctx.mounted) return;
     await exportChatMessagesTxt(
-      widget.parentContext,
+      pctx,
       conversation: widget.conversation,
       messages: widget.messages,
       showThinkingAndToolCards: _showThinkingAndToolCards,
@@ -1253,13 +1129,14 @@ class _BatchExportDialogState extends State<_BatchExportDialog> {
 
   Future<void> _onExportImage() async {
     if (_exporting) return;
-    // Close dialog first to avoid overlapping UI
-    if (mounted) await Navigator.of(context).maybePop();
     try {
+      final pctx = widget.parentContext;
+      await Navigator.of(context).maybePop();
+      if (!pctx.mounted) return;
       File? file;
-      await _runWithExportingOverlay(widget.parentContext, () async {
+      await _runWithExportingOverlay(pctx, () async {
         file = await _renderAndSaveChatImage(
-          widget.parentContext,
+          pctx,
           widget.conversation,
           widget.messages,
           showThinkingAndToolCards: _showThinkingAndToolCards,
@@ -1267,12 +1144,15 @@ class _BatchExportDialogState extends State<_BatchExportDialog> {
         );
       });
       if (file == null) throw 'render error';
-      await showImagePreviewSheet(widget.parentContext, file: file!);
+      if (!pctx.mounted) return;
+      await showImagePreviewSheet(pctx, file: file!);
       return;
     } catch (e) {
-      final l10n = AppLocalizations.of(widget.parentContext)!;
+      final pctx = widget.parentContext;
+      if (!pctx.mounted) return;
+      final l10n = AppLocalizations.of(pctx)!;
       showAppSnackBar(
-        widget.parentContext,
+        pctx,
         message: l10n.messageExportSheetExportFailed('$e'),
         type: NotificationType.error,
       );
@@ -1317,7 +1197,7 @@ class _BatchExportDialogState extends State<_BatchExportDialog> {
                       icon: Icon(
                         Lucide.X,
                         size: 18,
-                        color: cs.onSurface.withOpacity(0.75),
+                        color: cs.onSurface.withValues(alpha: 0.75),
                       ),
                       onPressed: () => Navigator.of(context).maybePop(),
                     ),
@@ -1412,7 +1292,9 @@ class _BatchExportDialogState extends State<_BatchExportDialog> {
               title,
               style: TextStyle(
                 fontSize: 14,
-                color: isEnabled ? cs.onSurface : cs.onSurface.withOpacity(0.4),
+                color: isEnabled
+                    ? cs.onSurface
+                    : cs.onSurface.withValues(alpha: 0.4),
               ),
             ),
           ),
@@ -1462,12 +1344,6 @@ class _BatchExportSheetState extends State<_BatchExportSheet> {
     super.dispose();
   }
 
-  String _formatTime(BuildContext context, DateTime time) {
-    final l10n = AppLocalizations.of(context)!;
-    final fmt = DateFormat(l10n.messageExportSheetDateTimeWithSecondsPattern);
-    return fmt.format(time);
-  }
-
   Future<void> _onExportMarkdown() async {
     if (_exporting) return;
 
@@ -1502,10 +1378,11 @@ class _BatchExportSheetState extends State<_BatchExportSheet> {
     if (_exporting) return;
     setState(() => _exporting = true);
     try {
+      final pctx = widget.parentContext;
       File? file;
-      await _runWithExportingOverlay(widget.parentContext, () async {
+      await _runWithExportingOverlay(pctx, () async {
         file = await _renderAndSaveChatImage(
-          widget.parentContext,
+          pctx,
           widget.conversation,
           widget.messages,
           showThinkingAndToolCards: _showThinkingAndToolCards,
@@ -1515,12 +1392,15 @@ class _BatchExportSheetState extends State<_BatchExportSheet> {
       if (file == null) throw 'render error';
       // After generation, close current sheet then open preview
       if (mounted) await Navigator.of(context).maybePop();
-      await showImagePreviewSheet(widget.parentContext, file: file!);
+      if (!pctx.mounted) return;
+      await showImagePreviewSheet(pctx, file: file!);
       return; // do not fall through to setState after pop
     } catch (e) {
-      final l10n = AppLocalizations.of(widget.parentContext)!;
+      final pctx = widget.parentContext;
+      if (!pctx.mounted) return;
+      final l10n = AppLocalizations.of(pctx)!;
       showAppSnackBar(
-        widget.parentContext,
+        pctx,
         message: l10n.messageExportSheetExportFailed('$e'),
         type: NotificationType.error,
       );
@@ -1549,7 +1429,7 @@ class _BatchExportSheetState extends State<_BatchExportSheet> {
                 width: 40,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: cs.onSurface.withOpacity(0.2),
+                  color: cs.onSurface.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(999),
                 ),
               ),
@@ -1660,7 +1540,9 @@ class _BatchExportSheetState extends State<_BatchExportSheet> {
               title,
               style: TextStyle(
                 fontSize: 14,
-                color: isEnabled ? cs.onSurface : cs.onSurface.withOpacity(0.4),
+                color: isEnabled
+                    ? cs.onSurface
+                    : cs.onSurface.withValues(alpha: 0.4),
               ),
             ),
           ),
@@ -1685,12 +1567,6 @@ class _ExportSheetState extends State<_ExportSheet> {
   void dispose() {
     _ctrl.dispose();
     super.dispose();
-  }
-
-  String _formatTime(BuildContext context, DateTime time) {
-    final l10n = AppLocalizations.of(context)!;
-    final fmt = DateFormat(l10n.messageExportSheetDateTimeWithSecondsPattern);
-    return fmt.format(time);
   }
 
   Future<void> _onExportMarkdown() async {
@@ -1759,10 +1635,11 @@ class _ExportSheetState extends State<_ExportSheet> {
     if (_exporting) return;
     setState(() => _exporting = true);
     try {
+      final pctx = widget.parentContext;
       File? file;
-      await _runWithExportingOverlay(widget.parentContext, () async {
+      await _runWithExportingOverlay(pctx, () async {
         file = await _renderAndSaveMessageImage(
-          widget.parentContext,
+          pctx,
           widget.message,
           showThinkingAndToolCards: _showThinkingAndToolCards,
           expandThinkingContent: _expandThinkingContent,
@@ -1770,12 +1647,15 @@ class _ExportSheetState extends State<_ExportSheet> {
       });
       if (file == null) throw 'render error';
       if (mounted) await Navigator.of(context).maybePop();
-      await showImagePreviewSheet(widget.parentContext, file: file!);
+      if (!pctx.mounted) return;
+      await showImagePreviewSheet(pctx, file: file!);
       return;
     } catch (e) {
-      final l10n = AppLocalizations.of(widget.parentContext)!;
+      final pctx = widget.parentContext;
+      if (!pctx.mounted) return;
+      final l10n = AppLocalizations.of(pctx)!;
       showAppSnackBar(
-        widget.parentContext,
+        pctx,
         message: l10n.messageExportSheetExportFailed('$e'),
         type: NotificationType.error,
       );
@@ -1804,7 +1684,7 @@ class _ExportSheetState extends State<_ExportSheet> {
                 width: 40,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: cs.onSurface.withOpacity(0.2),
+                  color: cs.onSurface.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(999),
                 ),
               ),
@@ -1915,7 +1795,9 @@ class _ExportSheetState extends State<_ExportSheet> {
               title,
               style: TextStyle(
                 fontSize: 14,
-                color: isEnabled ? cs.onSurface : cs.onSurface.withOpacity(0.4),
+                color: isEnabled
+                    ? cs.onSurface
+                    : cs.onSurface.withValues(alpha: 0.4),
               ),
             ),
           ),
@@ -1954,8 +1836,7 @@ class _ExportedMessageCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final isAssistant = message.role == 'assistant';
     final headerFg = cs.onSurface;
-    final headerBg = cs.surface;
-    final bubbleBg = cs.primary.withOpacity(0.08);
+    final bubbleBg = cs.primary.withValues(alpha: 0.08);
     final bubbleFg = cs.onSurface;
     final time = DateFormat('yyyy-MM-dd HH:mm').format(message.timestamp);
 
@@ -2049,7 +1930,7 @@ class _ExportedMessageCard extends StatelessWidget {
             style: TextStyle(fontSize: contentFontSize, height: 1.5),
             child: MarkdownWithCodeHighlight(text: mdText.toString()),
           )
-        : Text('—', style: TextStyle(color: bubbleFg.withOpacity(0.5)));
+        : Text('—', style: TextStyle(color: bubbleFg.withValues(alpha: 0.5)));
 
     // Desktop uses smaller margins and paddings
     final double containerMargin = isDesktop ? 12.0 : 16.0;
@@ -2058,13 +1939,15 @@ class _ExportedMessageCard extends StatelessWidget {
     return MediaQuery(
       // Respect chat font scale for export rendering
       data: MediaQuery.of(context).copyWith(
-        textScaleFactor: MediaQuery.of(context).textScaleFactor * chatFontScale,
+        textScaler: TextScaler.linear(
+          MediaQuery.textScalerOf(context).scale(1) * chatFontScale,
+        ),
       ),
       child: Container(
         margin: EdgeInsets.all(containerMargin),
         padding: EdgeInsets.all(containerPadding),
         decoration: BoxDecoration(
-          color: cs.background,
+          color: cs.surface,
           borderRadius: BorderRadius.circular(16),
           // removed outer border per UX
         ),
@@ -2078,7 +1961,7 @@ class _ExportedMessageCard extends StatelessWidget {
               style: TextStyle(
                 fontSize: titleFontSize,
                 fontWeight: FontWeight.w700,
-                color: headerFg.withOpacity(0.95),
+                color: headerFg.withValues(alpha: 0.95),
               ),
               overflow: TextOverflow.ellipsis,
               maxLines: 1,
@@ -2089,7 +1972,7 @@ class _ExportedMessageCard extends StatelessWidget {
               time,
               style: TextStyle(
                 fontSize: timeFontSize,
-                color: headerFg.withOpacity(0.6),
+                color: headerFg.withValues(alpha: 0.6),
               ),
             ),
             SizedBox(height: isDesktop ? 10.0 : 12.0),
@@ -2231,14 +2114,16 @@ class _ExportedChatImage extends StatelessWidget {
 
     return MediaQuery(
       data: MediaQuery.of(context).copyWith(
-        textScaleFactor: MediaQuery.of(context).textScaleFactor * chatFontScale,
+        textScaler: TextScaler.linear(
+          MediaQuery.textScalerOf(context).scale(1) * chatFontScale,
+        ),
       ),
       child: ClipRect(
         child: Container(
           margin: EdgeInsets.all(containerMargin),
           padding: EdgeInsets.all(containerPadding),
           decoration: BoxDecoration(
-            color: cs.background,
+            color: cs.surface,
             borderRadius: BorderRadius.circular(isDesktop ? 12.0 : 16.0),
             // removed outer border per UX
           ),
@@ -2252,7 +2137,7 @@ class _ExportedChatImage extends StatelessWidget {
                 style: TextStyle(
                   fontSize: titleFontSize,
                   fontWeight: FontWeight.w700,
-                  color: cs.onSurface.withOpacity(0.95),
+                  color: cs.onSurface.withValues(alpha: 0.95),
                 ),
                 overflow: TextOverflow.ellipsis,
                 maxLines: 1,
@@ -2263,7 +2148,7 @@ class _ExportedChatImage extends StatelessWidget {
                 DateFormat('yyyy-MM-dd HH:mm').format(timestamp),
                 style: TextStyle(
                   fontSize: timeFontSize,
-                  color: cs.onSurface.withOpacity(0.6),
+                  color: cs.onSurface.withValues(alpha: 0.6),
                 ),
               ),
               SizedBox(height: isDesktop ? 10.0 : 12.0),
@@ -2304,7 +2189,7 @@ class _ExportedBubble extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isAssistant = message.role == 'assistant';
-    final bubbleBg = cs.primary.withOpacity(0.08);
+    final bubbleBg = cs.primary.withValues(alpha: 0.08);
     final bubbleFg = cs.onSurface;
 
     // Desktop uses smaller font sizes for better proportions
@@ -2394,7 +2279,7 @@ class _ExportedBubble extends StatelessWidget {
             style: TextStyle(fontSize: contentFontSize, height: 1.5),
             child: MarkdownWithCodeHighlight(text: mdText.toString()),
           )
-        : Text('—', style: TextStyle(color: bubbleFg.withOpacity(0.5)));
+        : Text('—', style: TextStyle(color: bubbleFg.withValues(alpha: 0.5)));
 
     if (isAssistant) {
       // Build mixed content: reasoning segments and tool cards按 toolStartIndex 混合显示
@@ -2536,7 +2421,7 @@ class _AssistantHeader extends StatelessWidget {
           style: TextStyle(
             fontSize: nameFontSize,
             fontWeight: FontWeight.w500,
-            color: cs.onSurface.withOpacity(0.7),
+            color: cs.onSurface.withValues(alpha: 0.7),
           ),
         ),
       ],
@@ -2562,7 +2447,7 @@ class _ModelIconSmall extends StatelessWidget {
         width: size,
         height: size,
         decoration: BoxDecoration(
-          color: cs.secondary.withOpacity(0.1),
+          color: cs.secondary.withValues(alpha: 0.1),
           shape: BoxShape.circle,
         ),
         child: Icon(Lucide.Bot, size: size * 0.64, color: cs.secondary),
@@ -2608,7 +2493,7 @@ class _ModelIconSmall extends StatelessWidget {
       decoration: BoxDecoration(
         color: Theme.of(context).brightness == Brightness.dark
             ? Colors.white10
-            : cs.primary.withOpacity(0.1),
+            : cs.primary.withValues(alpha: 0.1),
         shape: BoxShape.circle,
       ),
       alignment: Alignment.center,
@@ -2681,7 +2566,7 @@ class _AssistantAvatarSmall extends StatelessWidget {
         width: size,
         height: size,
         decoration: BoxDecoration(
-          color: cs.primary.withOpacity(0.1),
+          color: cs.primary.withValues(alpha: 0.1),
           shape: BoxShape.circle,
         ),
         alignment: Alignment.center,
@@ -2702,7 +2587,7 @@ class _AssistantAvatarSmall extends StatelessWidget {
       width: size,
       height: size,
       decoration: BoxDecoration(
-        color: cs.primary.withOpacity(0.1),
+        color: cs.primary.withValues(alpha: 0.1),
         shape: BoxShape.circle,
       ),
       alignment: Alignment.center,
@@ -2737,7 +2622,7 @@ class _ExportDisclaimer extends StatelessWidget {
           text,
           style: TextStyle(
             fontSize: fontSize,
-            color: cs.onSurface.withOpacity(0.5),
+            color: cs.onSurface.withValues(alpha: 0.5),
           ),
           textAlign: TextAlign.center,
         ),
@@ -2752,6 +2637,7 @@ Future<void> _runWithExportingOverlay(
 ) async {
   final cs = Theme.of(context).colorScheme;
   final l10n = AppLocalizations.of(context)!;
+  final navigator = Navigator.of(context, rootNavigator: true);
   // Show overlay first
   showDialog<void>(
     context: context,
@@ -2760,7 +2646,7 @@ Future<void> _runWithExportingOverlay(
       child: Material(
         color: cs.surface,
         elevation: 6,
-        shadowColor: Colors.black.withOpacity(0.2),
+        shadowColor: Colors.black.withValues(alpha: 0.2),
         borderRadius: BorderRadius.circular(14),
         child: Padding(
           padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
@@ -2773,7 +2659,7 @@ Future<void> _runWithExportingOverlay(
                 l10n.messageExportSheetExporting,
                 style: TextStyle(
                   fontSize: 14,
-                  color: cs.onSurface.withOpacity(0.8),
+                  color: cs.onSurface.withValues(alpha: 0.8),
                 ),
               ),
             ],
@@ -2785,7 +2671,9 @@ Future<void> _runWithExportingOverlay(
   try {
     await task();
   } finally {
-    Navigator.of(context, rootNavigator: true).pop();
+    if (navigator.mounted) {
+      await navigator.maybePop();
+    }
   }
 }
 
@@ -2820,8 +2708,8 @@ class _ExportOptionTile extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final Color base = isDark
-        ? cs.primary.withOpacity(0.10)
-        : cs.primary.withOpacity(0.06);
+        ? cs.primary.withValues(alpha: 0.10)
+        : cs.primary.withValues(alpha: 0.06);
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 6),
       child: IosCardPress(
@@ -2833,7 +2721,9 @@ class _ExportOptionTile extends StatelessWidget {
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: cs.outlineVariant.withOpacity(0.35)),
+            border: Border.all(
+              color: cs.outlineVariant.withValues(alpha: 0.35),
+            ),
           ),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -2856,7 +2746,7 @@ class _ExportOptionTile extends StatelessWidget {
                       subtitle,
                       style: TextStyle(
                         fontSize: 13,
-                        color: cs.onSurface.withOpacity(0.75),
+                        color: cs.onSurface.withValues(alpha: 0.75),
                       ),
                     ),
                   ],
@@ -2905,8 +2795,7 @@ class _ExportThinkingCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final bg = cs.primaryContainer.withOpacity(isDark ? 0.25 : 0.30);
-    final fg = cs.onPrimaryContainer;
+    final bg = cs.primaryContainer.withValues(alpha: isDark ? 0.25 : 0.30);
     final l10n = AppLocalizations.of(context)!;
     final cleanedText = _sanitizeThinkingText(thinkingText);
 
@@ -2937,11 +2826,9 @@ class _ExportThinkingCard extends StatelessWidget {
             ),
             child: Row(
               children: [
-                SvgPicture.asset(
-                  'assets/icons/deepthink.svg',
-                  width: iconSize,
-                  height: iconSize,
-                  colorFilter: ColorFilter.mode(cs.secondary, BlendMode.srcIn),
+                ReasoningIcons.thinkingCardIcon(
+                  size: iconSize,
+                  color: cs.secondary,
                 ),
                 SizedBox(width: isDesktop ? 6.0 : 8.0),
                 Text(
@@ -3044,7 +2931,7 @@ class _ExportToolCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final bg = cs.primaryContainer.withOpacity(isDark ? 0.25 : 0.30);
+    final bg = cs.primaryContainer.withValues(alpha: isDark ? 0.25 : 0.30);
 
     // Desktop uses smaller sizes
     final double iconSize = isDesktop ? 14.0 : 18.0;

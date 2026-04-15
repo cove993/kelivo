@@ -610,6 +610,12 @@ abstract class AppLocalizations {
   /// **'WeChat sponsor code'**
   String get sponsorPageWeChatSubtitle;
 
+  /// No description provided for @sponsorPageScanQrHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan the QR code to sponsor'**
+  String get sponsorPageScanQrHint;
+
   /// No description provided for @languageDisplaySimplifiedChinese.
   ///
   /// In en, this message translates to:
@@ -875,6 +881,18 @@ abstract class AppLocalizations {
   /// **'Built-in'**
   String get mcpTransportTagInmemory;
 
+  /// No description provided for @mcpTransportTagSse.
+  ///
+  /// In en, this message translates to:
+  /// **'SSE'**
+  String get mcpTransportTagSse;
+
+  /// No description provided for @mcpTransportTagHttp.
+  ///
+  /// In en, this message translates to:
+  /// **'HTTP'**
+  String get mcpTransportTagHttp;
+
   /// No description provided for @mcpServerEditSheetStdioOnlyDesktop.
   ///
   /// In en, this message translates to:
@@ -998,14 +1016,26 @@ abstract class AppLocalizations {
   /// No description provided for @homePageDeleteMessage.
   ///
   /// In en, this message translates to:
-  /// **'Delete Message'**
+  /// **'Delete This Version'**
   String get homePageDeleteMessage;
 
   /// No description provided for @homePageDeleteMessageConfirm.
   ///
   /// In en, this message translates to:
-  /// **'Are you sure you want to delete this message? This cannot be undone.'**
+  /// **'Are you sure you want to delete this version? This cannot be undone.'**
   String get homePageDeleteMessageConfirm;
+
+  /// No description provided for @homePageDeleteAllVersions.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete All Versions'**
+  String get homePageDeleteAllVersions;
+
+  /// No description provided for @homePageDeleteAllVersionsConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to delete all versions of this message? This cannot be undone.'**
+  String get homePageDeleteAllVersionsConfirm;
 
   /// No description provided for @homePageCancel.
   ///
@@ -2912,8 +2942,14 @@ abstract class AppLocalizations {
   /// No description provided for @messageMoreSheetDelete.
   ///
   /// In en, this message translates to:
-  /// **'Delete'**
+  /// **'Delete This Version'**
   String get messageMoreSheetDelete;
+
+  /// No description provided for @messageMoreSheetDeleteAllVersions.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete All Versions'**
+  String get messageMoreSheetDeleteAllVersions;
 
   /// No description provided for @reasoningBudgetSheetOff.
   ///
@@ -3002,7 +3038,7 @@ abstract class AppLocalizations {
   /// No description provided for @reasoningBudgetSheetCustomLabel.
   ///
   /// In en, this message translates to:
-  /// **'Custom Reasoning Budget (tokens)'**
+  /// **'Custom Reasoning Budget'**
   String get reasoningBudgetSheetCustomLabel;
 
   /// No description provided for @reasoningBudgetSheetCustomHint.
@@ -3827,6 +3863,18 @@ abstract class AppLocalizations {
   /// **'Add'**
   String get chatInputBarMoreTooltip;
 
+  /// No description provided for @chatInputBarQueuedPending.
+  ///
+  /// In en, this message translates to:
+  /// **'Queued to send'**
+  String get chatInputBarQueuedPending;
+
+  /// No description provided for @chatInputBarQueuedCancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel Queue'**
+  String get chatInputBarQueuedCancel;
+
   /// No description provided for @chatInputBarInsertNewline.
   ///
   /// In en, this message translates to:
@@ -4549,12 +4597,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Built-in tools only support official APIs.'**
   String get modelDetailSheetBuiltinToolsDescription;
-
-  /// No description provided for @modelDetailSheetGeminiCodeExecutionMutuallyExclusiveHint.
-  ///
-  /// In en, this message translates to:
-  /// **'Code execution cannot coexist with Search/URL Context/MCP tools.'**
-  String get modelDetailSheetGeminiCodeExecutionMutuallyExclusiveHint;
 
   /// No description provided for @modelDetailSheetBuiltinToolsUnsupportedHint.
   ///
@@ -5828,6 +5870,12 @@ abstract class AppLocalizations {
   /// **'Nice!'**
   String get aboutPageEasterEggButton;
 
+  /// No description provided for @aboutPageAppName.
+  ///
+  /// In en, this message translates to:
+  /// **'Kelivo'**
+  String get aboutPageAppName;
+
   /// No description provided for @aboutPageAppDescription.
   ///
   /// In en, this message translates to:
@@ -5846,17 +5894,77 @@ abstract class AppLocalizations {
   /// **'Version'**
   String get aboutPageVersion;
 
+  /// No description provided for @aboutPageVersionDetail.
+  ///
+  /// In en, this message translates to:
+  /// **'{version} / {buildNumber}'**
+  String aboutPageVersionDetail(String version, String buildNumber);
+
   /// No description provided for @aboutPageSystem.
   ///
   /// In en, this message translates to:
   /// **'System'**
   String get aboutPageSystem;
 
+  /// No description provided for @aboutPageLoadingPlaceholder.
+  ///
+  /// In en, this message translates to:
+  /// **'...'**
+  String get aboutPageLoadingPlaceholder;
+
+  /// No description provided for @aboutPageUnknownPlaceholder.
+  ///
+  /// In en, this message translates to:
+  /// **'-'**
+  String get aboutPageUnknownPlaceholder;
+
+  /// No description provided for @aboutPagePlatformMacos.
+  ///
+  /// In en, this message translates to:
+  /// **'macOS'**
+  String get aboutPagePlatformMacos;
+
+  /// No description provided for @aboutPagePlatformWindows.
+  ///
+  /// In en, this message translates to:
+  /// **'Windows'**
+  String get aboutPagePlatformWindows;
+
+  /// No description provided for @aboutPagePlatformLinux.
+  ///
+  /// In en, this message translates to:
+  /// **'Linux'**
+  String get aboutPagePlatformLinux;
+
+  /// No description provided for @aboutPagePlatformAndroid.
+  ///
+  /// In en, this message translates to:
+  /// **'Android'**
+  String get aboutPagePlatformAndroid;
+
+  /// No description provided for @aboutPagePlatformIos.
+  ///
+  /// In en, this message translates to:
+  /// **'iOS'**
+  String get aboutPagePlatformIos;
+
+  /// No description provided for @aboutPagePlatformOther.
+  ///
+  /// In en, this message translates to:
+  /// **'Other ({os})'**
+  String aboutPagePlatformOther(String os);
+
   /// No description provided for @aboutPageWebsite.
   ///
   /// In en, this message translates to:
   /// **'Website'**
   String get aboutPageWebsite;
+
+  /// No description provided for @aboutPageGithub.
+  ///
+  /// In en, this message translates to:
+  /// **'GitHub'**
+  String get aboutPageGithub;
 
   /// No description provided for @aboutPageLicense.
   ///
@@ -5900,6 +6008,18 @@ abstract class AppLocalizations {
   /// **'Show user name and the timestamp below it in chat messages'**
   String get displaySettingsPageShowUserNameTimestampSubtitle;
 
+  /// No description provided for @displaySettingsPageShowUserNameTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Show User Name'**
+  String get displaySettingsPageShowUserNameTitle;
+
+  /// No description provided for @displaySettingsPageShowUserTimestampTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Show User Timestamp'**
+  String get displaySettingsPageShowUserTimestampTitle;
+
   /// No description provided for @displaySettingsPageShowUserMessageActionsTitle.
   ///
   /// In en, this message translates to:
@@ -5923,6 +6043,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Show model name and the timestamp below it in chat messages'**
   String get displaySettingsPageShowModelNameTimestampSubtitle;
+
+  /// No description provided for @displaySettingsPageShowModelNameTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Show Model Name'**
+  String get displaySettingsPageShowModelNameTitle;
+
+  /// No description provided for @displaySettingsPageShowModelTimestampTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Show Model Timestamp'**
+  String get displaySettingsPageShowModelTimestampTitle;
 
   /// No description provided for @displaySettingsPageShowProviderInChatMessageTitle.
   ///
@@ -5971,6 +6103,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Collapse reasoning after finish'**
   String get displaySettingsPageAutoCollapseThinkingSubtitle;
+
+  /// No description provided for @displaySettingsPageCollapseThinkingStepsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Collapse Thinking Steps'**
+  String get displaySettingsPageCollapseThinkingStepsTitle;
+
+  /// No description provided for @displaySettingsPageCollapseThinkingStepsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Show only the latest steps until expanded'**
+  String get displaySettingsPageCollapseThinkingStepsSubtitle;
+
+  /// No description provided for @displaySettingsPageShowToolResultSummaryTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Show Tool Result Summary'**
+  String get displaySettingsPageShowToolResultSummaryTitle;
+
+  /// No description provided for @displaySettingsPageShowToolResultSummarySubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Display the summary text below tool steps'**
+  String get displaySettingsPageShowToolResultSummarySubtitle;
+
+  /// No description provided for @chainOfThoughtExpandSteps.
+  ///
+  /// In en, this message translates to:
+  /// **'Show {count} more steps'**
+  String chainOfThoughtExpandSteps(Object count);
+
+  /// No description provided for @chainOfThoughtCollapse.
+  ///
+  /// In en, this message translates to:
+  /// **'Collapse'**
+  String get chainOfThoughtCollapse;
 
   /// No description provided for @displaySettingsPageShowChatListDateTitle.
   ///
@@ -6025,6 +6193,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Show quick jump buttons when scrolling'**
   String get displaySettingsPageMessageNavButtonsSubtitle;
+
+  /// No description provided for @displaySettingsPageUseNewAssistantAvatarUxTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Show assistant avatar in chat title bar'**
+  String get displaySettingsPageUseNewAssistantAvatarUxTitle;
 
   /// No description provided for @displaySettingsPageHapticsOnSidebarTitle.
   ///
@@ -8059,6 +8233,84 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Assistant'**
   String get worldBookInjectionRoleAssistant;
+
+  /// No description provided for @mcpToolNeedsApproval.
+  ///
+  /// In en, this message translates to:
+  /// **'Require approval'**
+  String get mcpToolNeedsApproval;
+
+  /// No description provided for @toolApprovalPending.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for approval'**
+  String get toolApprovalPending;
+
+  /// No description provided for @toolApprovalApprove.
+  ///
+  /// In en, this message translates to:
+  /// **'Approve'**
+  String get toolApprovalApprove;
+
+  /// No description provided for @toolApprovalDeny.
+  ///
+  /// In en, this message translates to:
+  /// **'Deny'**
+  String get toolApprovalDeny;
+
+  /// No description provided for @toolApprovalDenyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Deny tool call'**
+  String get toolApprovalDenyTitle;
+
+  /// No description provided for @toolApprovalDenyHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Reason (optional)'**
+  String get toolApprovalDenyHint;
+
+  /// No description provided for @toolApprovalDeniedMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Tool call \"{toolName}\" was denied by user. Reason: {reason}'**
+  String toolApprovalDeniedMessage(Object reason, Object toolName);
+
+  /// No description provided for @tokenDetailPromptTokens.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} tokens'**
+  String tokenDetailPromptTokens(int count);
+
+  /// No description provided for @tokenDetailPromptTokensWithCache.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} tokens ({cached} cached)'**
+  String tokenDetailPromptTokensWithCache(int count, int cached);
+
+  /// No description provided for @tokenDetailCompletionTokens.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} tokens'**
+  String tokenDetailCompletionTokens(int count);
+
+  /// No description provided for @tokenDetailSpeed.
+  ///
+  /// In en, this message translates to:
+  /// **'{value} tok/s'**
+  String tokenDetailSpeed(String value);
+
+  /// No description provided for @tokenDetailDuration.
+  ///
+  /// In en, this message translates to:
+  /// **'{value}s'**
+  String tokenDetailDuration(String value);
+
+  /// No description provided for @tokenDetailTotalTokens.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} tokens'**
+  String tokenDetailTotalTokens(int count);
 }
 
 class _AppLocalizationsDelegate

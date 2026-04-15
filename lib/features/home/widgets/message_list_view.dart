@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:scrollview_observer/scrollview_observer.dart';
 
 import '../../../core/models/chat_message.dart';
-import '../../../core/models/conversation.dart';
 import '../../../core/providers/settings_provider.dart';
 import '../../../core/providers/assistant_provider.dart';
 import '../../../l10n/app_localizations.dart';
@@ -21,6 +21,11 @@ typedef OnResendMessage = void Function(ChatMessage message);
 typedef OnTranslateMessage = void Function(ChatMessage message);
 typedef OnEditMessage = void Function(ChatMessage message);
 typedef OnDeleteMessage =
+    Future<void> Function(
+      ChatMessage message,
+      Map<String, List<ChatMessage>> byGroup,
+    );
+typedef OnDeleteAllVersions =
     Future<void> Function(
       ChatMessage message,
       Map<String, List<ChatMessage>> byGroup,
@@ -59,18 +64,21 @@ class TranslationUiState {
 
 /// Widget that displays the chat message list.
 ///
-/// This widget extracts the ListView.builder logic from HomePageState
-/// to reduce coupling and improve maintainability.
+/// Accepts pre-collapsed messages and pre-computed byGroup from the controller
+/// to avoid redundant computation on every build. Wraps the ListView with
+/// ListViewObserver for precise index-based scroll navigation.
 class MessageListView extends StatelessWidget {
   const MessageListView({
     super.key,
     required this.scrollController,
+    required this.observerController,
     required this.messages,
+    required this.byGroup,
     required this.versionSelections,
-    required this.currentConversation,
-    required this.messageKeys,
+    this.truncCollapsedIndex = -1,
     required this.reasoning,
     required this.reasoningSegments,
+    required this.contentSplits,
     required this.toolParts,
     required this.translations,
     required this.selecting,
@@ -88,6 +96,7 @@ class MessageListView extends StatelessWidget {
     this.onTranslateMessage,
     this.onEditMessage,
     this.onDeleteMessage,
+    this.onDeleteAllVersions,
     this.onForkConversation,
     this.onShareMessage,
     this.onSpeakMessage,
@@ -99,12 +108,23 @@ class MessageListView extends StatelessWidget {
   });
 
   final ScrollController scrollController;
+  final ListObserverController observerController;
+
+  /// Pre-collapsed messages (from ChatController.collapsedMessages).
   final List<ChatMessage> messages;
+
+  /// All messages grouped by groupId (from ChatController.groupedMessages).
+  final Map<String, List<ChatMessage>> byGroup;
+
+  /// Selected version per message group (for version navigation controls).
   final Map<String, int> versionSelections;
-  final Conversation? currentConversation;
-  final Map<String, GlobalKey> messageKeys;
+
+  /// Pre-computed truncate index in collapsed message space (-1 = none).
+  final int truncCollapsedIndex;
+
   final Map<String, stream_ctrl.ReasoningData> reasoning;
   final Map<String, List<stream_ctrl.ReasoningSegmentData>> reasoningSegments;
+  final Map<String, stream_ctrl.ContentSplitData> contentSplits;
   final Map<String, List<ToolUIPart>> toolParts;
   final Map<String, TranslationUiState> translations;
   final bool selecting;
@@ -133,6 +153,7 @@ class MessageListView extends StatelessWidget {
   final OnTranslateMessage? onTranslateMessage;
   final OnEditMessage? onEditMessage;
   final OnDeleteMessage? onDeleteMessage;
+  final OnDeleteAllVersions? onDeleteAllVersions;
   final OnForkConversation? onForkConversation;
   final OnShareMessage? onShareMessage;
   final OnSpeakMessage? onSpeakMessage;
@@ -143,45 +164,6 @@ class MessageListView extends StatelessWidget {
   onToggleReasoningSegment;
   final Widget Function()? buildPinnedStreamingIndicator;
 
-  /// Collapse message versions to show only selected version per group.
-  List<ChatMessage> _collapseVersions(List<ChatMessage> items) {
-    final Map<String, List<ChatMessage>> byGroup =
-        <String, List<ChatMessage>>{};
-    final List<String> order = <String>[];
-    for (final m in items) {
-      final gid = (m.groupId ?? m.id);
-      if (!byGroup.containsKey(gid)) {
-        byGroup[gid] = <ChatMessage>[];
-        order.add(gid);
-      }
-      byGroup[gid]!.add(m);
-    }
-    for (final e in byGroup.entries) {
-      e.value.sort((a, b) => a.version.compareTo(b.version));
-    }
-    final out = <ChatMessage>[];
-    for (final gid in order) {
-      final vers = byGroup[gid]!;
-      final sel = versionSelections[gid];
-      final idx = (sel != null && sel >= 0 && sel < vers.length)
-          ? sel
-          : (vers.length - 1);
-      out.add(vers[idx]);
-    }
-    return out;
-  }
-
-  /// Group messages by their group ID for version navigation.
-  Map<String, List<ChatMessage>> _groupMessages(List<ChatMessage> items) {
-    final Map<String, List<ChatMessage>> byGroup =
-        <String, List<ChatMessage>>{};
-    for (final m in items) {
-      final gid = (m.groupId ?? m.id);
-      byGroup.putIfAbsent(gid, () => <ChatMessage>[]).add(m);
-    }
-    return byGroup;
-  }
-
   /// Build the context divider widget shown at truncate position.
   Widget _buildContextDivider(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
@@ -191,7 +173,7 @@ class MessageListView extends StatelessWidget {
       children: [
         Expanded(
           child: Divider(
-            color: cs.outlineVariant.withOpacity(0.6),
+            color: cs.outlineVariant.withValues(alpha: 0.6),
             height: 1,
             thickness: 1,
           ),
@@ -202,13 +184,13 @@ class MessageListView extends StatelessWidget {
             label,
             style: TextStyle(
               fontSize: 12,
-              color: cs.onSurface.withOpacity(0.6),
+              color: cs.onSurface.withValues(alpha: 0.6),
             ),
           ),
         ),
         Expanded(
           child: Divider(
-            color: cs.outlineVariant.withOpacity(0.6),
+            color: cs.outlineVariant.withValues(alpha: 0.6),
             height: 1,
             thickness: 1,
           ),
@@ -217,29 +199,8 @@ class MessageListView extends StatelessWidget {
     );
   }
 
-  GlobalKey _keyForMessage(String id) =>
-      messageKeys.putIfAbsent(id, () => GlobalKey(debugLabel: 'msg:$id'));
-
   @override
   Widget build(BuildContext context) {
-    // Stable snapshot for this build (collapse versions)
-    final collapsedMessages = _collapseVersions(messages);
-    final byGroup = _groupMessages(messages);
-
-    // Map persisted truncateIndex (raw message count) to collapsed index
-    final int truncRaw = currentConversation?.truncateIndex ?? -1;
-    int truncCollapsed = -1;
-    if (truncRaw > 0) {
-      final seen = <String>{};
-      final int limit = truncRaw < messages.length ? truncRaw : messages.length;
-      int count = 0;
-      for (int i = 0; i < limit; i++) {
-        final gid0 = (messages[i].groupId ?? messages[i].id);
-        if (seen.add(gid0)) count++;
-      }
-      truncCollapsed = count - 1;
-    }
-
     return LayoutBuilder(
       builder: (context, constraints) {
         final horizontalPad =
@@ -257,26 +218,28 @@ class MessageListView extends StatelessWidget {
                 horizontalPad,
                 isPinnedIndicatorActive ? 28 : 16,
               ),
-              itemCount: collapsedMessages.length,
+              itemCount: messages.length,
               keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
               itemBuilder: (context, index) {
-                if (index < 0 || index >= collapsedMessages.length) {
+                if (index < 0 || index >= messages.length) {
                   return const SizedBox.shrink();
                 }
                 return _buildMessageItem(
                   context,
                   index: index,
-                  messages: collapsedMessages,
-                  byGroup: byGroup,
-                  truncCollapsed: truncCollapsed,
                   isProcessingFiles: isProcessing,
                 );
               },
             );
 
+            final observedList = ListViewObserver(
+              controller: observerController,
+              child: list,
+            );
+
             return Stack(
               children: [
-                list,
+                observedList,
                 if (isPinnedIndicatorActive &&
                     buildPinnedStreamingIndicator != null)
                   buildPinnedStreamingIndicator!(),
@@ -291,9 +254,6 @@ class MessageListView extends StatelessWidget {
   Widget _buildMessageItem(
     BuildContext context, {
     required int index,
-    required List<ChatMessage> messages,
-    required Map<String, List<ChatMessage>> byGroup,
-    required int truncCollapsed,
     required bool isProcessingFiles,
   }) {
     final message = messages[index];
@@ -303,7 +263,8 @@ class MessageListView extends StatelessWidget {
     final assistant = context.watch<AssistantProvider>().currentAssistant;
     final useAssistAvatar = assistant?.useAssistantAvatar == true;
     final useAssistName = assistant?.useAssistantName == true;
-    final showDivider = truncCollapsed >= 0 && index == truncCollapsed;
+    final showDivider =
+        truncCollapsedIndex >= 0 && index == truncCollapsedIndex;
     final gid = (message.groupId ?? message.id);
     final vers = (byGroup[gid] ?? const <ChatMessage>[]).toList()
       ..sort((a, b) => a.version.compareTo(b.version));
@@ -321,7 +282,7 @@ class MessageListView extends StatelessWidget {
         streamingContentNotifier!.hasNotifier(message.id);
 
     final messageColumn = Column(
-      key: _keyForMessage(message.id),
+      key: ValueKey(message.id),
       mainAxisSize: MainAxisSize.min,
       children: [
         Row(
@@ -344,22 +305,21 @@ class MessageListView extends StatelessWidget {
               child: (() {
                 Widget content = Builder(
                   builder: (context) {
-                    final textScale = MediaQuery.textScaleFactorOf(context);
                     final baseMediaQuery = context
                         .getInheritedWidgetOfExactType<MediaQuery>();
                     final baseData = baseMediaQuery?.data;
+                    final data = baseData ?? MediaQuery.of(context);
+                    final textScale = data.textScaler.scale(1);
                     return MediaQuery(
                       // Keep chat font scaling without rebuilding on keyboard insets.
-                      data: (baseData ?? MediaQuery.of(context)).copyWith(
-                        textScaleFactor: textScale * chatScale,
+                      data: data.copyWith(
+                        textScaler: TextScaler.linear(textScale * chatScale),
                       ),
                       child: isStreaming
                           ? _buildStreamingMessageWidget(
                               context,
                               message: message,
                               index: index,
-                              messages: messages,
-                              byGroup: byGroup,
                               r: r,
                               t: t,
                               useAssistAvatar: useAssistAvatar,
@@ -374,8 +334,6 @@ class MessageListView extends StatelessWidget {
                               context,
                               message: message,
                               index: index,
-                              messages: messages,
-                              byGroup: byGroup,
                               r: r,
                               t: t,
                               useAssistAvatar: useAssistAvatar,
@@ -435,7 +393,7 @@ class MessageListView extends StatelessWidget {
                     decoration: BoxDecoration(
                       color: const Color(
                         0xFFFFA726,
-                      ).withOpacity(opacity * 0.30),
+                      ).withValues(alpha: opacity * 0.30),
                       borderRadius: BorderRadius.circular(4),
                     ),
                   ),
@@ -454,8 +412,6 @@ class MessageListView extends StatelessWidget {
     BuildContext context, {
     required ChatMessage message,
     required int index,
-    required List<ChatMessage> messages,
-    required Map<String, List<ChatMessage>> byGroup,
     required stream_ctrl.ReasoningData? r,
     required TranslationUiState? t,
     required bool useAssistAvatar,
@@ -481,6 +437,10 @@ class MessageListView extends StatelessWidget {
         final streamingMessage = message.copyWith(
           content: displayContent,
           totalTokens: displayTokens,
+          promptTokens: data.promptTokens,
+          completionTokens: data.completionTokens,
+          cachedTokens: data.cachedTokens,
+          durationMs: data.durationMs,
         );
 
         // Update reasoning text from streaming data while preserving expanded state from r
@@ -488,8 +448,6 @@ class MessageListView extends StatelessWidget {
         stream_ctrl.ReasoningData? streamingReasoning = r;
         if (data.reasoningText != null && data.reasoningText!.isNotEmpty) {
           if (r != null) {
-            // Update the existing ReasoningData object's text fields
-            // but preserve the expanded state that user may have toggled
             r.text = data.reasoningText!;
             r.startAt = data.reasoningStartAt;
             if (data.reasoningFinishedAt != null) {
@@ -497,7 +455,6 @@ class MessageListView extends StatelessWidget {
             }
             streamingReasoning = r;
           } else {
-            // No existing reasoning data, create new one
             streamingReasoning = stream_ctrl.ReasoningData()
               ..text = data.reasoningText!
               ..startAt = data.reasoningStartAt
@@ -512,8 +469,6 @@ class MessageListView extends StatelessWidget {
             context,
             message: streamingMessage,
             index: index,
-            messages: messages,
-            byGroup: byGroup,
             r: streamingReasoning,
             t: t,
             useAssistAvatar: useAssistAvatar,
@@ -534,8 +489,6 @@ class MessageListView extends StatelessWidget {
     BuildContext context, {
     required ChatMessage message,
     required int index,
-    required List<ChatMessage> messages,
-    required Map<String, List<ChatMessage>> byGroup,
     required stream_ctrl.ReasoningData? r,
     required TranslationUiState? t,
     required bool useAssistAvatar,
@@ -586,7 +539,9 @@ class MessageListView extends StatelessWidget {
           ? (r?.expanded ?? false)
           : false,
       reasoningLoading: (message.role == 'assistant')
-          ? (r?.finishedAt == null && (r?.text.isNotEmpty == true))
+          ? (message.isStreaming &&
+                r?.finishedAt == null &&
+                (r?.text.isNotEmpty == true))
           : false,
       reasoningStartAt: (message.role == 'assistant') ? r?.startAt : null,
       reasoningFinishedAt: (message.role == 'assistant') ? r?.finishedAt : null,
@@ -619,9 +574,15 @@ class MessageListView extends StatelessWidget {
           ? () => onDeleteMessage?.call(message, byGroup)
           : null,
       onMore: () async {
-        final action = await showMessageMoreSheet(context, message);
-        if (action == MessageMoreAction.delete) {
+        final action = await showMessageMoreSheet(
+          context,
+          message,
+          canDeleteAllVersions: total > 1,
+        );
+        if (action == MessageMoreAction.deleteCurrentVersion) {
           await onDeleteMessage?.call(message, byGroup);
+        } else if (action == MessageMoreAction.deleteAllVersions) {
+          await onDeleteAllVersions?.call(message, byGroup);
         } else if (action == MessageMoreAction.edit) {
           onEditMessage?.call(message);
         } else if (action == MessageMoreAction.fork) {
@@ -631,6 +592,15 @@ class MessageListView extends StatelessWidget {
         }
       },
       toolParts: message.role == 'assistant' ? toolParts[message.id] : null,
+      contentSplitOffsets: message.role == 'assistant'
+          ? contentSplits[message.id]?.offsets
+          : null,
+      reasoningCountAtSplit: message.role == 'assistant'
+          ? contentSplits[message.id]?.reasoningCounts
+          : null,
+      toolCountAtSplit: message.role == 'assistant'
+          ? contentSplits[message.id]?.toolCounts
+          : null,
       reasoningSegments: message.role == 'assistant'
           ? (() {
               final segments = reasoningSegments[message.id];
@@ -643,6 +613,7 @@ class MessageListView extends StatelessWidget {
                       text: entry.value.text,
                       expanded: entry.value.expanded,
                       loading:
+                          message.isStreaming &&
                           entry.value.finishedAt == null &&
                           entry.value.text.isNotEmpty,
                       startAt: entry.value.startAt,

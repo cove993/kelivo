@@ -289,6 +289,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sponsorPageWeChatSubtitle => 'WeChat sponsor code';
 
   @override
+  String get sponsorPageScanQrHint => 'Scan the QR code to sponsor';
+
+  @override
   String get languageDisplaySimplifiedChinese => 'Simplified Chinese';
 
   @override
@@ -430,6 +433,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get mcpTransportTagInmemory => 'Built-in';
 
   @override
+  String get mcpTransportTagSse => 'SSE';
+
+  @override
+  String get mcpTransportTagHttp => 'HTTP';
+
+  @override
   String get mcpServerEditSheetStdioOnlyDesktop =>
       'STDIO is only available on desktop';
 
@@ -497,11 +506,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get userProviderDefaultUserName => 'User';
 
   @override
-  String get homePageDeleteMessage => 'Delete Message';
+  String get homePageDeleteMessage => 'Delete This Version';
 
   @override
   String get homePageDeleteMessageConfirm =>
-      'Are you sure you want to delete this message? This cannot be undone.';
+      'Are you sure you want to delete this version? This cannot be undone.';
+
+  @override
+  String get homePageDeleteAllVersions => 'Delete All Versions';
+
+  @override
+  String get homePageDeleteAllVersionsConfirm =>
+      'Are you sure you want to delete all versions of this message? This cannot be undone.';
 
   @override
   String get homePageCancel => 'Cancel';
@@ -1495,7 +1511,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get messageMoreSheetCreateBranch => 'Create Branch';
 
   @override
-  String get messageMoreSheetDelete => 'Delete';
+  String get messageMoreSheetDelete => 'Delete This Version';
+
+  @override
+  String get messageMoreSheetDeleteAllVersions => 'Delete All Versions';
 
   @override
   String get reasoningBudgetSheetOff => 'Off';
@@ -1548,8 +1567,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Use maximum reasoning depth for the toughest problems';
 
   @override
-  String get reasoningBudgetSheetCustomLabel =>
-      'Custom Reasoning Budget (tokens)';
+  String get reasoningBudgetSheetCustomLabel => 'Custom Reasoning Budget';
 
   @override
   String get reasoningBudgetSheetCustomHint => 'e.g. 2048 (-1 auto, 0 off)';
@@ -2024,6 +2042,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get chatInputBarMoreTooltip => 'Add';
 
   @override
+  String get chatInputBarQueuedPending => 'Queued to send';
+
+  @override
+  String get chatInputBarQueuedCancel => 'Cancel Queue';
+
+  @override
   String get chatInputBarInsertNewline => 'Newline';
 
   @override
@@ -2424,10 +2448,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get modelDetailSheetBuiltinToolsDescription =>
       'Built-in tools only support official APIs.';
-
-  @override
-  String get modelDetailSheetGeminiCodeExecutionMutuallyExclusiveHint =>
-      'Code execution cannot coexist with Search/URL Context/MCP tools.';
 
   @override
   String get modelDetailSheetBuiltinToolsUnsupportedHint =>
@@ -3099,6 +3119,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get aboutPageEasterEggButton => 'Nice!';
 
   @override
+  String get aboutPageAppName => 'Kelivo';
+
+  @override
   String get aboutPageAppDescription => 'Open-source AI Assistant';
 
   @override
@@ -3108,10 +3131,44 @@ class AppLocalizationsEn extends AppLocalizations {
   String get aboutPageVersion => 'Version';
 
   @override
+  String aboutPageVersionDetail(String version, String buildNumber) {
+    return '$version / $buildNumber';
+  }
+
+  @override
   String get aboutPageSystem => 'System';
 
   @override
+  String get aboutPageLoadingPlaceholder => '...';
+
+  @override
+  String get aboutPageUnknownPlaceholder => '-';
+
+  @override
+  String get aboutPagePlatformMacos => 'macOS';
+
+  @override
+  String get aboutPagePlatformWindows => 'Windows';
+
+  @override
+  String get aboutPagePlatformLinux => 'Linux';
+
+  @override
+  String get aboutPagePlatformAndroid => 'Android';
+
+  @override
+  String get aboutPagePlatformIos => 'iOS';
+
+  @override
+  String aboutPagePlatformOther(String os) {
+    return 'Other ($os)';
+  }
+
+  @override
   String get aboutPageWebsite => 'Website';
+
+  @override
+  String get aboutPageGithub => 'GitHub';
 
   @override
   String get aboutPageLicense => 'License';
@@ -3138,6 +3195,12 @@ class AppLocalizationsEn extends AppLocalizations {
       'Show user name and the timestamp below it in chat messages';
 
   @override
+  String get displaySettingsPageShowUserNameTitle => 'Show User Name';
+
+  @override
+  String get displaySettingsPageShowUserTimestampTitle => 'Show User Timestamp';
+
+  @override
   String get displaySettingsPageShowUserMessageActionsTitle =>
       'Show User Message Actions';
 
@@ -3152,6 +3215,13 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get displaySettingsPageShowModelNameTimestampSubtitle =>
       'Show model name and the timestamp below it in chat messages';
+
+  @override
+  String get displaySettingsPageShowModelNameTitle => 'Show Model Name';
+
+  @override
+  String get displaySettingsPageShowModelTimestampTitle =>
+      'Show Model Timestamp';
 
   @override
   String get displaySettingsPageShowProviderInChatMessageTitle =>
@@ -3183,6 +3253,30 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get displaySettingsPageAutoCollapseThinkingSubtitle =>
       'Collapse reasoning after finish';
+
+  @override
+  String get displaySettingsPageCollapseThinkingStepsTitle =>
+      'Collapse Thinking Steps';
+
+  @override
+  String get displaySettingsPageCollapseThinkingStepsSubtitle =>
+      'Show only the latest steps until expanded';
+
+  @override
+  String get displaySettingsPageShowToolResultSummaryTitle =>
+      'Show Tool Result Summary';
+
+  @override
+  String get displaySettingsPageShowToolResultSummarySubtitle =>
+      'Display the summary text below tool steps';
+
+  @override
+  String chainOfThoughtExpandSteps(Object count) {
+    return 'Show $count more steps';
+  }
+
+  @override
+  String get chainOfThoughtCollapse => 'Collapse';
 
   @override
   String get displaySettingsPageShowChatListDateTitle => 'Show Chat List Dates';
@@ -3217,6 +3311,10 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get displaySettingsPageMessageNavButtonsSubtitle =>
       'Show quick jump buttons when scrolling';
+
+  @override
+  String get displaySettingsPageUseNewAssistantAvatarUxTitle =>
+      'Show assistant avatar in chat title bar';
 
   @override
   String get displaySettingsPageHapticsOnSidebarTitle => 'Haptics on Sidebar';
@@ -4315,4 +4413,57 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get worldBookInjectionRoleAssistant => 'Assistant';
+
+  @override
+  String get mcpToolNeedsApproval => 'Require approval';
+
+  @override
+  String get toolApprovalPending => 'Waiting for approval';
+
+  @override
+  String get toolApprovalApprove => 'Approve';
+
+  @override
+  String get toolApprovalDeny => 'Deny';
+
+  @override
+  String get toolApprovalDenyTitle => 'Deny tool call';
+
+  @override
+  String get toolApprovalDenyHint => 'Reason (optional)';
+
+  @override
+  String toolApprovalDeniedMessage(Object reason, Object toolName) {
+    return 'Tool call \"$toolName\" was denied by user. Reason: $reason';
+  }
+
+  @override
+  String tokenDetailPromptTokens(int count) {
+    return '$count tokens';
+  }
+
+  @override
+  String tokenDetailPromptTokensWithCache(int count, int cached) {
+    return '$count tokens ($cached cached)';
+  }
+
+  @override
+  String tokenDetailCompletionTokens(int count) {
+    return '$count tokens';
+  }
+
+  @override
+  String tokenDetailSpeed(String value) {
+    return '$value tok/s';
+  }
+
+  @override
+  String tokenDetailDuration(String value) {
+    return '${value}s';
+  }
+
+  @override
+  String tokenDetailTotalTokens(int count) {
+    return '$count tokens';
+  }
 }

@@ -86,6 +86,7 @@
   "sponsorPageAfdianSubtitle": "afdian.com/a/kelivo",
   "sponsorPageWeChatTitle": "微信赞助",
   "sponsorPageWeChatSubtitle": "微信赞助码",
+  "sponsorPageScanQrHint": "扫描二维码赞助",
   "languageDisplaySimplifiedChinese": "简体中文",
   "languageDisplayEnglish": "English",
   "languageDisplayTraditionalChinese": "繁體中文",
@@ -440,8 +441,10 @@
   "mermaidExportFailed": "导出失败",
   "mermaidPreviewOpen": "浏览器预览",
   "mermaidPreviewOpenFailed": "无法打开预览",
-  "homePageDeleteMessage": "删除消息",
-  "homePageDeleteMessageConfirm": "确定要删除这条消息吗？此操作不可撤销。",
+  "homePageDeleteMessage": "删除本版本",
+  "homePageDeleteMessageConfirm": "确定要删除当前版本吗？此操作不可撤销。",
+  "homePageDeleteAllVersions": "删除全部版本",
+  "homePageDeleteAllVersionsConfirm": "确定要删除这条消息的全部版本吗？此操作不可撤销。",
   "homePageCancel": "取消",
   "homePageDelete": "删除",
   "homePageSelectMessagesToShare": "请选择要分享的消息",
@@ -493,7 +496,8 @@
   "messageMoreSheetEdit": "编辑",
   "messageMoreSheetShare": "分享",
   "messageMoreSheetCreateBranch": "创建分支",
-  "messageMoreSheetDelete": "删除",
+  "messageMoreSheetDelete": "删除本版本",
+  "messageMoreSheetDeleteAllVersions": "删除全部版本",
   "reasoningBudgetSheetOff": "关闭",
   "reasoningBudgetSheetAuto": "自动",
   "reasoningBudgetSheetLight": "轻度推理",
@@ -508,7 +512,7 @@
   "reasoningBudgetSheetMediumSubtitle": "使用较多推理来回答问题",
   "reasoningBudgetSheetHeavySubtitle": "使用大量推理来回答问题，适合复杂问题",
   "reasoningBudgetSheetXhighSubtitle": "使用最大推理深度，适合最复杂的问题",
-  "reasoningBudgetSheetCustomLabel": "自定义推理预算 (tokens)",
+  "reasoningBudgetSheetCustomLabel": "自定义推理预算",
   "reasoningBudgetSheetCustomHint": "例如：2048 (-1 自动，0 关闭)",
   "chatMessageWidgetFileNotFound": "文件不存在: {fileName}",
   "chatMessageWidgetCannotOpenFile": "无法打开文件: {message}",
@@ -649,6 +653,8 @@
   "chatInputBarReasoningStrengthTooltip": "思维链强度",
   "chatInputBarMcpServersTooltip": "MCP服务器",
   "chatInputBarMoreTooltip": "更多",
+  "chatInputBarQueuedPending": "排队中",
+  "chatInputBarQueuedCancel": "取消排队",
   "chatInputBarInsertNewline": "换行",
   "chatInputBarExpand": "展开",
   "chatInputBarCollapse": "收起",
@@ -774,7 +780,6 @@
   "modelDetailSheetCustomBodyTitle": "自定义 Body",
   "modelDetailSheetAddBody": "添加 Body",
   "modelDetailSheetBuiltinToolsDescription": "内置工具仅支持官方 API。",
-  "modelDetailSheetGeminiCodeExecutionMutuallyExclusiveHint": "代码执行无法与搜索/URL 上下文/MCP 工具共存。",
   "modelDetailSheetBuiltinToolsUnsupportedHint": "当前供应商不支持这些内置工具。",
   "modelDetailSheetSearchTool": "搜索",
   "modelDetailSheetSearchToolDescription": "启用 Google 搜索集成",
@@ -987,11 +992,39 @@
   "searchSettingsSheetNoServicesMessage": "暂无可用服务，请先在\"搜索服务\"中添加",
   "aboutPageEasterEggMessage": "\n（好吧现在还没彩蛋）",
   "aboutPageEasterEggButton": "好的",
+  "aboutPageAppName": "Kelivo",
   "aboutPageAppDescription": "开源AI 助手",
   "aboutPageNoQQGroup": "暂无QQ群",
   "aboutPageVersion": "版本",
+  "aboutPageVersionDetail": "{version} / {buildNumber}",
+  "@aboutPageVersionDetail": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      },
+      "buildNumber": {
+        "type": "String"
+      }
+    }
+  },
   "aboutPageSystem": "系统",
+  "aboutPageLoadingPlaceholder": "...",
+  "aboutPageUnknownPlaceholder": "-",
+  "aboutPagePlatformMacos": "macOS",
+  "aboutPagePlatformWindows": "Windows",
+  "aboutPagePlatformLinux": "Linux",
+  "aboutPagePlatformAndroid": "Android",
+  "aboutPagePlatformIos": "iOS",
+  "aboutPagePlatformOther": "其他（{os}）",
+  "@aboutPagePlatformOther": {
+    "placeholders": {
+      "os": {
+        "type": "String"
+      }
+    }
+  },
   "aboutPageWebsite": "官网",
+  "aboutPageGithub": "GitHub",
   "aboutPageLicense": "许可证",
   "aboutPageJoinQQGroup": "加入QQ群",
   "aboutPageJoinDiscord": "在 Discord 中加入我们",
@@ -999,10 +1032,14 @@
   "displaySettingsPageShowUserAvatarSubtitle": "是否在聊天消息中显示用户头像",
   "displaySettingsPageShowUserNameTimestampTitle": "显示用户名称和时间戳",
   "displaySettingsPageShowUserNameTimestampSubtitle": "是否在聊天消息中显示用户名称和时间戳",
+  "displaySettingsPageShowUserNameTitle": "显示用户名称",
+  "displaySettingsPageShowUserTimestampTitle": "显示用户时间戳",
   "displaySettingsPageShowUserMessageActionsTitle": "显示用户消息操作按钮",
   "displaySettingsPageShowUserMessageActionsSubtitle": "在用户消息下方显示复制、重发与更多按钮",
   "displaySettingsPageShowModelNameTimestampTitle": "显示模型名称和时间戳",
   "displaySettingsPageShowModelNameTimestampSubtitle": "是否在聊天消息中显示模型名称和时间戳",
+  "displaySettingsPageShowModelNameTitle": "显示模型名称",
+  "displaySettingsPageShowModelTimestampTitle": "显示模型时间戳",
   "displaySettingsPageShowProviderInChatMessageTitle": "模型名称后显示供应商",
   "displaySettingsPageShowProviderInChatMessageSubtitle": "在聊天消息的模型名称后面显示供应商名称（如 模型 | 供应商）",
   "displaySettingsPageChatModelIconTitle": "聊天列表模型图标",
@@ -1011,6 +1048,17 @@
   "displaySettingsPageShowTokenStatsSubtitle": "显示 token 用量与消息数量",
   "displaySettingsPageAutoCollapseThinkingTitle": "自动折叠思考",
   "displaySettingsPageAutoCollapseThinkingSubtitle": "思考完成后自动折叠，保持界面简洁",
+  "displaySettingsPageCollapseThinkingStepsTitle": "折叠思考步骤",
+  "displaySettingsPageCollapseThinkingStepsSubtitle": "默认只显示最新步骤，展开后查看全部",
+  "displaySettingsPageShowToolResultSummaryTitle": "显示工具结果摘要",
+  "displaySettingsPageShowToolResultSummarySubtitle": "在工具步骤下方显示摘要文本",
+  "chainOfThoughtExpandSteps": "展开更多 {count} 步",
+  "@chainOfThoughtExpandSteps": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "chainOfThoughtCollapse": "收起",
   "displaySettingsPageShowChatListDateTitle": "显示对话列表日期",
   "displaySettingsPageShowChatListDateSubtitle": "在左侧对话列表中显示日期分组标签",
   "displaySettingsPageKeepSidebarOpenOnAssistantTapTitle": "点选助手时不自动关闭侧边栏",
@@ -1020,6 +1068,7 @@
   "displaySettingsPageShowUpdatesSubtitle": "显示应用更新通知",
   "displaySettingsPageMessageNavButtonsTitle": "消息导航按钮",
   "displaySettingsPageMessageNavButtonsSubtitle": "滚动时显示快速跳转按钮",
+  "displaySettingsPageUseNewAssistantAvatarUxTitle": "聊天标题栏显示助手头像",
   "displaySettingsPageHapticsOnSidebarTitle": "侧边栏触觉反馈",
   "displaySettingsPageHapticsOnSidebarSubtitle": "打开/关闭侧边栏时启用触觉反馈",
   "displaySettingsPageHapticsGlobalTitle": "全局触觉反馈",
@@ -1276,6 +1325,8 @@
   "mcpTransportOptionStdio": "STDIO",
   "mcpTransportTagStdio": "STDIO",
   "mcpTransportTagInmemory": "内置",
+  "mcpTransportTagSse": "SSE",
+  "mcpTransportTagHttp": "HTTP",
   "mcpServerEditSheetStdioOnlyDesktop": "STDIO 仅在桌面端可用",
   "mcpServerEditSheetStdioCommandLabel": "命令",
   "mcpServerEditSheetStdioArgumentsLabel": "参数",
@@ -1440,5 +1491,18 @@
   "worldBookInjectionPositionBottomOfChat": "对话底部",
   "worldBookInjectionPositionAtDepth": "指定深度",
   "worldBookInjectionRoleUser": "用户",
-  "worldBookInjectionRoleAssistant": "助手"
+  "worldBookInjectionRoleAssistant": "助手",
+  "mcpToolNeedsApproval": "需要审批",
+  "toolApprovalPending": "等待审批",
+  "toolApprovalApprove": "批准",
+  "toolApprovalDeny": "拒绝",
+  "toolApprovalDenyTitle": "拒绝工具调用",
+  "toolApprovalDenyHint": "原因（可选）",
+  "toolApprovalDeniedMessage": "工具调用 \"{toolName}\" 已被用户拒绝。原因：{reason}",
+  "tokenDetailPromptTokens": "{count} tokens",
+  "tokenDetailPromptTokensWithCache": "{count} tokens ({cached} cached)",
+  "tokenDetailCompletionTokens": "{count} tokens",
+  "tokenDetailSpeed": "{value} tok/s",
+  "tokenDetailDuration": "{value}s",
+  "tokenDetailTotalTokens": "{count} tokens"
 }
