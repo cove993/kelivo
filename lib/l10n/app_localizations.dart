@@ -3143,6 +3143,12 @@ abstract class AppLocalizations {
   /// **'Regenerating only updates this message and keeps the messages below it. Continue?'**
   String get chatMessageWidgetRegenerateConfirmContent;
 
+  /// No description provided for @chatMessageWidgetRegenerateConfirmDeleteTrailingContent.
+  ///
+  /// In en, this message translates to:
+  /// **'Regenerating will delete all messages below this message and cannot be undone. Continue?'**
+  String get chatMessageWidgetRegenerateConfirmDeleteTrailingContent;
+
   /// No description provided for @chatMessageWidgetRegenerateConfirmCancel.
   ///
   /// In en, this message translates to:
@@ -6140,6 +6146,18 @@ abstract class AppLocalizations {
   /// **'Display the summary text below tool steps'**
   String get displaySettingsPageShowToolResultSummarySubtitle;
 
+  /// No description provided for @displaySettingsPageRegenerateDeleteTrailingMessagesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete messages below when regenerating'**
+  String get displaySettingsPageRegenerateDeleteTrailingMessagesTitle;
+
+  /// No description provided for @displaySettingsPageShowRegenerateConfirmDialogTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm before regenerating'**
+  String get displaySettingsPageShowRegenerateConfirmDialogTitle;
+
   /// No description provided for @chainOfThoughtExpandSteps.
   ///
   /// In en, this message translates to:
@@ -6163,6 +6181,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Display date group labels in the conversation list'**
   String get displaySettingsPageShowChatListDateSubtitle;
+
+  /// No description provided for @displaySettingsPageEnableImageCropperTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Enable Image Cropping'**
+  String get displaySettingsPageEnableImageCropperTitle;
+
+  /// No description provided for @displaySettingsPageEnableImageCropperSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Crop images after selecting from gallery or camera'**
+  String get displaySettingsPageEnableImageCropperSubtitle;
 
   /// No description provided for @displaySettingsPageKeepSidebarOpenOnAssistantTapTitle.
   ///
