@@ -628,10 +628,15 @@ class StreamController {
     );
 
     if (state.ctx.streamOutput) {
+      final initialExpanded = !getSettingsProvider().autoCollapseThinking;
+      final isNewReasoning = !_reasoning.containsKey(messageId);
       final r = _reasoning[messageId] ?? ReasoningData();
       r.text += chunk.reasoning!;
       r.startAt ??= DateTime.now();
       // NOTE: Do not reset r.expanded here - preserve user's toggle state during streaming
+      if (isNewReasoning) {
+        r.expanded = initialExpanded;
+      }
       _reasoning[messageId] = r;
 
       // Add to reasoning segments for mixed display
@@ -641,7 +646,7 @@ class StreamController {
         final newSegment = ReasoningSegmentData();
         newSegment.text = chunk.reasoning!;
         newSegment.startAt = DateTime.now();
-        newSegment.expanded = false;
+        newSegment.expanded = initialExpanded;
         newSegment.toolStartIndex = (_toolParts[messageId]?.length ?? 0);
         segments.add(newSegment);
       } else {
@@ -652,7 +657,7 @@ class StreamController {
           final newSegment = ReasoningSegmentData();
           newSegment.text = chunk.reasoning!;
           newSegment.startAt = DateTime.now();
-          newSegment.expanded = false;
+          newSegment.expanded = initialExpanded;
           newSegment.toolStartIndex = (_toolParts[messageId]?.length ?? 0);
           segments.add(newSegment);
         } else {
@@ -1176,6 +1181,7 @@ class GenerationContext {
     required this.assistantMessage,
     required this.apiMessages,
     required this.userImagePaths,
+    required this.allowImagesApiRouting,
     required this.providerKey,
     required this.modelId,
     required this.assistant,
@@ -1194,6 +1200,7 @@ class GenerationContext {
   final ChatMessage assistantMessage;
   final List<Map<String, dynamic>> apiMessages;
   final List<String> userImagePaths;
+  final bool allowImagesApiRouting;
   final String providerKey;
   final String modelId;
   final dynamic assistant;
