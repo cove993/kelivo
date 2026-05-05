@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import 'package:Kelivo/core/providers/settings_provider.dart';
 import 'package:Kelivo/features/stats/models/stats_models.dart';
 import 'package:Kelivo/features/stats/pages/stats_page.dart';
+import 'package:Kelivo/features/stats/widgets/stats_heatmap.dart';
 import 'package:Kelivo/l10n/app_localizations.dart';
 
 Widget _harness(StatsSnapshot snapshot) {
@@ -58,6 +59,172 @@ StatsSnapshot _snapshot({
 }
 
 void main() {
+  testWidgets('heatmap shows month labels above columns', (tester) async {
+    final days = [
+      for (var i = 0; i < 14; i++)
+        StatsHeatmapDay(date: DateTime(2026, 4, 25 + i), count: i),
+    ];
+
+    await tester.pumpWidget(
+      MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: Scaffold(body: StatsHeatmap(days: days)),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(
+      find.byKey(const ValueKey('stats-heatmap-month-2026-5')),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const ValueKey('stats-heatmap-weekday-1')),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const ValueKey('stats-heatmap-weekday-3')),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const ValueKey('stats-heatmap-weekday-5')),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('heatmap completes leading week as calendar dates', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: Scaffold(
+          body: StatsHeatmap(
+            days: [StatsHeatmapDay(date: DateTime(2026, 1, 3), count: 2)],
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(
+      find.byKey(const ValueKey('stats-heatmap-day-2025-12-28')),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const ValueKey('stats-heatmap-day-2026-1-1')),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const ValueKey('stats-heatmap-month-2026-1')),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('heatmap does not complete trailing week after latest date', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: Scaffold(
+          body: StatsHeatmap(
+            days: [StatsHeatmapDay(date: DateTime(2026, 1, 7), count: 2)],
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(
+      find.byKey(const ValueKey('stats-heatmap-day-2026-1-7')),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const ValueKey('stats-heatmap-day-2026-1-8')),
+      findsNothing,
+    );
+    expect(
+      find.byKey(const ValueKey('stats-heatmap-day-2026-1-10')),
+      findsNothing,
+    );
+  });
+
+  testWidgets('heatmap initially shows latest date on narrow viewport', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(220, 360);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    final latest = DateTime(2026, 5, 3);
+    final earliest = latest.subtract(const Duration(days: 179));
+    final days = [
+      for (var i = 179; i >= 0; i--)
+        StatsHeatmapDay(date: latest.subtract(Duration(days: i)), count: 1),
+    ];
+
+    await tester.pumpWidget(
+      MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: Scaffold(body: StatsHeatmap(days: days)),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final latestCell = tester.getRect(
+      find.byKey(const ValueKey('stats-heatmap-day-2026-5-3')),
+    );
+    final earliestCell = tester.getRect(
+      find.byKey(
+        ValueKey(
+          'stats-heatmap-day-${earliest.year}-${earliest.month}-${earliest.day}',
+        ),
+      ),
+    );
+
+    expect(latestCell.right, lessThanOrEqualTo(220));
+    expect(latestCell.left, greaterThan(160));
+    expect(earliestCell.right, lessThan(0));
+  });
+
+  testWidgets('heatmap legend follows graph width on wide viewport', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(720, 360);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: Scaffold(
+          body: StatsHeatmap(
+            days: [StatsHeatmapDay(date: DateTime(2026, 5, 3), count: 1)],
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final latestCell = tester.getRect(
+      find.byKey(const ValueKey('stats-heatmap-day-2026-5-3')),
+    );
+    final legend = tester.getRect(
+      find.byKey(const ValueKey('stats-heatmap-legend')),
+    );
+
+    expect(latestCell.left, lessThan(40));
+    expect(legend.left, greaterThan(18));
+    expect(legend.right, lessThan(190));
+  });
+
   testWidgets('renders summary sections and empty rankings', (tester) async {
     await tester.pumpWidget(_harness(_snapshot()));
     await tester.pumpAndSettle();

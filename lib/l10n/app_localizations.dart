@@ -1343,6 +1343,54 @@ abstract class AppLocalizations {
   /// **'Regex Replace'**
   String get assistantEditPageRegexTab;
 
+  /// No description provided for @assistantEditTabLayoutTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Customize tabs'**
+  String get assistantEditTabLayoutTooltip;
+
+  /// No description provided for @assistantEditTabLayoutTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Customize tabs'**
+  String get assistantEditTabLayoutTitle;
+
+  /// No description provided for @assistantEditTabLayoutSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Drag tabs to reorder. Turn off tabs you do not need.'**
+  String get assistantEditTabLayoutSubtitle;
+
+  /// No description provided for @assistantEditOutlineModeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Section list style'**
+  String get assistantEditOutlineModeTitle;
+
+  /// No description provided for @assistantEditOutlineModeSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Show an assistant overview first, then open each setting section from a list.'**
+  String get assistantEditOutlineModeSubtitle;
+
+  /// No description provided for @assistantEditTabLayoutResetTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset tab layout'**
+  String get assistantEditTabLayoutResetTooltip;
+
+  /// No description provided for @assistantEditTabLayoutAtLeastOneVisible.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep at least one tab visible'**
+  String get assistantEditTabLayoutAtLeastOneVisible;
+
+  /// No description provided for @assistantEditTabLayoutDragHandle.
+  ///
+  /// In en, this message translates to:
+  /// **'Drag to reorder {tab}'**
+  String assistantEditTabLayoutDragHandle(String tab);
+
   /// No description provided for @assistantEditRegexDescription.
   ///
   /// In en, this message translates to:
@@ -2357,12 +2405,6 @@ abstract class AppLocalizations {
   /// **'Assistant Settings'**
   String get assistantSettingsPageTitle;
 
-  /// No description provided for @assistantSettingsDefaultTag.
-  ///
-  /// In en, this message translates to:
-  /// **'Default'**
-  String get assistantSettingsDefaultTag;
-
   /// No description provided for @assistantSettingsCopyButton.
   ///
   /// In en, this message translates to:
@@ -3100,6 +3142,72 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No messages to compress'**
   String get compressContextNoMessages;
+
+  /// No description provided for @compressContextNoConversation.
+  ///
+  /// In en, this message translates to:
+  /// **'No conversation to compress'**
+  String get compressContextNoConversation;
+
+  /// No description provided for @compressContextNoModel.
+  ///
+  /// In en, this message translates to:
+  /// **'No compression model configured'**
+  String get compressContextNoModel;
+
+  /// No description provided for @compressContextEmptySummary.
+  ///
+  /// In en, this message translates to:
+  /// **'Compression returned an empty summary'**
+  String get compressContextEmptySummary;
+
+  /// No description provided for @compressContextOptionsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Compress Context'**
+  String get compressContextOptionsTitle;
+
+  /// No description provided for @compressContextOptionsDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose which part of the current chat is sent to the compression model.'**
+  String get compressContextOptionsDesc;
+
+  /// No description provided for @compressContextKeepStart.
+  ///
+  /// In en, this message translates to:
+  /// **'Start'**
+  String get compressContextKeepStart;
+
+  /// No description provided for @compressContextKeepRecent.
+  ///
+  /// In en, this message translates to:
+  /// **'Recent'**
+  String get compressContextKeepRecent;
+
+  /// No description provided for @compressContextUnlimited.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlimited'**
+  String get compressContextUnlimited;
+
+  /// No description provided for @compressContextMaxCharsLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Characters'**
+  String get compressContextMaxCharsLabel;
+
+  /// No description provided for @compressContextInvalidLimit.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a positive character count'**
+  String get compressContextInvalidLimit;
+
+  /// No description provided for @compressContextStartButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Compress'**
+  String get compressContextStartButton;
 
   /// No description provided for @bottomToolsSheetLearningMode.
   ///
@@ -5155,6 +5263,66 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Adds header APP-Code requests to get a 10% discount. Only affects AIhubmix.'**
   String get providerDetailPageAihubmixAppCodeHelp;
+
+  /// No description provided for @providerDetailPageBalanceTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Account Balance'**
+  String get providerDetailPageBalanceTitle;
+
+  /// No description provided for @providerDetailPageBalanceInfo.
+  ///
+  /// In en, this message translates to:
+  /// **'Get account balance'**
+  String get providerDetailPageBalanceInfo;
+
+  /// No description provided for @providerDetailPageBalanceApiPathLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Balance API Path'**
+  String get providerDetailPageBalanceApiPathLabel;
+
+  /// No description provided for @providerDetailPageBalanceResultPathLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Result JSON Path'**
+  String get providerDetailPageBalanceResultPathLabel;
+
+  /// No description provided for @providerDetailPageBalanceQueryButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Check Balance'**
+  String get providerDetailPageBalanceQueryButton;
+
+  /// No description provided for @providerDetailPageBalanceQuerying.
+  ///
+  /// In en, this message translates to:
+  /// **'Checking...'**
+  String get providerDetailPageBalanceQuerying;
+
+  /// No description provided for @providerDetailPageBalanceResetDefaultsButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset'**
+  String get providerDetailPageBalanceResetDefaultsButton;
+
+  /// No description provided for @providerDetailPageBalanceResetDefaultsTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset balance settings'**
+  String get providerDetailPageBalanceResetDefaultsTooltip;
+
+  /// No description provided for @providerDetailPageBalanceResult.
+  ///
+  /// In en, this message translates to:
+  /// **'Balance: {value}'**
+  String providerDetailPageBalanceResult(String value);
+
+  /// No description provided for @providerDetailPageBalanceError.
+  ///
+  /// In en, this message translates to:
+  /// **'Balance query failed: {message}'**
+  String providerDetailPageBalanceError(String message);
 
   /// No description provided for @providerDetailPageVertexAiTitle.
   ///

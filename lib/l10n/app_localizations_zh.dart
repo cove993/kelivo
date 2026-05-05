@@ -663,6 +663,32 @@ class AppLocalizationsZh extends AppLocalizations {
   String get assistantEditPageRegexTab => '正则替换';
 
   @override
+  String get assistantEditTabLayoutTooltip => '自定义标签页';
+
+  @override
+  String get assistantEditTabLayoutTitle => '自定义标签页';
+
+  @override
+  String get assistantEditTabLayoutSubtitle => '拖动标签页调整顺序，关闭暂时用不到的标签页。';
+
+  @override
+  String get assistantEditOutlineModeTitle => '二级列表样式';
+
+  @override
+  String get assistantEditOutlineModeSubtitle => '先显示助手概览，再从列表进入各个设置项。';
+
+  @override
+  String get assistantEditTabLayoutResetTooltip => '重置标签页布局';
+
+  @override
+  String get assistantEditTabLayoutAtLeastOneVisible => '至少保留一个可见标签页';
+
+  @override
+  String assistantEditTabLayoutDragHandle(String tab) {
+    return '拖动以调整 $tab 的顺序';
+  }
+
+  @override
   String get assistantEditRegexDescription => '为用户/助手消息配置正则规则，可修改或仅调整显示效果。';
 
   @override
@@ -1178,9 +1204,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get assistantSettingsPageTitle => '助手设置';
 
   @override
-  String get assistantSettingsDefaultTag => '默认';
-
-  @override
   String get assistantSettingsCopyButton => '复制';
 
   @override
@@ -1551,6 +1574,39 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get compressContextNoMessages => '没有可压缩的消息';
+
+  @override
+  String get compressContextNoConversation => '没有可压缩的会话';
+
+  @override
+  String get compressContextNoModel => '未配置压缩模型';
+
+  @override
+  String get compressContextEmptySummary => '压缩返回了空摘要';
+
+  @override
+  String get compressContextOptionsTitle => '压缩上下文';
+
+  @override
+  String get compressContextOptionsDesc => '选择发送给压缩模型的当前聊天范围。';
+
+  @override
+  String get compressContextKeepStart => '最开始';
+
+  @override
+  String get compressContextKeepRecent => '最近';
+
+  @override
+  String get compressContextUnlimited => '无限制';
+
+  @override
+  String get compressContextMaxCharsLabel => '字符数';
+
+  @override
+  String get compressContextInvalidLimit => '请输入大于 0 的字符数';
+
+  @override
+  String get compressContextStartButton => '开始压缩';
 
   @override
   String get bottomToolsSheetLearningMode => '学习模式';
@@ -2649,6 +2705,40 @@ class AppLocalizationsZh extends AppLocalizations {
   @override
   String get providerDetailPageAihubmixAppCodeHelp =>
       '为请求附加 APP-Code，可享 10% 优惠，仅对 AIhubmix 生效。';
+
+  @override
+  String get providerDetailPageBalanceTitle => '账户余额';
+
+  @override
+  String get providerDetailPageBalanceInfo => '获取账户余额';
+
+  @override
+  String get providerDetailPageBalanceApiPathLabel => '余额 API 路径';
+
+  @override
+  String get providerDetailPageBalanceResultPathLabel => '结果 JSON 路径';
+
+  @override
+  String get providerDetailPageBalanceQueryButton => '查询余额';
+
+  @override
+  String get providerDetailPageBalanceQuerying => '查询中...';
+
+  @override
+  String get providerDetailPageBalanceResetDefaultsButton => '重置';
+
+  @override
+  String get providerDetailPageBalanceResetDefaultsTooltip => '重置余额设置';
+
+  @override
+  String providerDetailPageBalanceResult(String value) {
+    return '余额：$value';
+  }
+
+  @override
+  String providerDetailPageBalanceError(String message) {
+    return '余额查询失败：$message';
+  }
 
   @override
   String get providerDetailPageVertexAiTitle => 'Vertex AI';
@@ -5144,6 +5234,32 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
   String get assistantEditPageRegexTab => '正则替换';
 
   @override
+  String get assistantEditTabLayoutTooltip => '自定义标签页';
+
+  @override
+  String get assistantEditTabLayoutTitle => '自定义标签页';
+
+  @override
+  String get assistantEditTabLayoutSubtitle => '拖动标签页调整顺序，关闭暂时用不到的标签页。';
+
+  @override
+  String get assistantEditOutlineModeTitle => '二级列表样式';
+
+  @override
+  String get assistantEditOutlineModeSubtitle => '先显示助手概览，再从列表进入各个设置项。';
+
+  @override
+  String get assistantEditTabLayoutResetTooltip => '重置标签页布局';
+
+  @override
+  String get assistantEditTabLayoutAtLeastOneVisible => '至少保留一个可见标签页';
+
+  @override
+  String assistantEditTabLayoutDragHandle(String tab) {
+    return '拖动以调整 $tab 的顺序';
+  }
+
+  @override
   String get assistantEditRegexDescription => '为用户/助手消息配置正则规则，可修改或仅调整显示效果。';
 
   @override
@@ -5659,9 +5775,6 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
   String get assistantSettingsPageTitle => '助手设置';
 
   @override
-  String get assistantSettingsDefaultTag => '默认';
-
-  @override
   String get assistantSettingsCopyButton => '复制';
 
   @override
@@ -6032,6 +6145,39 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
 
   @override
   String get compressContextNoMessages => '没有可压缩的消息';
+
+  @override
+  String get compressContextNoConversation => '没有可压缩的会话';
+
+  @override
+  String get compressContextNoModel => '未配置压缩模型';
+
+  @override
+  String get compressContextEmptySummary => '压缩返回了空摘要';
+
+  @override
+  String get compressContextOptionsTitle => '压缩上下文';
+
+  @override
+  String get compressContextOptionsDesc => '选择发送给压缩模型的当前聊天范围。';
+
+  @override
+  String get compressContextKeepStart => '最开始';
+
+  @override
+  String get compressContextKeepRecent => '最近';
+
+  @override
+  String get compressContextUnlimited => '无限制';
+
+  @override
+  String get compressContextMaxCharsLabel => '字符数';
+
+  @override
+  String get compressContextInvalidLimit => '请输入大于 0 的字符数';
+
+  @override
+  String get compressContextStartButton => '开始压缩';
 
   @override
   String get bottomToolsSheetLearningMode => '学习模式';
@@ -7130,6 +7276,40 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
   @override
   String get providerDetailPageAihubmixAppCodeHelp =>
       '为请求附加 APP-Code，可享 10% 优惠，仅对 AIhubmix 生效。';
+
+  @override
+  String get providerDetailPageBalanceTitle => '账户余额';
+
+  @override
+  String get providerDetailPageBalanceInfo => '获取账户余额';
+
+  @override
+  String get providerDetailPageBalanceApiPathLabel => '余额 API 路径';
+
+  @override
+  String get providerDetailPageBalanceResultPathLabel => '结果 JSON 路径';
+
+  @override
+  String get providerDetailPageBalanceQueryButton => '查询余额';
+
+  @override
+  String get providerDetailPageBalanceQuerying => '查询中...';
+
+  @override
+  String get providerDetailPageBalanceResetDefaultsButton => '重置';
+
+  @override
+  String get providerDetailPageBalanceResetDefaultsTooltip => '重置余额设置';
+
+  @override
+  String providerDetailPageBalanceResult(String value) {
+    return '余额：$value';
+  }
+
+  @override
+  String providerDetailPageBalanceError(String message) {
+    return '余额查询失败：$message';
+  }
 
   @override
   String get providerDetailPageVertexAiTitle => 'Vertex AI';
@@ -9625,6 +9805,32 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get assistantEditPageRegexTab => '正則替換';
 
   @override
+  String get assistantEditTabLayoutTooltip => '自訂標籤頁';
+
+  @override
+  String get assistantEditTabLayoutTitle => '自訂標籤頁';
+
+  @override
+  String get assistantEditTabLayoutSubtitle => '拖動標籤頁調整順序，關閉暫時用不到的標籤頁。';
+
+  @override
+  String get assistantEditOutlineModeTitle => '二級列表樣式';
+
+  @override
+  String get assistantEditOutlineModeSubtitle => '先顯示助理概覽，再從列表進入各個設定項。';
+
+  @override
+  String get assistantEditTabLayoutResetTooltip => '重設標籤頁佈局';
+
+  @override
+  String get assistantEditTabLayoutAtLeastOneVisible => '至少保留一個可見標籤頁';
+
+  @override
+  String assistantEditTabLayoutDragHandle(String tab) {
+    return '拖動以調整 $tab 的順序';
+  }
+
+  @override
   String get assistantEditRegexDescription => '為使用者/助理訊息配置正則規則，可修改或僅調整顯示效果。';
 
   @override
@@ -10140,9 +10346,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get assistantSettingsPageTitle => '助理設定';
 
   @override
-  String get assistantSettingsDefaultTag => '預設';
-
-  @override
   String get assistantSettingsCopyButton => '複製';
 
   @override
@@ -10512,6 +10715,39 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get compressContextNoMessages => '沒有可壓縮的訊息';
+
+  @override
+  String get compressContextNoConversation => '沒有可壓縮的對話';
+
+  @override
+  String get compressContextNoModel => '未設定壓縮模型';
+
+  @override
+  String get compressContextEmptySummary => '壓縮返回了空摘要';
+
+  @override
+  String get compressContextOptionsTitle => '壓縮上下文';
+
+  @override
+  String get compressContextOptionsDesc => '選擇要傳送給壓縮模型的目前聊天範圍。';
+
+  @override
+  String get compressContextKeepStart => '最開始';
+
+  @override
+  String get compressContextKeepRecent => '最近';
+
+  @override
+  String get compressContextUnlimited => '無限制';
+
+  @override
+  String get compressContextMaxCharsLabel => '字元數';
+
+  @override
+  String get compressContextInvalidLimit => '請輸入大於 0 的字元數';
+
+  @override
+  String get compressContextStartButton => '開始壓縮';
 
   @override
   String get bottomToolsSheetLearningMode => '學習模式';
@@ -11610,6 +11846,40 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   @override
   String get providerDetailPageAihubmixAppCodeHelp =>
       '為請求附加 APP-Code，可享 10% 優惠，僅對 AIhubmix 生效。';
+
+  @override
+  String get providerDetailPageBalanceTitle => '帳戶餘額';
+
+  @override
+  String get providerDetailPageBalanceInfo => '取得帳戶餘額';
+
+  @override
+  String get providerDetailPageBalanceApiPathLabel => '餘額 API 路徑';
+
+  @override
+  String get providerDetailPageBalanceResultPathLabel => '結果 JSON 路徑';
+
+  @override
+  String get providerDetailPageBalanceQueryButton => '查詢餘額';
+
+  @override
+  String get providerDetailPageBalanceQuerying => '查詢中...';
+
+  @override
+  String get providerDetailPageBalanceResetDefaultsButton => '重設';
+
+  @override
+  String get providerDetailPageBalanceResetDefaultsTooltip => '重設餘額設定';
+
+  @override
+  String providerDetailPageBalanceResult(String value) {
+    return '餘額：$value';
+  }
+
+  @override
+  String providerDetailPageBalanceError(String message) {
+    return '餘額查詢失敗：$message';
+  }
 
   @override
   String get providerDetailPageVertexAiTitle => 'Vertex AI';

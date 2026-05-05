@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'dart:collection';
 import 'dart:io';
 import 'package:socks5_proxy/socks_client.dart' as socks;
 import 'package:shared_preferences/shared_preferences.dart';
@@ -180,6 +181,12 @@ class SettingsProvider extends ChangeNotifier {
       'display_use_pure_background_v1';
   static const String _displayChatMessageBackgroundStyleKey =
       'display_chat_message_background_style_v1';
+  static const String _mobileAssistantEditTabOrderKey =
+      'mobile_assistant_edit_tab_order_v1';
+  static const String _mobileAssistantEditTabHiddenKey =
+      'mobile_assistant_edit_tab_hidden_v1';
+  static const String _mobileAssistantDetailOutlineEnabledKey =
+      'mobile_assistant_detail_outline_enabled_v1';
   // Network request logging (debug)
   static const String _requestLogEnabledKey = 'request_log_enabled_v1';
   // Flutter runtime logging (debug)
@@ -925,6 +932,14 @@ class SettingsProvider extends ChangeNotifier {
       default:
         _chatMessageBackgroundStyle = ChatMessageBackgroundStyle.defaultStyle;
     }
+    _mobileAssistantEditTabOrder = List.unmodifiable(
+      prefs.getStringList(_mobileAssistantEditTabOrderKey) ?? const <String>[],
+    );
+    _hiddenMobileAssistantEditTabs = Set.unmodifiable(
+      prefs.getStringList(_mobileAssistantEditTabHiddenKey) ?? const <String>[],
+    );
+    _mobileAssistantDetailOutlineEnabled =
+        prefs.getBool(_mobileAssistantDetailOutlineEnabledKey) ?? false;
     // desktop UI
     _desktopSidebarWidth = prefs.getDouble(_desktopSidebarWidthKey) ?? 300;
     _desktopSidebarOpen = prefs.getBool(_desktopSidebarOpenKey) ?? true;
@@ -1948,6 +1963,41 @@ class SettingsProvider extends ChangeNotifier {
       ChatMessageBackgroundStyle.defaultStyle => 'default',
     };
     await prefs.setString(_displayChatMessageBackgroundStyleKey, v);
+  }
+
+  List<String> _mobileAssistantEditTabOrder = const <String>[];
+  List<String> get mobileAssistantEditTabOrder => _mobileAssistantEditTabOrder;
+  Future<void> setMobileAssistantEditTabOrder(List<String> order) async {
+    final next = List<String>.unmodifiable(LinkedHashSet<String>.from(order));
+    if (listEquals(_mobileAssistantEditTabOrder, next)) return;
+    _mobileAssistantEditTabOrder = next;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setStringList(_mobileAssistantEditTabOrderKey, next);
+  }
+
+  Set<String> _hiddenMobileAssistantEditTabs = const <String>{};
+  Set<String> get hiddenMobileAssistantEditTabs =>
+      _hiddenMobileAssistantEditTabs;
+  Future<void> setHiddenMobileAssistantEditTabs(Set<String> hidden) async {
+    final sorted = hidden.toList()..sort();
+    final next = Set<String>.unmodifiable(sorted);
+    if (setEquals(_hiddenMobileAssistantEditTabs, next)) return;
+    _hiddenMobileAssistantEditTabs = next;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setStringList(_mobileAssistantEditTabHiddenKey, sorted);
+  }
+
+  bool _mobileAssistantDetailOutlineEnabled = false;
+  bool get mobileAssistantDetailOutlineEnabled =>
+      _mobileAssistantDetailOutlineEnabled;
+  Future<void> setMobileAssistantDetailOutlineEnabled(bool enabled) async {
+    if (_mobileAssistantDetailOutlineEnabled == enabled) return;
+    _mobileAssistantDetailOutlineEnabled = enabled;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_mobileAssistantDetailOutlineEnabledKey, enabled);
   }
 
   // ===== Android background chat generation =====
@@ -3490,6 +3540,10 @@ DO NOT GIVE ANSWERS OR DO HOMEWORK FOR THE USER. If the user asks a math or logi
     copy._desktopMinimizeToTrayOnClose = _desktopMinimizeToTrayOnClose;
     copy._usePureBackground = _usePureBackground;
     copy._chatMessageBackgroundStyle = _chatMessageBackgroundStyle;
+    copy._mobileAssistantEditTabOrder = _mobileAssistantEditTabOrder;
+    copy._hiddenMobileAssistantEditTabs = _hiddenMobileAssistantEditTabs;
+    copy._mobileAssistantDetailOutlineEnabled =
+        _mobileAssistantDetailOutlineEnabled;
     return copy;
   }
 }
@@ -3744,6 +3798,10 @@ class ProviderConfig {
   final KeyManagementConfig? keyManagement;
   // AIhubmix promo header opt-in
   final bool? aihubmixAppCodeEnabled;
+  // OpenAI-compatible provider account balance query.
+  final bool? balanceEnabled;
+  final String? balanceApiPath;
+  final String? balanceResultPath;
 
   static String resolveProxyType(String? value) {
     switch (value?.trim().toLowerCase()) {
@@ -3782,6 +3840,9 @@ class ProviderConfig {
     this.apiKeys,
     this.keyManagement,
     this.aihubmixAppCodeEnabled,
+    this.balanceEnabled,
+    this.balanceApiPath,
+    this.balanceResultPath,
   });
 
   // Sentinel for copyWith nullability control (allow explicit null set)
@@ -3814,6 +3875,9 @@ class ProviderConfig {
     List<ApiKeyConfig>? apiKeys,
     KeyManagementConfig? keyManagement,
     bool? aihubmixAppCodeEnabled,
+    bool? balanceEnabled,
+    String? balanceApiPath,
+    String? balanceResultPath,
   }) => ProviderConfig(
     id: id ?? this.id,
     enabled: enabled ?? this.enabled,
@@ -3846,6 +3910,9 @@ class ProviderConfig {
     keyManagement: keyManagement ?? this.keyManagement,
     aihubmixAppCodeEnabled:
         aihubmixAppCodeEnabled ?? this.aihubmixAppCodeEnabled,
+    balanceEnabled: balanceEnabled ?? this.balanceEnabled,
+    balanceApiPath: balanceApiPath ?? this.balanceApiPath,
+    balanceResultPath: balanceResultPath ?? this.balanceResultPath,
   );
 
   Map<String, dynamic> toJson() => {
@@ -3875,6 +3942,9 @@ class ProviderConfig {
     'apiKeys': apiKeys?.map((e) => e.toJson()).toList(),
     'keyManagement': keyManagement?.toJson(),
     'aihubmixAppCodeEnabled': aihubmixAppCodeEnabled,
+    'balanceEnabled': balanceEnabled,
+    'balanceApiPath': balanceApiPath,
+    'balanceResultPath': balanceResultPath,
   };
 
   factory ProviderConfig.fromJson(Map<String, dynamic> json) => ProviderConfig(
@@ -3920,6 +3990,9 @@ class ProviderConfig {
       (json['keyManagement'] as Map?)?.cast<String, dynamic>(),
     ),
     aihubmixAppCodeEnabled: json['aihubmixAppCodeEnabled'] as bool?,
+    balanceEnabled: json['balanceEnabled'] as bool?,
+    balanceApiPath: json['balanceApiPath'] as String?,
+    balanceResultPath: json['balanceResultPath'] as String?,
   );
 
   static ProviderKind classify(String key, {ProviderKind? explicitType}) {
@@ -3948,6 +4021,9 @@ class ProviderConfig {
     }
     if (RegExp(r'bytedance|doubao|volces|ark').hasMatch(k)) {
       return 'https://ark.cn-beijing.volces.com/api/v3';
+    }
+    if (RegExp(r'kimi|moonshot|月之暗面').hasMatch(k)) {
+      return 'https://api.moonshot.cn/v1';
     }
     if (k.contains('silicon')) return 'https://api.siliconflow.cn/v1';
     if (k.contains('grok') || k.contains('x.ai') || k.contains('xai')) {
@@ -4004,6 +4080,9 @@ class ProviderConfig {
           apiKeys: const [],
           keyManagement: const KeyManagementConfig(),
           aihubmixAppCodeEnabled: false,
+          balanceEnabled: false,
+          balanceApiPath: '/credits',
+          balanceResultPath: 'data.total_usage',
         );
       case ProviderKind.claude:
         return ProviderConfig(
@@ -4024,6 +4103,9 @@ class ProviderConfig {
           apiKeys: const [],
           keyManagement: const KeyManagementConfig(),
           aihubmixAppCodeEnabled: false,
+          balanceEnabled: false,
+          balanceApiPath: '/credits',
+          balanceResultPath: 'data.total_usage',
         );
       case ProviderKind.openai:
         // Special-case KelivoIN default models and overrides
@@ -4072,6 +4154,9 @@ class ProviderConfig {
             apiKeys: const [],
             keyManagement: const KeyManagementConfig(),
             aihubmixAppCodeEnabled: false,
+            balanceEnabled: _defaultBalanceEnabled(key),
+            balanceApiPath: _defaultBalanceApiPath(key),
+            balanceResultPath: _defaultBalanceResultPath(key),
           );
         }
         // Special-case SiliconFlow: prefill two partnered models
@@ -4109,6 +4194,9 @@ class ProviderConfig {
             apiKeys: const [],
             keyManagement: const KeyManagementConfig(),
             aihubmixAppCodeEnabled: false,
+            balanceEnabled: _defaultBalanceEnabled(key),
+            balanceApiPath: _defaultBalanceApiPath(key),
+            balanceResultPath: _defaultBalanceResultPath(key),
           );
         }
         return ProviderConfig(
@@ -4131,7 +4219,48 @@ class ProviderConfig {
           apiKeys: const [],
           keyManagement: const KeyManagementConfig(),
           aihubmixAppCodeEnabled: lowerKey.contains('aihubmix'),
+          balanceEnabled: _defaultBalanceEnabled(key),
+          balanceApiPath: _defaultBalanceApiPath(key),
+          balanceResultPath: _defaultBalanceResultPath(key),
         );
     }
+  }
+
+  static String _defaultBalanceApiPath(String key) {
+    final k = key.toLowerCase();
+    if (k.contains('aihubmix')) return '/user/balance';
+    if (k.contains('deepseek')) return '/user/balance';
+    if (k.contains('openrouter')) return '/credits';
+    if (k.contains('vercel')) return '/credits';
+    if (k.contains('silicon')) return '/user/info';
+    if (RegExp(r'kimi|moonshot|月之暗面').hasMatch(k)) {
+      return '/users/me/balance';
+    }
+    return '/credits';
+  }
+
+  static String _defaultBalanceResultPath(String key) {
+    final k = key.toLowerCase();
+    if (k.contains('aihubmix')) return 'balance_infos[0].total_balance';
+    if (k.contains('deepseek')) return 'balance_infos[0].total_balance';
+    if (k.contains('openrouter')) {
+      return 'data.total_credits - data.total_usage';
+    }
+    if (k.contains('vercel')) return 'balance';
+    if (k.contains('silicon')) return 'data.totalBalance';
+    if (RegExp(r'kimi|moonshot|月之暗面').hasMatch(k)) {
+      return 'data.available_balance';
+    }
+    return 'data.total_usage';
+  }
+
+  static bool _defaultBalanceEnabled(String key) {
+    final k = key.toLowerCase();
+    return k.contains('aihubmix') ||
+        k.contains('deepseek') ||
+        k.contains('openrouter') ||
+        k.contains('vercel') ||
+        k.contains('silicon') ||
+        RegExp(r'kimi|moonshot|月之暗面').hasMatch(k);
   }
 }

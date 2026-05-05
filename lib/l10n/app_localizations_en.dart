@@ -673,6 +673,35 @@ class AppLocalizationsEn extends AppLocalizations {
   String get assistantEditPageRegexTab => 'Regex Replace';
 
   @override
+  String get assistantEditTabLayoutTooltip => 'Customize tabs';
+
+  @override
+  String get assistantEditTabLayoutTitle => 'Customize tabs';
+
+  @override
+  String get assistantEditTabLayoutSubtitle =>
+      'Drag tabs to reorder. Turn off tabs you do not need.';
+
+  @override
+  String get assistantEditOutlineModeTitle => 'Section list style';
+
+  @override
+  String get assistantEditOutlineModeSubtitle =>
+      'Show an assistant overview first, then open each setting section from a list.';
+
+  @override
+  String get assistantEditTabLayoutResetTooltip => 'Reset tab layout';
+
+  @override
+  String get assistantEditTabLayoutAtLeastOneVisible =>
+      'Keep at least one tab visible';
+
+  @override
+  String assistantEditTabLayoutDragHandle(String tab) {
+    return 'Drag to reorder $tab';
+  }
+
+  @override
   String get assistantEditRegexDescription =>
       'Create regex rules to rewrite or visually adjust user/assistant messages.';
 
@@ -1208,9 +1237,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get assistantSettingsPageTitle => 'Assistant Settings';
 
   @override
-  String get assistantSettingsDefaultTag => 'Default';
-
-  @override
   String get assistantSettingsCopyButton => 'Copy';
 
   @override
@@ -1589,6 +1615,41 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get compressContextNoMessages => 'No messages to compress';
+
+  @override
+  String get compressContextNoConversation => 'No conversation to compress';
+
+  @override
+  String get compressContextNoModel => 'No compression model configured';
+
+  @override
+  String get compressContextEmptySummary =>
+      'Compression returned an empty summary';
+
+  @override
+  String get compressContextOptionsTitle => 'Compress Context';
+
+  @override
+  String get compressContextOptionsDesc =>
+      'Choose which part of the current chat is sent to the compression model.';
+
+  @override
+  String get compressContextKeepStart => 'Start';
+
+  @override
+  String get compressContextKeepRecent => 'Recent';
+
+  @override
+  String get compressContextUnlimited => 'Unlimited';
+
+  @override
+  String get compressContextMaxCharsLabel => 'Characters';
+
+  @override
+  String get compressContextInvalidLimit => 'Enter a positive character count';
+
+  @override
+  String get compressContextStartButton => 'Compress';
 
   @override
   String get bottomToolsSheetLearningMode => 'Learning Mode';
@@ -2739,6 +2800,41 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get providerDetailPageAihubmixAppCodeHelp =>
       'Adds header APP-Code requests to get a 10% discount. Only affects AIhubmix.';
+
+  @override
+  String get providerDetailPageBalanceTitle => 'Account Balance';
+
+  @override
+  String get providerDetailPageBalanceInfo => 'Get account balance';
+
+  @override
+  String get providerDetailPageBalanceApiPathLabel => 'Balance API Path';
+
+  @override
+  String get providerDetailPageBalanceResultPathLabel => 'Result JSON Path';
+
+  @override
+  String get providerDetailPageBalanceQueryButton => 'Check Balance';
+
+  @override
+  String get providerDetailPageBalanceQuerying => 'Checking...';
+
+  @override
+  String get providerDetailPageBalanceResetDefaultsButton => 'Reset';
+
+  @override
+  String get providerDetailPageBalanceResetDefaultsTooltip =>
+      'Reset balance settings';
+
+  @override
+  String providerDetailPageBalanceResult(String value) {
+    return 'Balance: $value';
+  }
+
+  @override
+  String providerDetailPageBalanceError(String message) {
+    return 'Balance query failed: $message';
+  }
 
   @override
   String get providerDetailPageVertexAiTitle => 'Vertex AI';

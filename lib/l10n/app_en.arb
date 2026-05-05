@@ -324,6 +324,21 @@
   "assistantEditPageQuickPhraseTab": "Quick Phrase",
   "assistantEditPageCustomTab": "Custom",
   "assistantEditPageRegexTab": "Regex Replace",
+  "assistantEditTabLayoutTooltip": "Customize tabs",
+  "assistantEditTabLayoutTitle": "Customize tabs",
+  "assistantEditTabLayoutSubtitle": "Drag tabs to reorder. Turn off tabs you do not need.",
+  "assistantEditOutlineModeTitle": "Section list style",
+  "assistantEditOutlineModeSubtitle": "Show an assistant overview first, then open each setting section from a list.",
+  "assistantEditTabLayoutResetTooltip": "Reset tab layout",
+  "assistantEditTabLayoutAtLeastOneVisible": "Keep at least one tab visible",
+  "assistantEditTabLayoutDragHandle": "Drag to reorder {tab}",
+  "@assistantEditTabLayoutDragHandle": {
+    "placeholders": {
+      "tab": {
+        "type": "String"
+      }
+    }
+  },
   "assistantEditRegexDescription": "Create regex rules to rewrite or visually adjust user/assistant messages.",
   "assistantEditAddRegexButton": "Add Regex Rule",
   "assistantRegexAddTitle": "Add Regex Rule",
@@ -517,7 +532,6 @@
   },
   "assistantEditModelUseGlobalDefault": "Use global default",
   "assistantSettingsPageTitle": "Assistant Settings",
-  "assistantSettingsDefaultTag": "Default",
   "assistantSettingsCopyButton": "Copy",
   "assistantSettingsCopySuccess": "Assistant copied",
   "assistantSettingsCopySuffix": "Copy",
@@ -641,6 +655,17 @@
   "compressingContext": "Compressing context...",
   "compressContextFailed": "Failed to compress context",
   "compressContextNoMessages": "No messages to compress",
+  "compressContextNoConversation": "No conversation to compress",
+  "compressContextNoModel": "No compression model configured",
+  "compressContextEmptySummary": "Compression returned an empty summary",
+  "compressContextOptionsTitle": "Compress Context",
+  "compressContextOptionsDesc": "Choose which part of the current chat is sent to the compression model.",
+  "compressContextKeepStart": "Start",
+  "compressContextKeepRecent": "Recent",
+  "compressContextUnlimited": "Unlimited",
+  "compressContextMaxCharsLabel": "Characters",
+  "compressContextInvalidLimit": "Enter a positive character count",
+  "compressContextStartButton": "Compress",
   "bottomToolsSheetLearningMode": "Learning Mode",
   "bottomToolsSheetLearningModeDescription": "Help you learn step by step",
   "bottomToolsSheetConfigurePrompt": "Configure prompt",
@@ -1186,6 +1211,30 @@
   "providerDetailPageResponseApiTitle": "Response API (/responses)",
   "providerDetailPageAihubmixAppCodeLabel": "APP-Code (10% off)",
   "providerDetailPageAihubmixAppCodeHelp": "Adds header APP-Code requests to get a 10% discount. Only affects AIhubmix.",
+  "providerDetailPageBalanceTitle": "Account Balance",
+  "providerDetailPageBalanceInfo": "Get account balance",
+  "providerDetailPageBalanceApiPathLabel": "Balance API Path",
+  "providerDetailPageBalanceResultPathLabel": "Result JSON Path",
+  "providerDetailPageBalanceQueryButton": "Check Balance",
+  "providerDetailPageBalanceQuerying": "Checking...",
+  "providerDetailPageBalanceResetDefaultsButton": "Reset",
+  "providerDetailPageBalanceResetDefaultsTooltip": "Reset balance settings",
+  "providerDetailPageBalanceResult": "Balance: {value}",
+  "@providerDetailPageBalanceResult": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "providerDetailPageBalanceError": "Balance query failed: {message}",
+  "@providerDetailPageBalanceError": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
   "providerDetailPageVertexAiTitle": "Vertex AI",
   "providerDetailPageLocationLabel": "Location",
   "providerDetailPageProjectIdLabel": "Project ID",
