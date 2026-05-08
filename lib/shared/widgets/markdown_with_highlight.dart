@@ -6,6 +6,7 @@ import 'package:gpt_markdown/custom_widgets/markdown_config.dart'
     show GptMarkdownConfig;
 import 'package:flutter_highlight/themes/github.dart';
 import 'package:flutter_highlight/themes/atom-one-dark-reasonable.dart';
+import 'package:flutter/rendering.dart';
 import 'package:highlight/highlight.dart' show Node, highlight;
 import '../../icons/lucide_adapter.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -13,7 +14,9 @@ import 'dart:io';
 import 'dart:math' as math;
 import 'dart:convert';
 import 'dart:ui' as ui;
+import 'package:super_clipboard/super_clipboard.dart';
 import '../../utils/sandbox_path_resolver.dart';
+import '../../utils/clipboard_images.dart';
 import '../../features/chat/pages/image_viewer_page.dart';
 import '../../features/chat/pages/html_preview_page.dart';
 import 'snackbar.dart';
@@ -101,7 +104,6 @@ class MarkdownWithCodeHighlight extends StatelessWidget {
     // Ensure fenced code blocks take precedence over headings and other blocks
     // so lines like "# comment" inside code fences are not parsed as headings.
     components.insert(0, FencedCodeBlockMd());
-    // HTML details may contain fenced code blocks, so it must be checked first.
     components.insert(0, DetailsHtmlMd());
     // Inline components: keep defaults but make link parsing line-scoped
     final inlineComponents = List<MarkdownComponent>.from(
@@ -356,242 +358,11 @@ class MarkdownWithCodeHighlight extends StatelessWidget {
         );
       },
       tableBuilder: (ctx, rows, style, cfg) {
-        final cs = Theme.of(ctx).colorScheme;
-        final isDark = Theme.of(ctx).brightness == Brightness.dark;
-        final borderColor = cs.outlineVariant.withValues(
-          alpha: isDark ? 0.22 : 0.28,
-        );
-        // Blend header background with surface so it matches current theme tone
-        final headerBg = Color.alphaBlend(
-          cs.primary.withValues(alpha: isDark ? 0.14 : 0.08),
-          cs.surface,
-        );
-        final headerStyle = (style).copyWith(
-          fontWeight: FontWeight.w600,
-          // Ensure header text adapts to theme changes
-          color: cs.onSurface,
-        );
-        final cellStyle = (style).copyWith(
-          // Ensure cell text adapts to theme changes
-          color: cs.onSurface,
-        );
-
-        // Count max columns to pad missing cells
-        int maxCol = 0;
-        for (final r in rows) {
-          if (r.fields.length > maxCol) maxCol = r.fields.length;
-        }
-
-        // Desktop platform detection (for selection + layout)
-        final bool isDesktop =
-            Platform.isMacOS || Platform.isWindows || Platform.isLinux;
-
-        // Common cell builder
-        Widget cell(
-          String text,
-          TextAlign align, {
-          bool header = false,
-          bool lastCol = false,
-          bool lastRow = false,
-        }) {
-          // Render inline markdown (bold, code, links) inside table cells
-          final innerCfg = cfg.copyWith(
-            style: header ? headerStyle : cellStyle,
-          );
-          final children = MarkdownComponent.generate(
-            ctx,
-            text,
-            innerCfg,
-            true,
-          );
-          return Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-            child: Align(
-              alignment: () {
-                switch (align) {
-                  case TextAlign.center:
-                    return Alignment.center;
-                  case TextAlign.right:
-                    return Alignment.centerRight;
-                  default:
-                    return Alignment.centerLeft;
-                }
-              }(),
-              child: isDesktop
-                  ? SelectableText.rich(
-                      TextSpan(
-                        style: header ? headerStyle : cellStyle,
-                        children: children,
-                      ),
-                      textAlign: align,
-                      maxLines: null,
-                    )
-                  : RichText(
-                      text: TextSpan(
-                        style: header ? headerStyle : cellStyle,
-                        children: children,
-                      ),
-                      textAlign: align,
-                      softWrap: true,
-                      maxLines: null,
-                      overflow: TextOverflow.visible,
-                      textWidthBasis: TextWidthBasis.parent,
-                    ),
-            ),
-          );
-        }
-
-        // Build a horizontally scrollable table (mobile) or responsive wrapping table (desktop)
-        if (!isDesktop) {
-          // Mobile/tablet: keep horizontal scroll to preserve layout
-          final table = Table(
-            defaultColumnWidth: const IntrinsicColumnWidth(),
-            border: TableBorder(
-              horizontalInside: BorderSide(color: borderColor, width: 0.5),
-              verticalInside: BorderSide(color: borderColor, width: 0.5),
-            ),
-            defaultVerticalAlignment: TableCellVerticalAlignment.middle,
-            children: [
-              if (rows.isNotEmpty)
-                TableRow(
-                  decoration: BoxDecoration(color: headerBg),
-                  children: List.generate(maxCol, (i) {
-                    final f = i < rows.first.fields.length
-                        ? rows.first.fields[i]
-                        : null;
-                    final txt = f?.data ?? '';
-                    final align = f?.alignment ?? TextAlign.left;
-                    return cell(
-                      txt,
-                      align,
-                      header: true,
-                      lastCol: i == maxCol - 1,
-                      lastRow: false,
-                    );
-                  }),
-                ),
-              for (int r = 1; r < rows.length; r++)
-                TableRow(
-                  children: List.generate(maxCol, (c) {
-                    final f = c < rows[r].fields.length
-                        ? rows[r].fields[c]
-                        : null;
-                    final txt = f?.data ?? '';
-                    final align = f?.alignment ?? TextAlign.left;
-                    return cell(
-                      txt,
-                      align,
-                      lastCol: c == maxCol - 1,
-                      lastRow: r == rows.length - 1,
-                    );
-                  }),
-                ),
-            ],
-          );
-
-          return SelectionContainer.disabled(
-            child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              primary: false,
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(12),
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: Theme.of(ctx).colorScheme.surface,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  // Draw border on top so header row background won't cover top corners
-                  foregroundDecoration: BoxDecoration(
-                    border: Border.all(color: borderColor, width: 0.8),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: DefaultTextStyle.merge(
-                    // Ensure any nested spans fallback to current onSurface instead of stale defaults
-                    style: TextStyle(color: cs.onSurface),
-                    child: table,
-                  ),
-                ),
-              ),
-            ),
-          );
-        }
-
-        // Desktop: fit within available width and wrap cell content.
-        // Do NOT add an inner SelectionArea here to allow selection to span
-        // across the entire message-level SelectionArea wrapper.
-        return LayoutBuilder(
-          builder: (context, constraints) {
-            // Use equal flex for all columns so table width == available width.
-            final Map<int, TableColumnWidth> columnWidths = {
-              for (int i = 0; i < maxCol; i++) i: const FlexColumnWidth(),
-            };
-
-            final table = Table(
-              defaultColumnWidth: const FlexColumnWidth(),
-              border: TableBorder(
-                horizontalInside: BorderSide(color: borderColor, width: 0.5),
-                verticalInside: BorderSide(color: borderColor, width: 0.5),
-              ),
-              columnWidths: columnWidths,
-              defaultVerticalAlignment: TableCellVerticalAlignment.middle,
-              children: [
-                if (rows.isNotEmpty)
-                  TableRow(
-                    decoration: BoxDecoration(color: headerBg),
-                    children: List.generate(maxCol, (i) {
-                      final f = i < rows.first.fields.length
-                          ? rows.first.fields[i]
-                          : null;
-                      final txt = f?.data ?? '';
-                      final align = f?.alignment ?? TextAlign.left;
-                      return cell(
-                        txt,
-                        align,
-                        header: true,
-                        lastCol: i == maxCol - 1,
-                        lastRow: false,
-                      );
-                    }),
-                  ),
-                for (int r = 1; r < rows.length; r++)
-                  TableRow(
-                    children: List.generate(maxCol, (c) {
-                      final f = c < rows[r].fields.length
-                          ? rows[r].fields[c]
-                          : null;
-                      final txt = f?.data ?? '';
-                      final align = f?.alignment ?? TextAlign.left;
-                      return cell(
-                        txt,
-                        align,
-                        lastCol: c == maxCol - 1,
-                        lastRow: r == rows.length - 1,
-                      );
-                    }),
-                  ),
-              ],
-            );
-
-            return ClipRRect(
-              borderRadius: BorderRadius.circular(12),
-              child: Container(
-                width: double.infinity,
-                constraints: BoxConstraints(maxWidth: constraints.maxWidth),
-                decoration: BoxDecoration(
-                  color: Theme.of(ctx).colorScheme.surface,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                foregroundDecoration: BoxDecoration(
-                  border: Border.all(color: borderColor, width: 0.8),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: DefaultTextStyle.merge(
-                  style: TextStyle(color: cs.onSurface),
-                  child: table,
-                ),
-              ),
-            );
-          },
+        return _MarkdownTableBlock(
+          rows: _MarkdownTableData.fromRows(rows),
+          style: style,
+          config: cfg,
+          appFontFamily: appFontFamily.isEmpty ? null : appFontFamily,
         );
       },
       // Inline `code` styling via highlightBuilder in gpt_markdown
@@ -796,12 +567,7 @@ class MarkdownWithCodeHighlight extends StatelessWidget {
     // Skips $$...$$ blocks, which are handled separately.
     // NOW SAFE: Code blocks are masked, so $variables in code won't be converted.
     if (enableMath && enableDollarLatex) {
-      // Require that the matched inline math does not cross table column separators (|)
-      // to avoid breaking markdown tables.
-      final inlineDollar = RegExp(r"(?<!\$)\$([^\$\n|]+?)\$(?!\$)");
-      out = out.replaceAllMapped(inlineDollar, (m) {
-        return "\\(${m[1]}\\)";
-      });
+      out = _replaceInlineDollarMath(out);
     }
 
     // Ensure display-math blocks stay as standalone blocks even when generated inline.
@@ -916,16 +682,127 @@ class MarkdownWithCodeHighlight extends StatelessWidget {
     bool displayMode = false,
   }) {
     final resolved = style ?? const TextStyle();
+    final normalizedTex = _normalizeMathTex(tex);
     try {
       return Math.tex(
-        tex,
+        normalizedTex,
         mathStyle: displayMode ? MathStyle.display : MathStyle.text,
         textStyle: resolved,
-        onErrorFallback: (_) => Text(tex, style: resolved),
+        onErrorFallback: (_) => Text(normalizedTex, style: resolved),
       );
     } catch (_) {
-      return Text(tex, style: resolved);
+      return Text(normalizedTex, style: resolved);
     }
+  }
+
+  static String _replaceInlineDollarMath(String input) {
+    final buf = StringBuffer();
+    var i = 0;
+    while (i < input.length) {
+      if (input.codeUnitAt(i) == 0x24 &&
+          !_isEscaped(input, i) &&
+          !_isDoubleDollar(input, i) &&
+          _canOpenDollarMath(input, i)) {
+        final close = _findClosingDollarMath(input, i + 1);
+        if (close != -1) {
+          final body = input.substring(i + 1, close);
+          buf
+            ..write(r'\(')
+            ..write(body)
+            ..write(r'\)');
+          i = close + 1;
+          continue;
+        }
+      }
+      buf.writeCharCode(input.codeUnitAt(i));
+      i++;
+    }
+    return buf.toString();
+  }
+
+  static int _findClosingDollarMath(String input, int start) {
+    for (var i = start; i < input.length; i++) {
+      final ch = input.codeUnitAt(i);
+      if (ch == 0x0A) return -1;
+      if (ch == 0x5C) {
+        i++;
+        continue;
+      }
+      if (ch != 0x24 || _isDoubleDollar(input, i)) continue;
+
+      final body = input.substring(start, i);
+      if (_isValidDollarMathBody(body) && _canCloseDollarMath(input, i)) {
+        return i;
+      }
+    }
+    return -1;
+  }
+
+  static bool _isValidDollarMathBody(String body) {
+    if (body.isEmpty) return false;
+    if (_isWhitespaceCodeUnit(body.codeUnitAt(0))) return false;
+    if (_isWhitespaceCodeUnit(body.codeUnitAt(body.length - 1))) return false;
+    return !_containsUnescapedPipe(body);
+  }
+
+  static bool _containsUnescapedPipe(String input) {
+    for (var i = 0; i < input.length; i++) {
+      final ch = input.codeUnitAt(i);
+      if (ch == 0x5C) {
+        i++;
+        continue;
+      }
+      if (ch == 0x7C) return true;
+    }
+    return false;
+  }
+
+  static bool _canOpenDollarMath(String input, int index) {
+    if (index == 0) return true;
+    final prev = input.codeUnitAt(index - 1);
+    return _isWhitespaceCodeUnit(prev) || prev == 0x28;
+  }
+
+  static bool _canCloseDollarMath(String input, int index) {
+    final nextIndex = index + 1;
+    if (nextIndex >= input.length) return true;
+    final next = input.codeUnitAt(nextIndex);
+    return next != 0x24 && !_isAsciiLetterOrDigit(next);
+  }
+
+  static bool _isDoubleDollar(String input, int index) {
+    return (index > 0 && input.codeUnitAt(index - 1) == 0x24) ||
+        (index + 1 < input.length && input.codeUnitAt(index + 1) == 0x24);
+  }
+
+  static bool _isEscaped(String input, int index) {
+    var backslashes = 0;
+    for (var i = index - 1; i >= 0 && input.codeUnitAt(i) == 0x5C; i--) {
+      backslashes++;
+    }
+    return backslashes.isOdd;
+  }
+
+  static bool _isWhitespaceCodeUnit(int codeUnit) {
+    return codeUnit == 0x20 ||
+        codeUnit == 0x09 ||
+        codeUnit == 0x0A ||
+        codeUnit == 0x0D;
+  }
+
+  static bool _isAsciiLetterOrDigit(int codeUnit) {
+    return (codeUnit >= 0x30 && codeUnit <= 0x39) ||
+        (codeUnit >= 0x41 && codeUnit <= 0x5A) ||
+        (codeUnit >= 0x61 && codeUnit <= 0x7A);
+  }
+
+  static String _normalizeMathTex(String tex) {
+    return tex.replaceAllMapped(RegExp(r'\\\|([\s\S]*?)\\\|'), (match) {
+      final body = match.group(1) ?? '';
+      return r'\lVert '
+          '$body'
+          r' \rVert';
+    });
   }
 
   static String _softBreakInline(String input) {
@@ -1666,6 +1543,671 @@ bool _isHtml(String? lang) {
   return l == 'html' || l == 'htm' || l == 'rawhtml' || l == 'raw_html';
 }
 
+@visibleForTesting
+String markdownTableRowsToCsvForTesting(List<List<String>> rows) =>
+    _rowsToCsv(rows);
+
+class _MarkdownTableBlock extends StatelessWidget {
+  _MarkdownTableBlock({
+    required this.rows,
+    required this.style,
+    required this.config,
+    required this.appFontFamily,
+  }) : _tableBoundaryKey = GlobalKey();
+
+  final _MarkdownTableData rows;
+  final TextStyle style;
+  final GptMarkdownConfig config;
+  final String? appFontFamily;
+  final GlobalKey _tableBoundaryKey;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final borderColor = cs.outlineVariant.withValues(
+      alpha: isDark ? 0.22 : 0.30,
+    );
+    final headerBg = Color.alphaBlend(
+      cs.primary.withValues(alpha: isDark ? 0.15 : 0.07),
+      cs.surface,
+    );
+    final bodyBg = Color.alphaBlend(
+      cs.primary.withValues(alpha: isDark ? 0.04 : 0.015),
+      cs.surface,
+    );
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final bool isDesktopPlatform =
+            Platform.isMacOS || Platform.isWindows || Platform.isLinux;
+        final bool useCompactTable =
+            !isDesktopPlatform || constraints.maxWidth < 520;
+
+        final columnWidth = _compactColumnWidth(
+          constraints.maxWidth.isFinite
+              ? constraints.maxWidth
+              : MediaQuery.sizeOf(context).width,
+          rows.columnCount,
+        );
+        final viewportWidth = constraints.maxWidth.isFinite
+            ? constraints.maxWidth
+            : MediaQuery.sizeOf(context).width;
+        final shouldScrollHorizontally =
+            useCompactTable && columnWidth * rows.columnCount > viewportWidth;
+        final table = _buildTable(
+          context,
+          borderColor: borderColor,
+          headerBg: headerBg,
+          compact: useCompactTable,
+          columnWidth: columnWidth,
+          fixedColumns: shouldScrollHorizontally,
+        );
+
+        final tableSurface = _buildTableSurface(
+          context,
+          table: table,
+          bodyBg: bodyBg,
+          borderColor: borderColor,
+          compact: useCompactTable,
+        );
+
+        if (!useCompactTable) {
+          return Padding(
+            padding: const EdgeInsets.symmetric(vertical: 6),
+            child: tableSurface,
+          );
+        }
+
+        final l10n = AppLocalizations.of(context)!;
+        return SelectionContainer.disabled(
+          child: Container(
+            key: const ValueKey('markdown-table-block'),
+            width: double.infinity,
+            margin: const EdgeInsets.symmetric(vertical: 6),
+            decoration: BoxDecoration(
+              color: Color.alphaBlend(
+                cs.primary.withValues(alpha: isDark ? 0.045 : 0.018),
+                cs.surface,
+              ),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            foregroundDecoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: borderColor, width: 0.8),
+            ),
+            clipBehavior: Clip.antiAlias,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                _MarkdownTableToolbar(
+                  label: l10n.markdownTableLabel,
+                  backgroundColor: headerBg,
+                  copyLabel: l10n.shareProviderSheetCopyButton,
+                  exportLabel: l10n.markdownTableExportCsvTooltip,
+                  exportImageLabel: l10n.messageExportSheetExportImage,
+                  onCopy: () => _copyCsv(context),
+                  onCopyImage: () => _copyImage(context),
+                  onExport: () => _exportCsv(context),
+                  onExportImage: () => _exportImage(context),
+                ),
+                GestureDetector(
+                  key: const ValueKey('markdown-table-body'),
+                  behavior: HitTestBehavior.opaque,
+                  child: _buildMobileTableViewport(
+                    scrollable: shouldScrollHorizontally,
+                    child: tableSurface,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildTable(
+    BuildContext context, {
+    required Color borderColor,
+    required Color headerBg,
+    required bool compact,
+    required double columnWidth,
+    required bool fixedColumns,
+  }) {
+    final columnWidths = <int, TableColumnWidth>{
+      for (int i = 0; i < rows.columnCount; i++)
+        i: fixedColumns
+            ? FixedColumnWidth(columnWidth)
+            : const FlexColumnWidth(),
+    };
+
+    return Table(
+      defaultColumnWidth: fixedColumns
+          ? FixedColumnWidth(columnWidth)
+          : const FlexColumnWidth(),
+      columnWidths: columnWidths,
+      border: TableBorder(
+        horizontalInside: BorderSide(color: borderColor, width: 0.5),
+        verticalInside: BorderSide(color: borderColor, width: 0.5),
+      ),
+      defaultVerticalAlignment: TableCellVerticalAlignment.middle,
+      children: [
+        for (int r = 0; r < rows.rows.length; r++)
+          TableRow(
+            decoration: r == 0 ? BoxDecoration(color: headerBg) : null,
+            children: [
+              for (int c = 0; c < rows.columnCount; c++)
+                _MarkdownTableCell(
+                  data: rows.rows[r].cells[c],
+                  header: r == 0,
+                  style: style,
+                  config: config,
+                  appFontFamily: appFontFamily,
+                  selectable: !compact,
+                ),
+            ],
+          ),
+      ],
+    );
+  }
+
+  Widget _buildTableSurface(
+    BuildContext context, {
+    required Widget table,
+    required Color bodyBg,
+    required Color borderColor,
+    required bool compact,
+  }) {
+    final cs = Theme.of(context).colorScheme;
+    final tableContent = Container(
+      decoration: BoxDecoration(
+        color: bodyBg,
+        borderRadius: compact ? BorderRadius.zero : BorderRadius.circular(10),
+      ),
+      foregroundDecoration: compact
+          ? null
+          : BoxDecoration(
+              border: Border.all(color: borderColor, width: 0.8),
+              borderRadius: BorderRadius.circular(10),
+            ),
+      child: DefaultTextStyle.merge(
+        style: TextStyle(color: cs.onSurface, fontFamily: appFontFamily),
+        child: table,
+      ),
+    );
+
+    if (compact) {
+      return RepaintBoundary(key: _tableBoundaryKey, child: tableContent);
+    }
+
+    return RepaintBoundary(
+      key: _tableBoundaryKey,
+      child: SizedBox(
+        width: double.infinity,
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(10),
+          child: tableContent,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMobileTableViewport({
+    required Widget child,
+    required bool scrollable,
+  }) {
+    if (!scrollable) return child;
+    return SingleChildScrollView(
+      key: const ValueKey('markdown-table-horizontal-scroll'),
+      scrollDirection: Axis.horizontal,
+      primary: false,
+      physics: const ClampingScrollPhysics(),
+      clipBehavior: Clip.hardEdge,
+      child: child,
+    );
+  }
+
+  double _compactColumnWidth(double maxWidth, int columnCount) {
+    final safeMax = maxWidth.isFinite && maxWidth > 0 ? maxWidth : 360.0;
+    if (columnCount <= 1) {
+      return (safeMax - 16).clamp(220.0, 360.0).toDouble();
+    }
+    final visibleColumns = columnCount >= 4 ? 2.45 : columnCount.toDouble();
+    return ((safeMax - 16) / visibleColumns).clamp(112.0, 178.0).toDouble();
+  }
+
+  Future<void> _copyCsv(BuildContext context) async {
+    final l10n = AppLocalizations.of(context)!;
+    await Clipboard.setData(ClipboardData(text: rows.toCsv()));
+    if (!context.mounted) return;
+    showAppSnackBar(
+      context,
+      message: l10n.markdownTableCopiedCsvSnackbar,
+      type: NotificationType.success,
+    );
+  }
+
+  Future<void> _exportCsv(BuildContext context) async {
+    final l10n = AppLocalizations.of(context)!;
+    final timestamp = DateTime.now().toLocal().toIso8601String().replaceAll(
+      RegExp(r'[:.]'),
+      '-',
+    );
+    final filename = '${l10n.markdownTableDefaultFileNameStem}_$timestamp.csv';
+    final csv = rows.toCsv();
+
+    try {
+      if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
+        final savePath = await FilePicker.platform.saveFile(
+          dialogTitle: l10n.backupPageExportToFile,
+          fileName: filename,
+          type: FileType.custom,
+          allowedExtensions: const ['csv'],
+        );
+        if (savePath == null) return;
+        await File(savePath).parent.create(recursive: true);
+        await File(savePath).writeAsString(csv);
+        if (!context.mounted) return;
+        showAppSnackBar(
+          context,
+          message: l10n.messageExportSheetExportedAs(p.basename(savePath)),
+          type: NotificationType.success,
+        );
+        return;
+      }
+
+      final savePath = await FilePicker.platform.saveFile(
+        dialogTitle: l10n.backupPageExportToFile,
+        fileName: filename,
+        type: FileType.custom,
+        allowedExtensions: const ['csv'],
+        bytes: Uint8List.fromList(utf8.encode(csv)),
+      );
+      if (savePath == null || !context.mounted) return;
+      showAppSnackBar(
+        context,
+        message: l10n.messageExportSheetExportedAs(p.basename(savePath)),
+        type: NotificationType.success,
+      );
+    } catch (e) {
+      if (!context.mounted) return;
+      showAppSnackBar(
+        context,
+        message: l10n.messageExportSheetExportFailed('$e'),
+        type: NotificationType.error,
+      );
+    }
+  }
+
+  Future<void> _exportImage(BuildContext context) async {
+    final l10n = AppLocalizations.of(context)!;
+    final timestamp = DateTime.now().toLocal().toIso8601String().replaceAll(
+      RegExp(r'[:.]'),
+      '-',
+    );
+    final filename = '${l10n.markdownTableDefaultFileNameStem}_$timestamp.png';
+    try {
+      final bytes = await _captureTablePngBytes();
+      if (bytes == null) throw 'render error';
+      final savePath = await _savePngBytes(
+        dialogTitle: l10n.backupPageExportToFile,
+        filename: filename,
+        bytes: bytes,
+      );
+      if (savePath == null) return;
+      if (!context.mounted) return;
+      showAppSnackBar(
+        context,
+        message: l10n.messageExportSheetExportedAs(p.basename(savePath)),
+        type: NotificationType.success,
+      );
+    } catch (e) {
+      if (!context.mounted) return;
+      showAppSnackBar(
+        context,
+        message: l10n.messageExportSheetExportFailed('$e'),
+        type: NotificationType.error,
+      );
+    }
+  }
+
+  Future<void> _copyImage(BuildContext context) async {
+    final l10n = AppLocalizations.of(context)!;
+    try {
+      final bytes = await _captureTablePngBytes();
+      if (bytes == null) throw 'render error';
+      final ok = await _writePngToClipboard(bytes);
+      if (!context.mounted) return;
+      showAppSnackBar(
+        context,
+        message: ok
+            ? l10n.chatMessageWidgetCopiedToClipboard
+            : l10n.messageExportSheetExportFailed('clipboard'),
+        type: ok ? NotificationType.success : NotificationType.error,
+      );
+    } catch (e) {
+      if (!context.mounted) return;
+      showAppSnackBar(
+        context,
+        message: l10n.messageExportSheetExportFailed('$e'),
+        type: NotificationType.error,
+      );
+    }
+  }
+
+  Future<Uint8List?> _captureTablePngBytes() async {
+    await WidgetsBinding.instance.endOfFrame;
+    final boundary =
+        _tableBoundaryKey.currentContext?.findRenderObject()
+            as RenderRepaintBoundary?;
+    if (boundary == null) return null;
+    final image = await boundary.toImage(pixelRatio: 3.0);
+    final data = await image.toByteData(format: ui.ImageByteFormat.png);
+    return data?.buffer.asUint8List();
+  }
+
+  Future<File> _writeTableImageTempFile(Uint8List bytes) async {
+    final dir = Directory.systemTemp;
+    final file = File(
+      p.join(
+        dir.path,
+        'kelivo-table-${DateTime.now().millisecondsSinceEpoch}.png',
+      ),
+    );
+    await file.writeAsBytes(bytes, flush: true);
+    return file;
+  }
+
+  Future<String?> _savePngBytes({
+    required String dialogTitle,
+    required String filename,
+    required Uint8List bytes,
+  }) async {
+    if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
+      final savePath = await FilePicker.platform.saveFile(
+        dialogTitle: dialogTitle,
+        fileName: filename,
+        type: FileType.custom,
+        allowedExtensions: const ['png'],
+      );
+      if (savePath == null) return null;
+      await File(savePath).parent.create(recursive: true);
+      await File(savePath).writeAsBytes(bytes, flush: true);
+      return savePath;
+    }
+
+    return FilePicker.platform.saveFile(
+      dialogTitle: dialogTitle,
+      fileName: filename,
+      type: FileType.custom,
+      allowedExtensions: const ['png'],
+      bytes: bytes,
+    );
+  }
+
+  Future<bool> _writePngToClipboard(Uint8List bytes) async {
+    try {
+      final clipboard = SystemClipboard.instance;
+      if (clipboard != null) {
+        final item = DataWriterItem(suggestedName: 'kelivo-table.png');
+        item.add(Formats.png(bytes));
+        await clipboard.write([item]);
+        return true;
+      }
+    } catch (_) {}
+
+    try {
+      final file = await _writeTableImageTempFile(bytes);
+      return await ClipboardImages.setImagePath(file.path);
+    } catch (_) {
+      return false;
+    }
+  }
+}
+
+class _MarkdownTableCell extends StatelessWidget {
+  const _MarkdownTableCell({
+    required this.data,
+    required this.header,
+    required this.style,
+    required this.config,
+    required this.appFontFamily,
+    required this.selectable,
+  });
+
+  final _MarkdownTableCellData data;
+  final bool header;
+  final TextStyle style;
+  final GptMarkdownConfig config;
+  final String? appFontFamily;
+  final bool selectable;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final baseStyle = style.copyWith(
+      fontSize: header ? 13.0 : 13.5,
+      height: 1.42,
+      fontWeight: header ? FontWeight.w600 : FontWeight.w400,
+      color: header ? cs.onSurface : cs.onSurface.withValues(alpha: 0.90),
+      fontFamily: appFontFamily ?? style.fontFamily,
+    );
+    final innerCfg = config.copyWith(style: baseStyle);
+    final displayText = _softBreakTableCellText(data.text);
+    final spans = MarkdownComponent.generate(
+      context,
+      displayText,
+      innerCfg,
+      true,
+    );
+    final textSpan = TextSpan(style: baseStyle, children: spans);
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 9),
+      child: Align(
+        alignment: _alignmentFor(data.alignment),
+        child: selectable
+            ? SelectableText.rich(textSpan, textAlign: data.alignment)
+            : RichText(
+                text: textSpan,
+                textAlign: data.alignment,
+                softWrap: true,
+                overflow: TextOverflow.visible,
+                textWidthBasis: TextWidthBasis.parent,
+              ),
+      ),
+    );
+  }
+
+  Alignment _alignmentFor(TextAlign align) {
+    switch (align) {
+      case TextAlign.center:
+        return Alignment.center;
+      case TextAlign.right:
+        return Alignment.centerRight;
+      default:
+        return Alignment.centerLeft;
+    }
+  }
+
+  String _softBreakTableCellText(String input) {
+    return input.replaceAllMapped(RegExp(r'[^\s/\\-]{22,}'), (match) {
+      final value = match.group(0)!;
+      final buffer = StringBuffer();
+      for (var i = 0; i < value.length; i++) {
+        buffer.write(value[i]);
+        if ((i + 1) % 18 == 0 && i != value.length - 1) {
+          buffer.write('\u200B');
+        }
+      }
+      return buffer.toString();
+    });
+  }
+}
+
+class _MarkdownTableToolbar extends StatelessWidget {
+  const _MarkdownTableToolbar({
+    required this.label,
+    required this.backgroundColor,
+    required this.copyLabel,
+    required this.exportLabel,
+    required this.exportImageLabel,
+    required this.onCopy,
+    required this.onCopyImage,
+    required this.onExport,
+    required this.onExportImage,
+  });
+
+  final String label;
+  final Color backgroundColor;
+  final String copyLabel;
+  final String exportLabel;
+  final String exportImageLabel;
+  final VoidCallback onCopy;
+  final VoidCallback onCopyImage;
+  final VoidCallback onExport;
+  final VoidCallback onExportImage;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return Container(
+      height: 38,
+      padding: const EdgeInsetsDirectional.only(start: 12, end: 6),
+      decoration: BoxDecoration(
+        color: backgroundColor,
+        border: Border(
+          bottom: BorderSide(
+            color: cs.outlineVariant.withValues(alpha: isDark ? 0.20 : 0.28),
+            width: 0.6,
+          ),
+        ),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                color: cs.onSurfaceVariant.withValues(alpha: 0.80),
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                height: 1.0,
+              ),
+            ),
+          ),
+          Tooltip(
+            message: copyLabel,
+            child: IosIconButton(
+              icon: Lucide.Copy,
+              semanticLabel: copyLabel,
+              onTap: onCopy,
+              onLongPress: onCopyImage,
+              size: 15,
+              minSize: 32,
+              padding: const EdgeInsets.all(7),
+              color: cs.onSurfaceVariant.withValues(alpha: 0.68),
+            ),
+          ),
+          Tooltip(
+            message: exportImageLabel,
+            child: IosIconButton(
+              icon: Lucide.ImageDown,
+              semanticLabel: exportImageLabel,
+              onTap: onExportImage,
+              size: 15,
+              minSize: 32,
+              padding: const EdgeInsets.all(7),
+              color: cs.onSurfaceVariant.withValues(alpha: 0.68),
+            ),
+          ),
+          Tooltip(
+            message: exportLabel,
+            child: IosIconButton(
+              icon: Lucide.Download,
+              semanticLabel: exportLabel,
+              onTap: onExport,
+              size: 15,
+              minSize: 32,
+              padding: const EdgeInsets.all(7),
+              color: cs.onSurfaceVariant.withValues(alpha: 0.68),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _MarkdownTableData {
+  const _MarkdownTableData({required this.rows, required this.columnCount});
+
+  final List<_MarkdownTableRowData> rows;
+  final int columnCount;
+
+  factory _MarkdownTableData.fromRows(List<CustomTableRow> sourceRows) {
+    var columnCount = 0;
+    for (final row in sourceRows) {
+      if (row.fields.length > columnCount) columnCount = row.fields.length;
+    }
+
+    final normalizedRows = sourceRows
+        .map((row) {
+          final cells = <_MarkdownTableCellData>[];
+          for (var i = 0; i < columnCount; i++) {
+            final field = i < row.fields.length ? row.fields[i] : null;
+            cells.add(
+              _MarkdownTableCellData(
+                text: field?.data ?? '',
+                alignment: field?.alignment ?? TextAlign.left,
+              ),
+            );
+          }
+          return _MarkdownTableRowData(cells);
+        })
+        .toList(growable: false);
+
+    return _MarkdownTableData(rows: normalizedRows, columnCount: columnCount);
+  }
+
+  String toCsv() => _rowsToCsv(
+    rows.map((row) => row.cells.map((c) => c.text).toList()).toList(),
+  );
+}
+
+class _MarkdownTableRowData {
+  const _MarkdownTableRowData(this.cells);
+
+  final List<_MarkdownTableCellData> cells;
+}
+
+class _MarkdownTableCellData {
+  const _MarkdownTableCellData({required this.text, required this.alignment});
+
+  final String text;
+  final TextAlign alignment;
+}
+
+String _rowsToCsv(List<List<String>> rows) {
+  return rows.map((row) => row.map(_csvCell).join(',')).join('\r\n');
+}
+
+String _csvCell(String value) {
+  if (!value.contains(',') &&
+      !value.contains('"') &&
+      !value.contains('\n') &&
+      !value.contains('\r')) {
+    return value;
+  }
+  return '"${value.replaceAll('"', '""')}"';
+}
+
 class _MermaidBlock extends StatefulWidget {
   final String code;
   const _MermaidBlock({required this.code});
@@ -2253,14 +2795,20 @@ class InlineLatexScrollableMd extends InlineMd {
 /// Inline LaTeX for dollar delimiters only: `$...$`
 class InlineLatexDollarScrollableMd extends InlineMd {
   @override
-  RegExp get exp => RegExp(r"(?:(?<!\$)\$([^\$\n]+?)\$(?!\$))");
+  RegExp get exp => RegExp(
+    r"(^|[ \t\r\n(])(?<!\\)(?<!\$)\$((?:\\.|[^\$\\\n|])+?)\$(?!\$)(?![A-Za-z0-9])",
+  );
 
   @override
   InlineSpan span(BuildContext context, String text, GptMarkdownConfig config) {
     final m = exp.firstMatch(text);
     if (m == null) return TextSpan(text: text, style: config.style);
-    final body = (m.group(1) ?? '').trim();
+    final prefix = m.group(1) ?? '';
+    final body = (m.group(2) ?? '').trim();
     if (body.isEmpty) return TextSpan(text: text, style: config.style);
+    if (!MarkdownWithCodeHighlight._isValidDollarMathBody(m.group(2) ?? '')) {
+      return TextSpan(text: text, style: config.style);
+    }
     final math = MarkdownWithCodeHighlight._renderMath(
       body,
       style: () {
@@ -2269,9 +2817,15 @@ class InlineLatexDollarScrollableMd extends InlineMd {
         return base.copyWith(fontSize: baseSize * 1.2);
       }(),
     );
-    return WidgetSpan(
-      alignment: PlaceholderAlignment.middle,
-      child: SelectionContainer.disabled(child: math),
+    return TextSpan(
+      style: config.style,
+      children: [
+        if (prefix.isNotEmpty) TextSpan(text: prefix, style: config.style),
+        WidgetSpan(
+          alignment: PlaceholderAlignment.middle,
+          child: SelectionContainer.disabled(child: math),
+        ),
+      ],
     );
   }
 }
@@ -2719,13 +3273,20 @@ class BackslashEscapeMd extends InlineMd {
 
 class DetailsHtmlMd extends BlockMd {
   @override
-  String get expString =>
-      r"<details(?:\s+[^>]*)?>\s*<summary(?:\s+[^>]*)?>[\s\S]*?<\/summary>[\s\S]*?<\/details>";
+  RegExp get exp => RegExp(
+    r'^\ *?(?:' + expString + r")$",
+    dotAll: true,
+    multiLine: true,
+    caseSensitive: false,
+  );
+
+  @override
+  String get expString => _detailsPattern(6);
 
   @override
   Widget build(BuildContext context, String text, GptMarkdownConfig config) {
     final match = RegExp(
-      r"^<details(?<attrs>[^>]*)>\s*<summary(?:\s+[^>]*)?>(?<summary>[\s\S]*?)<\/summary>(?<body>[\s\S]*?)<\/details>$",
+      r"^<details(?<attrs>[^>]*)>\s*<summary(?:\s+[^>]*)?>(?<summary>[\s\S]*?)<\/summary>(?<body>[\s\S]*)<\/details>$",
       caseSensitive: false,
       dotAll: true,
     ).firstMatch(text.trim());
@@ -2748,6 +3309,16 @@ class DetailsHtmlMd extends BlockMd {
       initiallyExpanded: initiallyExpanded,
       config: config,
     );
+  }
+
+  static String _detailsPattern(int depth) {
+    final open = r"<details(?:\s+[^>]*)?>";
+    final summary = r"\s*<summary(?:\s+[^>]*)?>[\s\S]*?<\/summary>";
+    if (depth <= 1) {
+      return '$open$summary(?:(?!<details\\b|<\\/details>)[\\s\\S])*<\\/details>';
+    }
+    final nested = _detailsPattern(depth - 1);
+    return '$open$summary(?:(?!<details\\b|<\\/details>)[\\s\\S]|$nested)*<\\/details>';
   }
 
   static String _plainHtmlText(String input) {

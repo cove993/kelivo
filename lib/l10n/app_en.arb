@@ -324,6 +324,7 @@
   "assistantEditPageQuickPhraseTab": "Quick Phrase",
   "assistantEditPageCustomTab": "Custom",
   "assistantEditPageRegexTab": "Regex Replace",
+  "assistantEditPageLocalToolsTab": "Local Tools",
   "assistantEditTabLayoutTooltip": "Customize tabs",
   "assistantEditTabLayoutTitle": "Customize tabs",
   "assistantEditTabLayoutSubtitle": "Drag tabs to reorder. Turn off tabs you do not need.",
@@ -505,6 +506,10 @@
   "codeBlockCollapseButton": "Collapse",
   "codeBlockExpandButton": "Expand",
   "codeBlockDefaultFileNameStem": "code",
+  "markdownTableLabel": "Table",
+  "markdownTableExportCsvTooltip": "Export CSV",
+  "markdownTableDefaultFileNameStem": "table",
+  "markdownTableCopiedCsvSnackbar": "CSV copied. Long press Copy to copy as image.",
   "codeBlockCollapsedLines": "… {n} lines folded",
   "@codeBlockCollapsedLines": {
     "placeholders": {
@@ -624,6 +629,39 @@
   "backupPageLocalBackup": "Local Backup",
   "backupPageImportFromCherryStudio": "Import from Cherry Studio",
   "backupPageImportFromChatbox": "Import from Chatbox",
+  "backupReminderSectionTitle": "Backup Reminder",
+  "backupReminderEnableTitle": "Remind me to back up",
+  "backupReminderFrequencyTitle": "Frequency",
+  "backupReminderTimeTitle": "Reminder Time",
+  "backupReminderTimeInputHint": "HH:mm",
+  "backupReminderTimeInvalid": "Enter a time from 00:00 to 23:59.",
+  "backupReminderLastBackupTitle": "Last Backup",
+  "backupReminderNextReminderTitle": "Next Reminder",
+  "backupReminderNever": "Never",
+  "backupReminderDisabled": "Off",
+  "backupReminderDueNow": "Due now",
+  "backupReminderEveryDay": "Every day",
+  "backupReminderEveryThreeDays": "Every 3 days",
+  "backupReminderEveryWeek": "Every week",
+  "backupReminderEveryFourteenDays": "Every 14 days",
+  "backupReminderEveryMonth": "Every month",
+  "backupReminderCustomDays": "Every {days} days",
+  "@backupReminderCustomDays": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "backupReminderCustomOption": "Custom...",
+  "backupReminderCustomDialogTitle": "Custom Frequency",
+  "backupReminderCustomDialogDescription": "Enter how many days to wait between backup reminders.",
+  "backupReminderCustomDaysLabel": "Days",
+  "backupReminderCustomDaysInvalid": "Enter a number from 1 to 365.",
+  "backupReminderSidebarTitle": "Backup reminder",
+  "backupReminderSidebarSubtitle": "Your backup interval has arrived.",
+  "backupReminderSidebarAction": "Go to backup",
+  "backupReminderSnoozeTooltip": "Remind me later",
   "chatHistoryPageTitle": "Chat History",
   "chatHistoryPageSearchTooltip": "Search",
   "chatHistoryPageDeleteAllTooltip": "Delete Unpinned",
@@ -777,6 +815,8 @@
     }
   },
   "chatMessageWidgetBuiltinSearch": "Built-in Search",
+  "chatMessageWidgetReadClipboard": "Read Clipboard",
+  "chatMessageWidgetWriteClipboard": "Write Clipboard",
   "chatMessageWidgetToolCall": "Tool Call: {name}",
   "@chatMessageWidgetToolCall": {
     "placeholders": {
@@ -1048,6 +1088,8 @@
   "defaultModelPageTitleModelSubtitle": "Used for summarizing conversation titles; prefer fast & cheap models",
   "defaultModelPageSummaryModelTitle": "Summary Model",
   "defaultModelPageSummaryModelSubtitle": "Used for generating conversation summaries; prefer fast and cheap models",
+  "defaultModelPageSuggestionModelTitle": "Chat Suggestions Model",
+  "defaultModelPageSuggestionModelSubtitle": "Used for follow-up suggestion bubbles after assistant replies. Disabled until a model is selected.",
   "assistantEditRecentChatsSummaryFrequencyTitle": "Summary Refresh Frequency",
   "assistantEditRecentChatsSummaryFrequencyDescription": "Refresh recent-chat summaries after the selected number of new messages.",
   "assistantEditRecentChatsSummaryFrequencyOption": "Every {count}",
@@ -1071,6 +1113,7 @@
   "defaultModelPagePromptLabel": "Prompt",
   "defaultModelPageTitlePromptHint": "Enter prompt template for title summarization",
   "defaultModelPageSummaryPromptHint": "Enter prompt template for summary generation",
+  "defaultModelPageSuggestionPromptHint": "Enter prompt template for chat suggestions",
   "defaultModelPageTranslatePromptHint": "Enter prompt template for translation",
   "defaultModelPageOcrPromptHint": "Enter prompt template for OCR image understanding",
   "defaultModelPageResetDefault": "Reset to default",
@@ -1093,6 +1136,17 @@
         "type": "String"
       },
       "userMessagesVar": {
+        "type": "String"
+      }
+    }
+  },
+  "defaultModelPageSuggestionVars": "Variables: conversation: {contentVar}, language: {localeVar}",
+  "@defaultModelPageSuggestionVars": {
+    "placeholders": {
+      "contentVar": {
+        "type": "String"
+      },
+      "localeVar": {
         "type": "String"
       }
     }
@@ -1123,6 +1177,7 @@
     }
   },
   "defaultModelPageUseCurrentModel": "Use current chat model",
+  "defaultModelPageNotEnabled": "Not enabled",
   "translatePagePasteButton": "Paste",
   "translatePageCopyResult": "Copy result",
   "translatePageClearAll": "Clear All",
@@ -1385,6 +1440,9 @@
   "searchServicesAddDialogAdd": "Add",
   "searchServicesAddDialogApiKeyRequired": "API Key is required",
   "searchServicesFieldCustomUrlOptional": "Custom URL (optional)",
+  "searchServicesDialogApiKey": "API Key",
+  "searchServicesDialogModel": "Model",
+  "searchServicesDialogSystemPrompt": "System Prompt",
   "searchServicesAddDialogInstanceUrl": "Instance URL",
   "searchServicesAddDialogUrlRequired": "URL is required",
   "searchServicesAddDialogEnginesOptional": "Engines (optional)",
@@ -1496,7 +1554,12 @@
   "displaySettingsPageShowUpdatesTitle": "Show Updates",
   "displaySettingsPageShowUpdatesSubtitle": "Show app update notifications",
   "displaySettingsPageMessageNavButtonsTitle": "Message Navigation Buttons",
-  "displaySettingsPageMessageNavButtonsSubtitle": "Show quick jump buttons when scrolling",
+  "displaySettingsPageMessageNavButtonsSubtitle": "Choose when quick jump buttons appear",
+  "displaySettingsPageMessageNavButtonsModeAlways": "Always show",
+  "displaySettingsPageMessageNavButtonsModeScroll": "Show while scrolling",
+  "displaySettingsPageMessageNavButtonsModeHover": "Show on mouse hover",
+  "displaySettingsPageMessageNavButtonsModeScrollAndHover": "Show while scrolling or hovering",
+  "displaySettingsPageMessageNavButtonsModeNever": "Never show",
   "displaySettingsPageUseNewAssistantAvatarUxTitle": "Show assistant avatar in chat title bar",
   "displaySettingsPageHapticsOnSidebarTitle": "Haptics on Sidebar",
   "displaySettingsPageHapticsOnSidebarSubtitle": "Enable haptic feedback when opening/closing sidebar",
@@ -1654,6 +1717,8 @@
   "searchProviderBochaDescription": "Bocha web search API. Accurate web results with optional summaries.",
   "searchServiceNameSerper": "Serper",
   "searchProviderSerperDescription": "Serper Google Search API. Fast web results with optional country, language, time, and page filters.",
+  "searchServiceNameGrok": "Grok",
+  "searchProviderGrokDescription": "Grok search via xAI Responses API. Uses web and X search tools and returns cited sources.",
   "searchServicesDialogCountryOptional": "Country/region (optional)",
   "searchServicesDialogLanguageOptional": "Language (optional)",
   "searchServicesDialogTimeFilterOptional": "Time filter (optional)",
@@ -1709,6 +1774,12 @@
   "assistantEditQuickPhraseDescription": "Manage quick phrases for this assistant. Click the button below to add phrases.",
   "assistantEditManageQuickPhraseButton": "Manage Quick Phrases",
   "assistantEditPageMemoryTab": "Memory",
+  "assistantEditLocalToolTimeInfoTitle": "Time Info",
+  "assistantEditLocalToolTimeInfoSubtitle": "Read the device date, weekday, time, timezone, UTC offset, and timestamp.",
+  "assistantEditLocalToolClipboardTitle": "Clipboard",
+  "assistantEditLocalToolClipboardSubtitle": "Read or write plain text from the device clipboard when explicitly needed.",
+  "assistantEditLocalToolAskUserTitle": "Ask User",
+  "assistantEditLocalToolAskUserSubtitle": "Let the assistant ask short questions and continue after you answer.",
   "assistantEditMemorySwitchTitle": "Memory",
   "assistantEditMemorySwitchDescription": "Allow the assistant to create and use memories across chats.",
   "assistantEditRecentChatsSwitchTitle": "Recent Chats Reference",
@@ -1954,6 +2025,20 @@
   "toolApprovalDenyTitle": "Deny tool call",
   "toolApprovalDenyHint": "Reason (optional)",
   "toolApprovalDeniedMessage": "Tool call \"{toolName}\" was denied by user. Reason: {reason}",
+  "askUserCardSubmit": "Submit answer",
+  "askUserCardCustomHint": "Type your answer",
+  "askUserCardSomethingElse": "Something else",
+  "askUserCardSkip": "Skip",
+  "askUserCardSkipped": "Skipped",
+  "askUserCardAnswered": "Answered",
+  "askUserCardInactive": "This question is no longer active. Regenerate or continue the conversation.",
+  "askUserCardCancelled": "Question cancelled",
+  "askUserCardQuestionCount": "Ask {count} questions",
+  "@askUserCardQuestionCount": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
   "tokenDetailPromptTokens": "{count} tokens",
   "@tokenDetailPromptTokens": {
     "placeholders": {
@@ -1989,6 +2074,46 @@
   "@tokenDetailTotalTokens": {
     "placeholders": {
       "count": {"type": "int"}
+    }
+  },
+  "debugPageTitle": "Debug",
+  "debugPageConversationToolsTitle": "Conversation tools",
+  "debugPageCreateOversizedConversationButton": "Create oversized conversation (30 MB)",
+  "debugPageCreateManyMessagesConversationButton": "Create 1024-message conversation",
+  "debugPageCreatingButton": "Creating...",
+  "debugPageCreatingOversizedConversation": "Creating a 30 MB oversized conversation...",
+  "debugPageCreatingManyMessagesConversation": "Creating a 1024-message conversation...",
+  "debugPageNoCurrentAssistant": "No current assistant. Create or select an assistant first.",
+  "debugPageConversationCreated": "Created debug conversation with {count} messages.",
+  "@debugPageConversationCreated": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "debugPageCreateConversationFailed": "Failed to create debug conversation: {error}",
+  "@debugPageCreateConversationFailed": {
+    "placeholders": {
+      "error": {"type": "String"}
+    }
+  },
+  "debugPageOversizedConversationTitle": "Oversized conversation test ({sizeMB} MB)",
+  "@debugPageOversizedConversationTitle": {
+    "placeholders": {
+      "sizeMB": {"type": "int"}
+    }
+  },
+  "debugPageManyMessagesConversationTitle": "{count}-message conversation test",
+  "@debugPageManyMessagesConversationTitle": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "debugPageOversizedConversationSeedText": "This is long debug text for reproducing slow rendering in oversized conversations. It includes repeated Markdown-like text, punctuation, CJK content, and plain words so chat rendering, storage, and scrolling can be profiled.",
+  "debugPageManyMessagesSeedText": "{role} message #{index}: quick random debug sample for testing list rendering, scrolling stability, message grouping, and conversation history performance.",
+  "@debugPageManyMessagesSeedText": {
+    "placeholders": {
+      "role": {"type": "String"},
+      "index": {"type": "int"}
     }
   }
 }

@@ -99,6 +99,190 @@ Widget _settingsHarness({
 }
 
 void main() {
+  test('markdown table CSV export escapes boundary cell values', () {
+    final csv = markdownTableRowsToCsvForTesting([
+      ['Name', 'Note', 'Multiline'],
+      ['Alice', 'plain', 'first\nsecond'],
+      ['Bob, Jr.', 'said "hello"', ''],
+    ]);
+
+    expect(
+      csv,
+      'Name,Note,Multiline\r\n'
+      'Alice,plain,"first\nsecond"\r\n'
+      '"Bob, Jr.","said ""hello""",',
+    );
+  });
+
+  testWidgets('MarkdownWithCodeHighlight renders mobile table export action', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      _markdownHarness('''
+| Name | Value |
+| - | -: |
+| Alpha | 42 |
+''', width: 360),
+    );
+    await tester.pump();
+
+    expect(find.text('Table'), findsOneWidget);
+    expect(find.byTooltip('Copy'), findsOneWidget);
+    expect(find.byTooltip('Export CSV'), findsOneWidget);
+    expect(find.byTooltip('Export as Image'), findsOneWidget);
+    final tableBlock = find.byKey(const ValueKey('markdown-table-block'));
+    final plainText = tester
+        .widgetList<RichText>(
+          find.descendant(of: tableBlock, matching: find.byType(RichText)),
+        )
+        .map((widget) => widget.text.toPlainText())
+        .join('\n');
+    expect(plainText, contains('Name'));
+    expect(plainText, contains('42'));
+  });
+
+  testWidgets('MarkdownWithCodeHighlight keeps table actions out of body', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      _markdownHarness('''
+| Name | Value |
+| - | - |
+| Alpha | Beta |
+''', width: 360),
+    );
+    await tester.pump();
+
+    final body = find.byKey(const ValueKey('markdown-table-body'));
+    expect(body, findsOneWidget);
+    expect(
+      find.descendant(of: body, matching: find.byTooltip('Export CSV')),
+      findsNothing,
+    );
+    expect(
+      find.descendant(of: body, matching: find.byTooltip('Copy')),
+      findsNothing,
+    );
+    expect(
+      find.descendant(of: body, matching: find.byTooltip('Export as Image')),
+      findsNothing,
+    );
+  });
+
+  testWidgets('MarkdownWithCodeHighlight does not scroll narrow table', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      _markdownHarness('''
+| Name | Value |
+| - | - |
+| Alpha | Beta |
+''', width: 360),
+    );
+    await tester.pump();
+
+    final tableBlock = find.byKey(const ValueKey('markdown-table-block'));
+    expect(tableBlock, findsOneWidget);
+    final tableBlockWidget = tester.widget<Container>(tableBlock);
+    expect(tableBlockWidget.foregroundDecoration, isA<BoxDecoration>());
+    final foregroundDecoration =
+        tableBlockWidget.foregroundDecoration! as BoxDecoration;
+    expect(foregroundDecoration.border, isNotNull);
+    expect(
+      find.descendant(
+        of: tableBlock,
+        matching: find.byKey(
+          const ValueKey('markdown-table-horizontal-scroll'),
+        ),
+      ),
+      findsNothing,
+    );
+  });
+
+  testWidgets('MarkdownWithCodeHighlight scrolls only overflowing table', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      _markdownHarness('''
+| Very long header | Another very long header | Third very long header | Fourth very long header |
+| - | - | - | - |
+| A very long value that should wrap inside the cell | Second long value | Third long value | Fourth long value |
+''', width: 320),
+    );
+    await tester.pump();
+
+    final tableBlock = find.byKey(const ValueKey('markdown-table-block'));
+    expect(tableBlock, findsOneWidget);
+    expect(tester.getSize(tableBlock).width, lessThanOrEqualTo(320));
+    expect(
+      find.descendant(
+        of: tableBlock,
+        matching: find.byKey(
+          const ValueKey('markdown-table-horizontal-scroll'),
+        ),
+      ),
+      findsOneWidget,
+    );
+    final scrollView = tester.widget<SingleChildScrollView>(
+      find.descendant(
+        of: tableBlock,
+        matching: find.byKey(
+          const ValueKey('markdown-table-horizontal-scroll'),
+        ),
+      ),
+    );
+    expect(scrollView.physics, isA<ClampingScrollPhysics>());
+  });
+
+  testWidgets(
+    'MarkdownWithCodeHighlight keeps table body clipped inside shell',
+    (tester) async {
+      await tester.pumpWidget(
+        _markdownHarness('''
+| Very long header | Another very long header | Third very long header |
+| - | - | - |
+| A very long value that should wrap inside the cell | Second long value | Third long value |
+''', width: 320),
+      );
+      await tester.pump();
+
+      final tableBlock = find.byKey(const ValueKey('markdown-table-block'));
+      final body = find.byKey(const ValueKey('markdown-table-body'));
+      final blockRect = tester.getRect(tableBlock);
+      final bodyRect = tester.getRect(body);
+
+      expect(bodyRect.left, greaterThanOrEqualTo(blockRect.left));
+      expect(bodyRect.right, lessThanOrEqualTo(blockRect.right));
+    },
+  );
+
+  testWidgets('MarkdownWithCodeHighlight applies app font to table text', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      _markdownHarness(
+        '''
+| Name | Value |
+| - | - |
+| Alpha | Beta |
+''',
+        width: 360,
+        preferences: const {'display_app_font_family_v1': 'Courier'},
+      ),
+    );
+    await tester.pump();
+
+    final tableBlock = find.byKey(const ValueKey('markdown-table-block'));
+    final richTexts = tester.widgetList<RichText>(
+      find.descendant(of: tableBlock, matching: find.byType(RichText)),
+    );
+
+    expect(
+      richTexts.any((widget) => widget.text.style?.fontFamily == 'Courier'),
+      isTrue,
+    );
+  });
+
   testWidgets(
     'MarkdownWithCodeHighlight uses flutter_math_fork for inline and block math',
     (tester) async {
@@ -156,6 +340,64 @@ void main() {
     expect(_findMathWidget(), findsOneWidget);
     expect(find.textContaining(r'$a+b$'), findsOneWidget);
   });
+
+  testWidgets(
+    r'MarkdownWithCodeHighlight renders escaped-pipe dollar math as math',
+    (tester) async {
+      await tester.pumpWidget(
+        _markdownHarness(
+          r'已知 $q$ 是 $\mathbb{R}^n$ 上的多项式。对所有满足 $\|x\|=1$ 的 $x$，有 $p(x)=q(x)$。',
+        ),
+      );
+      await tester.pump();
+
+      expect(_findMathWidget(), findsNWidgets(5));
+      expect(find.textContaining(r'\|x\|=1'), findsNothing);
+      expect(find.textContaining(r'\lVert x \rVert'), findsNothing);
+    },
+  );
+
+  testWidgets(
+    'MarkdownWithCodeHighlight follows GitHub-like dollar math boundaries',
+    (tester) async {
+      await tester.pumpWidget(
+        _markdownHarness(r'''
+分别$10和$20
+
+分别 $10和$ 20
+
+分别$10$和$20$
+
+分别 $10$ 和$20$
+'''),
+      );
+      await tester.pump();
+
+      expect(_findMathWidget(), findsNWidgets(2));
+      expect(find.textContaining(r'分别$10和$20'), findsOneWidget);
+      expect(find.textContaining(r'分别$10$和$20$'), findsOneWidget);
+      expect(find.textContaining(r'和$20$'), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'MarkdownWithCodeHighlight keeps table pipes from widening dollar math',
+    (tester) async {
+      await tester.pumpWidget(
+        _markdownHarness(r'''
+| A | B |
+| - | - |
+| $a$ | b |
+| $a|b$ | c |
+'''),
+      );
+      await tester.pump();
+
+      expect(_findMathWidget(), findsOneWidget);
+      expect(find.textContaining(r'$a'), findsOneWidget);
+      expect(find.textContaining(r'b$'), findsOneWidget);
+    },
+  );
 
   testWidgets(
     'MarkdownWithCodeHighlight disables all math rendering by setting',
@@ -485,6 +727,63 @@ press5
       await tester.pumpAndSettle();
 
       expect(find.text('隐藏内容', findRichText: true), findsNothing);
+    },
+  );
+
+  testWidgets(
+    'MarkdownWithCodeHighlight renders nested details independently',
+    (tester) async {
+      await tester.pumpWidget(
+        _markdownHarness('''
+开头文本
+
+<details>
+<summary>第一层折叠</summary>
+
+普通内容...
+
+<details>
+<summary>第二层折叠</summary>
+
+深藏的内容在这里！
+
+</details>
+
+</details>
+
+结尾文本
+'''),
+      );
+      await tester.pump();
+
+      var richTexts = tester.widgetList<RichText>(find.byType(RichText));
+      var plainText = richTexts.map((w) => w.text.toPlainText()).join('\n');
+
+      expect(plainText, contains('开头文本'));
+      expect(find.text('第一层折叠'), findsOneWidget);
+      expect(find.text('第二层折叠'), findsNothing);
+      expect(find.text('普通内容...', findRichText: true), findsNothing);
+      expect(find.text('深藏的内容在这里！', findRichText: true), findsNothing);
+
+      await tester.tap(find.text('第一层折叠'));
+      await tester.pumpAndSettle();
+
+      richTexts = tester.widgetList<RichText>(find.byType(RichText));
+      plainText = richTexts.map((w) => w.text.toPlainText()).join('\n');
+
+      expect(plainText, contains('普通内容...'));
+      expect(find.text('第二层折叠'), findsOneWidget);
+      expect(find.text('深藏的内容在这里！', findRichText: true), findsNothing);
+
+      await tester.tap(find.text('第二层折叠'));
+      await tester.pumpAndSettle();
+
+      richTexts = tester.widgetList<RichText>(find.byType(RichText));
+      plainText = richTexts.map((w) => w.text.toPlainText()).join('\n');
+
+      expect(plainText, contains('深藏的内容在这里！'));
+      expect(plainText, contains('结尾文本'));
+      expect(plainText, isNot(contains('</details>')));
     },
   );
 

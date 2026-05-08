@@ -148,6 +148,7 @@
   "assistantEditPageMcpTab": "MCP",
   "assistantEditPageCustomTab": "自訂請求",
   "assistantEditPageRegexTab": "正則替換",
+  "assistantEditPageLocalToolsTab": "本機工具",
   "assistantEditTabLayoutTooltip": "自訂標籤頁",
   "assistantEditTabLayoutTitle": "自訂標籤頁",
   "assistantEditTabLayoutSubtitle": "拖動標籤頁調整順序，關閉暫時用不到的標籤頁。",
@@ -318,6 +319,10 @@
   "codeBlockCollapseButton": "摺疊",
   "codeBlockExpandButton": "展開",
   "codeBlockDefaultFileNameStem": "程式碼",
+  "markdownTableLabel": "表格",
+  "markdownTableExportCsvTooltip": "匯出 CSV",
+  "markdownTableDefaultFileNameStem": "表格",
+  "markdownTableCopiedCsvSnackbar": "已複製 CSV，長按複製可複製為圖片",
   "codeBlockCollapsedLines": "… 已摺疊 {n} 行",
   "@codeBlockCollapsedLines": {
     "placeholders": {
@@ -490,6 +495,39 @@
   "backupPageLocalBackup": "本機備份",
   "backupPageImportFromCherryStudio": "從 Cherry Studio 匯入",
   "backupPageImportFromChatbox": "從 Chatbox 匯入",
+  "backupReminderSectionTitle": "備份提醒",
+  "backupReminderEnableTitle": "定期提醒我備份",
+  "backupReminderFrequencyTitle": "提醒頻率",
+  "backupReminderTimeTitle": "提醒時間",
+  "backupReminderTimeInputHint": "HH:mm",
+  "backupReminderTimeInvalid": "請輸入 00:00 到 23:59 之間的時間。",
+  "backupReminderLastBackupTitle": "上次備份",
+  "backupReminderNextReminderTitle": "下次提醒",
+  "backupReminderNever": "從未",
+  "backupReminderDisabled": "關閉",
+  "backupReminderDueNow": "現在已到期",
+  "backupReminderEveryDay": "每天",
+  "backupReminderEveryThreeDays": "每 3 天",
+  "backupReminderEveryWeek": "每週",
+  "backupReminderEveryFourteenDays": "每 14 天",
+  "backupReminderEveryMonth": "每月",
+  "backupReminderCustomDays": "每 {days} 天",
+  "@backupReminderCustomDays": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "backupReminderCustomOption": "自訂...",
+  "backupReminderCustomDialogTitle": "自訂頻率",
+  "backupReminderCustomDialogDescription": "輸入兩次備份提醒之間間隔多少天。",
+  "backupReminderCustomDaysLabel": "天數",
+  "backupReminderCustomDaysInvalid": "請輸入 1 到 365 之間的數字。",
+  "backupReminderSidebarTitle": "備份提醒",
+  "backupReminderSidebarSubtitle": "已經到你設定的備份週期了。",
+  "backupReminderSidebarAction": "去備份",
+  "backupReminderSnoozeTooltip": "稍後提醒",
   "homePageClearContext": "清空上下文",
   "homePageClearContextWithCount": "清空上下文 ({actual}/{configured})",
   "homePageDefaultAssistant": "預設助理",
@@ -607,6 +645,8 @@
   "chatMessageWidgetDeleteMemory": "刪除記憶",
   "chatMessageWidgetWebSearch": "聯網檢索: {query}",
   "chatMessageWidgetBuiltinSearch": "模型內建搜尋",
+  "chatMessageWidgetReadClipboard": "讀取剪貼簿",
+  "chatMessageWidgetWriteClipboard": "寫入剪貼簿",
   "chatMessageWidgetToolCall": "呼叫工具: {name}",
   "chatMessageWidgetToolResult": "呼叫工具: {name}",
   "chatMessageWidgetNoResultYet": "（暫無結果）",
@@ -771,6 +811,8 @@
   "defaultModelPageTitleModelSubtitle": "用於總結對話標題的模型，推薦使用快速且便宜的模型",
   "defaultModelPageSummaryModelTitle": "摘要模型",
   "defaultModelPageSummaryModelSubtitle": "用於生成對話摘要的模型，推薦使用快速且便宜的模型",
+  "defaultModelPageSuggestionModelTitle": "聊天建議模型",
+  "defaultModelPageSuggestionModelSubtitle": "用於在助手回覆後生成繼續對話的建議氣泡。選擇模型後才會啟用。",
   "assistantEditRecentChatsSummaryFrequencyTitle": "摘要更新頻率",
   "assistantEditRecentChatsSummaryFrequencyDescription": "累計達到所選條數的新訊息後，會更新歷史聊天摘要。",
   "assistantEditRecentChatsSummaryFrequencyOption": "每 {count} 則",
@@ -796,16 +838,19 @@
   "defaultModelPageTranslatePromptHint": "輸入用於翻譯的提示詞範本",
   "defaultModelPageOcrPromptHint": "輸入用於 OCR 辨識的提示詞範本",
   "defaultModelPageSummaryPromptHint": "輸入用於生成摘要的提示詞範本",
+  "defaultModelPageSuggestionPromptHint": "輸入用於生成聊天建議的提示詞範本",
   "defaultModelPageResetDefault": "重設為預設",
   "defaultModelPageSave": "儲存",
   "defaultModelPageTitleVars": "變數: 對話內容: {contentVar}, 語言: {localeVar}",
   "defaultModelPageTranslateVars": "變數：原始文本：{sourceVar}，目標語言：{targetVar}",
   "defaultModelPageSummaryVars": "變數：舊摘要：{previousSummaryVar}，新訊息：{userMessagesVar}",
+  "defaultModelPageSuggestionVars": "變數：對話內容：{contentVar}，語言：{localeVar}",
   "defaultModelPageCompressModelTitle": "壓縮模型",
   "defaultModelPageCompressModelSubtitle": "用於壓縮對話上下文的模型，建議使用快速模型",
   "defaultModelPageCompressPromptHint": "輸入用於上下文壓縮的提示詞範本",
   "defaultModelPageCompressVars": "變數：對話內容：{contentVar}，語言：{localeVar}",
   "defaultModelPageUseCurrentModel": "使用目前對話模型",
+  "defaultModelPageNotEnabled": "未啟用",
   "translatePagePasteButton": "貼上",
   "translatePageCopyResult": "複製結果",
   "translatePageClearAll": "清空全部",
@@ -1042,6 +1087,9 @@
   "searchServicesAddDialogAdd": "新增",
   "searchServicesAddDialogApiKeyRequired": "API Key 必填",
   "searchServicesFieldCustomUrlOptional": "自訂 URL（可選）",
+  "searchServicesDialogApiKey": "API Key",
+  "searchServicesDialogModel": "模型",
+  "searchServicesDialogSystemPrompt": "系統提示詞",
   "searchServicesAddDialogInstanceUrl": "實例 URL",
   "searchServicesAddDialogUrlRequired": "URL 必填",
   "searchServicesAddDialogEnginesOptional": "搜尋引擎（可選）",
@@ -1149,7 +1197,12 @@
   "displaySettingsPageShowUpdatesTitle": "顯示更新",
   "displaySettingsPageShowUpdatesSubtitle": "顯示應用程式更新通知",
   "displaySettingsPageMessageNavButtonsTitle": "訊息導航按鈕",
-  "displaySettingsPageMessageNavButtonsSubtitle": "滾動時顯示快速跳轉按鈕",
+  "displaySettingsPageMessageNavButtonsSubtitle": "選擇快速跳轉按鈕的顯示時機",
+  "displaySettingsPageMessageNavButtonsModeAlways": "始終顯示",
+  "displaySettingsPageMessageNavButtonsModeScroll": "滾動時顯示",
+  "displaySettingsPageMessageNavButtonsModeHover": "滑鼠懸停時顯示",
+  "displaySettingsPageMessageNavButtonsModeScrollAndHover": "滾動和滑鼠懸停時顯示",
+  "displaySettingsPageMessageNavButtonsModeNever": "永不顯示",
   "displaySettingsPageUseNewAssistantAvatarUxTitle": "聊天標題欄顯示助手頭像",
   "displaySettingsPageHapticsOnSidebarTitle": "側邊欄觸覺回饋",
   "displaySettingsPageHapticsOnSidebarSubtitle": "開啟/關閉側邊欄時啟用觸覺回饋",
@@ -1288,6 +1341,8 @@
   "searchProviderBochaDescription": "博查 AI 全網網頁搜尋，支援時間範圍與摘要，更適合 AI 使用。",
   "searchServiceNameSerper": "Serper",
   "searchProviderSerperDescription": "Serper Google 搜尋 API。回應快速，支援國家/地區、語言、時間和頁碼過濾。",
+  "searchServiceNameGrok": "Grok",
+  "searchProviderGrokDescription": "透過 xAI Responses API 使用 Grok 搜尋。呼叫網頁和 X 搜尋工具，並返回帶引用的來源。",
   "searchServicesDialogCountryOptional": "國家/地區（可選）",
   "searchServicesDialogLanguageOptional": "語言（可選）",
   "searchServicesDialogTimeFilterOptional": "時間過濾（可選）",
@@ -1359,6 +1414,12 @@
     }
   },
   "assistantEditPageMemoryTab": "記憶",
+  "assistantEditLocalToolTimeInfoTitle": "時間資訊",
+  "assistantEditLocalToolTimeInfoSubtitle": "讀取裝置日期、星期、時間、時區、UTC 偏移和時間戳。",
+  "assistantEditLocalToolClipboardTitle": "剪貼簿",
+  "assistantEditLocalToolClipboardSubtitle": "在明確需要時讀取或寫入裝置剪貼簿中的純文字。",
+  "assistantEditLocalToolAskUserTitle": "詢問使用者",
+  "assistantEditLocalToolAskUserSubtitle": "允許助手提出簡短問題，並在你回答後繼續生成。",
   "assistantEditMemorySwitchTitle": "記憶",
   "assistantEditMemorySwitchDescription": "允許助理主動儲存並在對話間引用使用者相關資訊",
   "assistantEditOutlineModeTitle": "二級列表樣式",
@@ -1600,10 +1661,71 @@
   "toolApprovalDenyTitle": "拒絕工具調用",
   "toolApprovalDenyHint": "原因（可選）",
   "toolApprovalDeniedMessage": "工具調用 \"{toolName}\" 已被使用者拒絕。原因：{reason}",
+  "askUserCardSubmit": "提交回答",
+  "askUserCardCustomHint": "輸入你的回答",
+  "askUserCardSomethingElse": "其他",
+  "askUserCardSkip": "跳過",
+  "askUserCardSkipped": "已跳過",
+  "askUserCardAnswered": "已回答",
+  "askUserCardInactive": "這個問題已不再活動。請重新生成或繼續對話。",
+  "askUserCardCancelled": "問題已取消",
+  "askUserCardQuestionCount": "詢問 {count} 個問題",
   "tokenDetailPromptTokens": "{count} tokens",
   "tokenDetailPromptTokensWithCache": "{count} tokens ({cached} cached)",
   "tokenDetailCompletionTokens": "{count} tokens",
   "tokenDetailSpeed": "{value} tok/s",
   "tokenDetailDuration": "{value}s",
-  "tokenDetailTotalTokens": "{count} tokens"
+  "tokenDetailTotalTokens": "{count} tokens",
+  "debugPageTitle": "Debug",
+  "debugPageConversationToolsTitle": "對話工具",
+  "debugPageCreateOversizedConversationButton": "建立超大對話（30 MB）",
+  "debugPageCreateManyMessagesConversationButton": "建立 1024 條訊息的對話",
+  "debugPageCreatingButton": "建立中...",
+  "debugPageCreatingOversizedConversation": "正在建立 30 MB 超大對話...",
+  "debugPageCreatingManyMessagesConversation": "正在建立 1024 條訊息的對話...",
+  "debugPageNoCurrentAssistant": "目前沒有助手。請先建立或選擇一個助手。",
+  "debugPageConversationCreated": "已建立包含 {count} 條訊息的調試對話。",
+  "@debugPageConversationCreated": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "debugPageCreateConversationFailed": "建立調試對話失敗：{error}",
+  "@debugPageCreateConversationFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "debugPageOversizedConversationTitle": "超大對話測試（{sizeMB} MB）",
+  "@debugPageOversizedConversationTitle": {
+    "placeholders": {
+      "sizeMB": {
+        "type": "int"
+      }
+    }
+  },
+  "debugPageManyMessagesConversationTitle": "{count} 條訊息測試",
+  "@debugPageManyMessagesConversationTitle": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "debugPageOversizedConversationSeedText": "這是一段用於復現超大對話渲染卡頓的長調試文字。它包含重複的 Markdown 風格文字、標點、中文內容和普通詞語，方便測試聊天渲染、儲存和捲動效能。",
+  "debugPageManyMessagesSeedText": "{role} 訊息 #{index}：快速隨機調試樣例，用於測試列表渲染、捲動穩定性、訊息分組和會話歷史效能。",
+  "@debugPageManyMessagesSeedText": {
+    "placeholders": {
+      "role": {
+        "type": "String"
+      },
+      "index": {
+        "type": "int"
+      }
+    }
+  }
 }

@@ -18,6 +18,7 @@ class Lucide {
   static const IconData ArrowLeft = lucide.LucideIcons.arrowLeft;
   static const IconData Camera = lucide.LucideIcons.camera;
   static const IconData Image = lucide.LucideIcons.image;
+  static const IconData ImageDown = lucide.LucideIcons.imageDown;
   static const IconData Brush = lucide.LucideIcons.brush;
   static const IconData Crop = lucide.LucideIcons.crop;
   static const IconData Upload = lucide.LucideIcons.upload;
@@ -45,6 +46,8 @@ class Lucide {
   static const IconData Bookmark = lucide.LucideIcons.bookmark;
   static const IconData MessageCircleWarning =
       lucide.LucideIcons.messageCircleWarning;
+  static const IconData MessageCircleQuestionMark =
+      lucide.LucideIcons.messageCircleQuestionMark;
   static const IconData ChevronDown = lucide.LucideIcons.chevronDown;
   static const IconData Import = lucide.LucideIcons.import;
   static const IconData GripHorizontal = lucide.LucideIcons.gripHorizontal;
@@ -79,6 +82,8 @@ class Lucide {
   static const IconData Eye = lucide.LucideIcons.eye;
   static const IconData EyeOff = lucide.LucideIcons.eyeOff;
   static const IconData Clipboard = lucide.LucideIcons.clipboard;
+  static const IconData ClipboardCheck = lucide.LucideIcons.clipboardCheck;
+  static const IconData ClipboardPen = lucide.LucideIcons.clipboardPen;
   static const IconData Sparkles = lucide.LucideIcons.sparkles;
   static const IconData Phone = lucide.LucideIcons.phone;
   static const IconData Code = lucide.LucideIcons.code;

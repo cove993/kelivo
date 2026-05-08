@@ -35,6 +35,7 @@ import 'scroll_controller.dart' as scroll_ctrl;
 import 'home_view_model.dart';
 import '../services/message_builder_service.dart';
 import '../services/message_generation_service.dart';
+import '../services/ask_user_interaction_service.dart';
 import '../services/ocr_service.dart';
 import '../services/translation_service.dart';
 import '../services/file_upload_service.dart';
@@ -595,6 +596,12 @@ class HomePageController extends ChangeNotifier {
     return result;
   }
 
+  Future<void> sendSuggestion(String suggestion) async {
+    final text = suggestion.trim();
+    if (text.isEmpty) return;
+    await sendMessage(ChatInputData(text: text));
+  }
+
   void cancelQueuedMessage() {
     final restored = _viewModel.cancelCurrentQueuedInput();
     if (restored == null) return;
@@ -642,6 +649,51 @@ class HomePageController extends ChangeNotifier {
     if (success) {
       notifyListeners();
     }
+  }
+
+  Future<void> submitRecoveredAskUserAnswer(
+    ChatMessage message,
+    ToolUIPart part,
+    AskUserResult result,
+  ) async {
+    if (currentConversation == null) return;
+
+    final content = result.toJsonString();
+    await _chatService.upsertToolEvent(
+      message.id,
+      id: part.id,
+      name: part.toolName,
+      arguments: part.arguments,
+      content: content,
+    );
+
+    final parts = List<ToolUIPart>.of(
+      _streamController.getToolParts(message.id) ?? const <ToolUIPart>[],
+    );
+    final idx = parts.indexWhere(
+      (candidate) =>
+          candidate.id == part.id ||
+          (candidate.id.isEmpty && candidate.toolName == part.toolName),
+    );
+    final answeredPart = ToolUIPart(
+      id: part.id,
+      toolName: part.toolName,
+      arguments: part.arguments,
+      content: content,
+      loading: false,
+    );
+    if (idx >= 0) {
+      parts[idx] = answeredPart;
+    } else {
+      parts.add(answeredPart);
+    }
+    _streamController.setToolParts(message.id, parts);
+    notifyListeners();
+
+    await _viewModel.continueAssistantMessageAfterToolAnswer(
+      message,
+      allowImagesApiRouting: _mediaController.allowImagesApiRouting,
+    );
   }
 
   Future<void> cancelStreaming() async {
@@ -793,6 +845,13 @@ class HomePageController extends ChangeNotifier {
         : showMessageEditSheet(ctx, message: message);
     final MessageEditResult? result = await future;
     if (result == null) return;
+
+    if (currentConversation != null) {
+      await _chatService.clearConversationSuggestions(currentConversation!.id);
+      _viewModel.updateCurrentConversation(
+        _chatService.getConversation(currentConversation!.id),
+      );
+    }
 
     final newMsg = await _chatService.appendMessageVersion(
       messageId: message.id,
@@ -1019,12 +1078,13 @@ class HomePageController extends ChangeNotifier {
   }
 
   List<ChatMessage> _selectedCollapsedMessages() {
-    final collapsed = _chatController.collapsedMessages;
-    final selected = <ChatMessage>[];
-    for (final m in collapsed) {
-      if (_selectedItems.contains(m.id)) selected.add(m);
-    }
-    return selected;
+    final convo = currentConversation;
+    if (convo == null) return const <ChatMessage>[];
+    return ChatController.selectedCollapsedMessagesForExport(
+      collapsedMessages: _chatController.collapsedMessages,
+      selectedIds: _selectedItems,
+      storedMessages: _chatService.getMessages(convo.id),
+    );
   }
 
   Future<void> exportSelectedAsMarkdown() async {
@@ -1111,11 +1171,7 @@ class HomePageController extends ChangeNotifier {
   Future<void> confirmSelection() async {
     final convo = currentConversation;
     if (convo == null) return;
-    final collapsed = _chatController.collapsedMessages;
-    final selected = <ChatMessage>[];
-    for (final m in collapsed) {
-      if (_selectedItems.contains(m.id)) selected.add(m);
-    }
+    final selected = _selectedCollapsedMessages();
     if (selected.isEmpty) {
       final l10n = AppLocalizations.of(_context)!;
       showAppSnackBar(

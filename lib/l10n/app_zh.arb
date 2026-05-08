@@ -144,6 +144,7 @@
   "assistantEditPageQuickPhraseTab": "快捷短语",
   "assistantEditPageCustomTab": "自定义请求",
   "assistantEditPageRegexTab": "正则替换",
+  "assistantEditPageLocalToolsTab": "本地工具",
   "assistantEditTabLayoutTooltip": "自定义标签页",
   "assistantEditTabLayoutTitle": "自定义标签页",
   "assistantEditTabLayoutSubtitle": "拖动标签页调整顺序，关闭暂时用不到的标签页。",
@@ -335,6 +336,10 @@
   "codeBlockCollapseButton": "折叠",
   "codeBlockExpandButton": "展开",
   "codeBlockDefaultFileNameStem": "代码",
+  "markdownTableLabel": "表格",
+  "markdownTableExportCsvTooltip": "导出 CSV",
+  "markdownTableDefaultFileNameStem": "表格",
+  "markdownTableCopiedCsvSnackbar": "已复制 CSV，长按复制可复制为图片",
   "codeBlockCollapsedLines": "… 已折叠 {n} 行",
   "@codeBlockCollapsedLines": {
     "placeholders": {
@@ -488,6 +493,39 @@
   "backupPageLocalBackup": "本地备份",
   "backupPageImportFromCherryStudio": "从 Cherry Studio 导入",
   "backupPageImportFromChatbox": "从 Chatbox 导入",
+  "backupReminderSectionTitle": "备份提醒",
+  "backupReminderEnableTitle": "定期提醒我备份",
+  "backupReminderFrequencyTitle": "提醒频率",
+  "backupReminderTimeTitle": "提醒时间",
+  "backupReminderTimeInputHint": "HH:mm",
+  "backupReminderTimeInvalid": "请输入 00:00 到 23:59 之间的时间。",
+  "backupReminderLastBackupTitle": "上次备份",
+  "backupReminderNextReminderTitle": "下次提醒",
+  "backupReminderNever": "从未",
+  "backupReminderDisabled": "关闭",
+  "backupReminderDueNow": "现在已到期",
+  "backupReminderEveryDay": "每天",
+  "backupReminderEveryThreeDays": "每 3 天",
+  "backupReminderEveryWeek": "每周",
+  "backupReminderEveryFourteenDays": "每 14 天",
+  "backupReminderEveryMonth": "每月",
+  "backupReminderCustomDays": "每 {days} 天",
+  "@backupReminderCustomDays": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "backupReminderCustomOption": "自定义...",
+  "backupReminderCustomDialogTitle": "自定义频率",
+  "backupReminderCustomDialogDescription": "输入两次备份提醒之间间隔多少天。",
+  "backupReminderCustomDaysLabel": "天数",
+  "backupReminderCustomDaysInvalid": "请输入 1 到 365 之间的数字。",
+  "backupReminderSidebarTitle": "备份提醒",
+  "backupReminderSidebarSubtitle": "已经到你设定的备份周期了。",
+  "backupReminderSidebarAction": "去备份",
+  "backupReminderSnoozeTooltip": "稍后提醒",
   "homePageClearContext": "清空上下文",
   "homePageClearContextWithCount": "清空上下文 ({actual}/{configured})",
   "homePageDefaultAssistant": "默认助手",
@@ -608,6 +646,8 @@
   "chatMessageWidgetDeleteMemory": "删除记忆",
   "chatMessageWidgetWebSearch": "联网检索: {query}",
   "chatMessageWidgetBuiltinSearch": "模型内置搜索",
+  "chatMessageWidgetReadClipboard": "读取剪切板",
+  "chatMessageWidgetWriteClipboard": "写入剪切板",
   "chatMessageWidgetToolCall": "调用工具: {name}",
   "chatMessageWidgetToolResult": "调用工具: {name}",
   "chatMessageWidgetNoResultYet": "（暂无结果）",
@@ -782,6 +822,8 @@
   "defaultModelPageTitleModelSubtitle": "用于总结对话标题的模型，推荐使用快速且便宜的模型",
   "defaultModelPageSummaryModelTitle": "摘要模型",
   "defaultModelPageSummaryModelSubtitle": "用于生成对话摘要的模型，推荐使用快速且便宜的模型",
+  "defaultModelPageSuggestionModelTitle": "聊天建议模型",
+  "defaultModelPageSuggestionModelSubtitle": "用于在助手回复后生成继续对话的建议气泡。选择模型后才会启用。",
   "assistantEditRecentChatsSummaryFrequencyTitle": "摘要更新频率",
   "assistantEditRecentChatsSummaryFrequencyDescription": "累计达到所选条数的新消息后，会更新历史聊天摘要。",
   "assistantEditRecentChatsSummaryFrequencyOption": "每 {count} 条",
@@ -807,16 +849,19 @@
   "defaultModelPageTranslatePromptHint": "输入用于翻译的提示词模板",
   "defaultModelPageOcrPromptHint": "输入用于 OCR 识别的提示词模板",
   "defaultModelPageSummaryPromptHint": "输入用于生成摘要的提示词模板",
+  "defaultModelPageSuggestionPromptHint": "输入用于生成聊天建议的提示词模板",
   "defaultModelPageResetDefault": "重置为默认",
   "defaultModelPageSave": "保存",
   "defaultModelPageTitleVars": "变量: 对话内容: {contentVar}, 语言: {localeVar}",
   "defaultModelPageTranslateVars": "变量：原始文本：{sourceVar}，目标语言：{targetVar}",
   "defaultModelPageSummaryVars": "变量：旧摘要：{previousSummaryVar}，新消息：{userMessagesVar}",
+  "defaultModelPageSuggestionVars": "变量：对话内容：{contentVar}，语言：{localeVar}",
   "defaultModelPageCompressModelTitle": "压缩模型",
   "defaultModelPageCompressModelSubtitle": "用于压缩对话上下文的模型，推荐使用快速模型",
   "defaultModelPageCompressPromptHint": "输入用于上下文压缩的提示词模板",
   "defaultModelPageCompressVars": "变量：对话内容：{contentVar}，语言：{localeVar}",
   "defaultModelPageUseCurrentModel": "使用当前对话模型",
+  "defaultModelPageNotEnabled": "未启用",
   "translatePagePasteButton": "粘贴",
   "translatePageCopyResult": "复制结果",
   "translatePageClearAll": "清空全部",
@@ -1056,6 +1101,9 @@
   "searchServicesAddDialogAdd": "添加",
   "searchServicesAddDialogApiKeyRequired": "API Key 必填",
   "searchServicesFieldCustomUrlOptional": "自定义 URL（可选）",
+  "searchServicesDialogApiKey": "API Key",
+  "searchServicesDialogModel": "模型",
+  "searchServicesDialogSystemPrompt": "系统提示词",
   "searchServicesAddDialogInstanceUrl": "实例 URL",
   "searchServicesAddDialogUrlRequired": "URL 必填",
   "searchServicesAddDialogEnginesOptional": "搜索引擎（可选）",
@@ -1163,7 +1211,12 @@
   "displaySettingsPageShowUpdatesTitle": "显示更新",
   "displaySettingsPageShowUpdatesSubtitle": "显示应用更新通知",
   "displaySettingsPageMessageNavButtonsTitle": "消息导航按钮",
-  "displaySettingsPageMessageNavButtonsSubtitle": "滚动时显示快速跳转按钮",
+  "displaySettingsPageMessageNavButtonsSubtitle": "选择快速跳转按钮的显示时机",
+  "displaySettingsPageMessageNavButtonsModeAlways": "始终显示",
+  "displaySettingsPageMessageNavButtonsModeScroll": "滚动时显示",
+  "displaySettingsPageMessageNavButtonsModeHover": "鼠标悬停时显示",
+  "displaySettingsPageMessageNavButtonsModeScrollAndHover": "滚动和鼠标悬停时显示",
+  "displaySettingsPageMessageNavButtonsModeNever": "永不显示",
   "displaySettingsPageUseNewAssistantAvatarUxTitle": "聊天标题栏显示助手头像",
   "displaySettingsPageHapticsOnSidebarTitle": "侧边栏触觉反馈",
   "displaySettingsPageHapticsOnSidebarSubtitle": "打开/关闭侧边栏时启用触觉反馈",
@@ -1302,6 +1355,8 @@
   "searchProviderBochaDescription": "博查 AI 全网网页搜索，支持时间范围与摘要，更适合 AI 使用。",
   "searchServiceNameSerper": "Serper",
   "searchProviderSerperDescription": "Serper Google 搜索 API。响应快速，支持国家/地区、语言、时间和页码过滤。",
+  "searchServiceNameGrok": "Grok",
+  "searchProviderGrokDescription": "通过 xAI Responses API 使用 Grok 搜索。调用网页和 X 搜索工具，并返回带引用的来源。",
   "searchServicesDialogCountryOptional": "国家/地区（可选）",
   "searchServicesDialogLanguageOptional": "语言（可选）",
   "searchServicesDialogTimeFilterOptional": "时间过滤（可选）",
@@ -1370,6 +1425,12 @@
   "assistantEditQuickPhraseDescription": "管理该助手的快捷短语。点击下方按钮添加短语。",
   "assistantEditManageQuickPhraseButton": "管理快捷短语",
   "assistantEditPageMemoryTab": "记忆",
+  "assistantEditLocalToolTimeInfoTitle": "时间信息",
+  "assistantEditLocalToolTimeInfoSubtitle": "读取设备日期、星期、时间、时区、UTC 偏移和时间戳。",
+  "assistantEditLocalToolClipboardTitle": "剪切板",
+  "assistantEditLocalToolClipboardSubtitle": "在明确需要时读取或写入设备剪切板中的纯文本。",
+  "assistantEditLocalToolAskUserTitle": "询问用户",
+  "assistantEditLocalToolAskUserSubtitle": "允许助手提出简短问题，并在你回答后继续生成。",
   "assistantEditMemorySwitchTitle": "记忆",
   "assistantEditMemorySwitchDescription": "允许助手主动存储并在对话间引用用户相关信息",
   "assistantEditOutlineModeTitle": "二级列表样式",
@@ -1606,10 +1667,71 @@
   "toolApprovalDenyTitle": "拒绝工具调用",
   "toolApprovalDenyHint": "原因（可选）",
   "toolApprovalDeniedMessage": "工具调用 \"{toolName}\" 已被用户拒绝。原因：{reason}",
+  "askUserCardSubmit": "提交回答",
+  "askUserCardCustomHint": "输入你的回答",
+  "askUserCardSomethingElse": "其他",
+  "askUserCardSkip": "跳过",
+  "askUserCardSkipped": "已跳过",
+  "askUserCardAnswered": "已回答",
+  "askUserCardInactive": "这个问题已不再活动。请重新生成或继续对话。",
+  "askUserCardCancelled": "问题已取消",
+  "askUserCardQuestionCount": "询问 {count} 个问题",
   "tokenDetailPromptTokens": "{count} tokens",
   "tokenDetailPromptTokensWithCache": "{count} tokens ({cached} cached)",
   "tokenDetailCompletionTokens": "{count} tokens",
   "tokenDetailSpeed": "{value} tok/s",
   "tokenDetailDuration": "{value}s",
-  "tokenDetailTotalTokens": "{count} tokens"
+  "tokenDetailTotalTokens": "{count} tokens",
+  "debugPageTitle": "Debug",
+  "debugPageConversationToolsTitle": "对话工具",
+  "debugPageCreateOversizedConversationButton": "创建超大对话（30 MB）",
+  "debugPageCreateManyMessagesConversationButton": "创建 1024 条消息的对话",
+  "debugPageCreatingButton": "创建中...",
+  "debugPageCreatingOversizedConversation": "正在创建 30 MB 超大对话...",
+  "debugPageCreatingManyMessagesConversation": "正在创建 1024 条消息的对话...",
+  "debugPageNoCurrentAssistant": "当前没有助手。请先创建或选择一个助手。",
+  "debugPageConversationCreated": "已创建包含 {count} 条消息的调试对话。",
+  "@debugPageConversationCreated": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "debugPageCreateConversationFailed": "创建调试对话失败：{error}",
+  "@debugPageCreateConversationFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "debugPageOversizedConversationTitle": "超大对话测试（{sizeMB} MB）",
+  "@debugPageOversizedConversationTitle": {
+    "placeholders": {
+      "sizeMB": {
+        "type": "int"
+      }
+    }
+  },
+  "debugPageManyMessagesConversationTitle": "{count} 条消息测试",
+  "@debugPageManyMessagesConversationTitle": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "debugPageOversizedConversationSeedText": "这是一段用于复现超大对话渲染卡顿的长调试文本。它包含重复的 Markdown 风格文本、标点、中文内容和普通词语，方便测试聊天渲染、存储和滚动性能。",
+  "debugPageManyMessagesSeedText": "{role} 消息 #{index}：快速随机调试样例，用于测试列表渲染、滚动稳定性、消息分组和会话历史性能。",
+  "@debugPageManyMessagesSeedText": {
+    "placeholders": {
+      "role": {
+        "type": "String"
+      },
+      "index": {
+        "type": "int"
+      }
+    }
+  }
 }
